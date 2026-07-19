@@ -1,13 +1,11 @@
 #version 330 core
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec3 aColor;
-uniform float xOffset;
-
-out vec3 ourColor;
+layout (location = 0) in vec2 aPos;
+uniform vec2 offset;
+uniform float scale;
+uniform float aspect;
 
 void main()
 {
-    vec3 newPos = vec3(aPos.x + xOffset, aPos.yz);
-    gl_Position = vec4(newPos, 1.0);
-    ourColor = aColor;
+    vec2 p = aPos * scale + offset;
+    gl_Position = vec4(p.x * aspect, p.y, 0.0, 1.0);
 }
