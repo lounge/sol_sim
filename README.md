@@ -29,7 +29,7 @@ The physics of an Earth–Moon system is identical in 2D and 3D (two bodies orbi
 ## Suggested first milestones
 
 1. learnopengl.com ch. 1,2,3,4 - DONE
-2. One circle you can draw at any position.
+2. One circle you can draw at any position. - DONE
 3. Two bodies with gravity and a naive integrator — watch it misbehave.
 4. Fix the integrator.
 5. Real Earth/Moon masses and distances with proper scaling.
