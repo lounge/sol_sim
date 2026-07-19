@@ -1,0 +1,40 @@
+# Odin build artifacts — odin build names the executable after the package
+# directory (no extension on macOS), so route builds to -out:bin/ or *.bin
+bin/
+*.bin
+*.exe
+*.o
+*.obj
+*.a
+*.dylib
+*.so
+*.dll
+*.pdb
+
+# Debug symbols
+*.dSYM/
+
+# Extensionless executables named after packages; the !name/ lines keep the
+# same-named source directories tracked (trailing slash = directories only)
+main
+window
+triangle
+shaders
+sim
+!main/
+!window/
+!triangle/
+!shaders/
+!sim/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Editors
+.vscode/
+.idea/
+
+CLAUDE.md
