@@ -8,6 +8,13 @@ import "core:os"
 import "core:math"
 import "vendor:glfw"
 
+Body :: struct {
+	pos: [2]f32,
+	vel: [2]f32,
+	mass: f32,
+	size: f32
+}
+
 framebuffer_size_callback :: proc "c" (window: glfw.WindowHandle, width: i32, height: i32) {
 	gl.Viewport(0, 0, width, height)
 }
@@ -26,10 +33,30 @@ shader_set_vec2 :: proc(id: u32, name: cstring, x: f32, y: f32) {
 	gl.Uniform2f(gl.GetUniformLocation(id, name), x, y)
 }
 
+G :: 1.0
+DT :: 0.05
 SCR_WIDTH :: 800
 SCR_HEIGHT :: 600
 
+earth := Body {
+	{0.0, 0.0},
+	{0.0, 0.0},
+	1.0,
+	0.4
+}
+
+moon_orbit_r: f32 = 0.8
+moon_init_vel := math.sqrt(G * earth.mass / moon_orbit_r)
+moon := Body {
+	{moon_orbit_r, 0.0},
+	{0.0, moon_init_vel},
+	0.0123,
+	0.1
+}
+
 main :: proc() {
+	earth.vel = {0, -moon.vel.y * moon.mass / earth.mass}
+
 	glfw.Init()
 	glfw.WindowHint(glfw.CONTEXT_VERSION_MAJOR, 3)
 	glfw.WindowHint(glfw.CONTEXT_VERSION_MINOR, 3)
@@ -80,16 +107,32 @@ main :: proc() {
 		gl.UseProgram(shader_program)
 		gl.BindVertexArray(VAO)
 
+		// Integrator: Calculate motion
+		r_vec := earth.pos - moon.pos
+		distance := math.sqrt(r_vec.x * r_vec.x + r_vec.y * r_vec.y)
+        force := G * earth.mass * moon.mass / (distance * distance)
+        direction := r_vec / distance
+
+        earth_accel := force / earth.mass
+        moon_accel := force / moon.mass
+
+        // semi-implicit (symplectic) Euler
+        earth.vel -= direction * (earth_accel * DT)
+        moon.vel += direction * (moon_accel * DT)
+
+        earth.pos += earth.vel * DT
+        moon.pos += moon.vel * DT
+
 		// Earth
-		shader_set_vec2(shader_program, "offset", -0.3, 0.0)
-		shader_set_float(shader_program, "scale", 0.4)
+		shader_set_vec2(shader_program, "offset", earth.pos.x, earth.pos.y)
+		shader_set_float(shader_program, "scale", earth.size)
 		shader_set_float(shader_program, "aspect", f32(fb_height) / f32(fb_width))
 
 		gl.DrawArrays(gl.TRIANGLE_FAN, 0, i32(segments + 2))
 
 		// Moon
-		shader_set_vec2(shader_program, "offset", 0.6, 0.3)
-		shader_set_float(shader_program, "scale", 0.1)
+		shader_set_vec2(shader_program, "offset", moon.pos.x, moon.pos.y)
+		shader_set_float(shader_program, "scale", moon.size)
 		shader_set_float(shader_program, "aspect", f32(fb_height) / f32(fb_width))
 
 		gl.DrawArrays(gl.TRIANGLE_FAN, 0, i32(segments + 2))
