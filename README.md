@@ -36,9 +36,10 @@ The physics of an Earth–Moon system is identical in 2D and 3D (two bodies orbi
 4. Fix the integrator. - DONE (semi-implicit Euler)
 5. Add the sun, make earth/moon orbit sun - DONE
 6. Real masses and distances with proper scaling. - DONE
-7. 2D Camera. Zoom / Positioning
-8. Real sizes of objects?
-9. Make 3D, camera, lighting.
+7. 2D Camera. Zoom / Tracking
+8. Real sizes of objects (Clamp into minimum markers).
+9. Make 3D.
+10. Lighting (Sun).
 10. Make interactive.
 
 Each one is small, and step 3 failing is a feature — you'll understand why the better integrators exist.
