@@ -1,5 +1,7 @@
 # Sol Sim
 
+A from-scratch orbital simulation whose real purpose is the learning along the way: graphics programming with raw OpenGL, the Odin language, orbital mechanics, and the physics and math underneath it all — numerical integration, vectors, floating-point behavior. The simulation is the vehicle, not the destination.
+
 The physics of an Earth–Moon system is identical in 2D and 3D (two bodies orbiting each other always stay in a single plane anyway), so you lose nothing physically. What you avoid is cameras, projection matrices, depth buffers, and lighting — all of which are worth learning, but they'd be noise while you're also learning Odin, OpenGL, and orbital mechanics at the same time. Once the 2D version works, "upgrading" to 3D is mostly a rendering exercise and a great second milestone.
 
 ## The three skill tracks (you can interleave them)
@@ -32,8 +34,8 @@ The physics of an Earth–Moon system is identical in 2D and 3D (two bodies orbi
 2. One circle you can draw at any position. - DONE
 3. Two bodies with gravity and a naive integrator — watch it misbehave. - DONE
 4. Fix the integrator. - DONE (semi-implicit Euler)
-5. Real Earth/Moon masses and distances with proper scaling.
-6. Add the sun, make earth/moon orbit sun
+5. Add the sun, make earth/moon orbit sun
+6. Real masses and distances with proper scaling.
 7. Make 3D, camera, lighting.
 8. Make interactive.
 
