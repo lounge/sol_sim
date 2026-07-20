@@ -19,32 +19,41 @@ process_input :: proc(window: glfw.WindowHandle) {
 	}
 }
 
-DT :: 0.05
+DT :: 0.0001
 SCR_WIDTH :: 800
 SCR_HEIGHT :: 600
 
 main :: proc() {
 	bodies: [dynamic]Body
 
-	earth := Body {
+	sun := Body {
 		{0.0, 0.0},
 		{0.0, 0.0},
-		1.0,
-		0.4
+		100.0,
+		0.15
 	}
 
-	moon_orbit_r: f32 = 0.8
+	earth_orbit_r: f32 = 0.7
+	earth_init_vel := math.sqrt(G * sun.mass / earth_orbit_r)
+	earth := Body {
+		{earth_orbit_r, 0.0},
+		{0.0, earth_init_vel},
+		1.0,
+		0.05
+	}
+
+	moon_orbit_r: f32 = 0.04
 	moon_init_vel := math.sqrt(G * earth.mass / moon_orbit_r)
 	moon := Body {
-		{moon_orbit_r, 0.0},
-		{0.0, moon_init_vel},
+		earth.pos + {moon_orbit_r, 0.0},
+		earth.vel + {0.0, moon_init_vel},
 		0.0123,
-		0.1
+		0.02
 	}
 
-	earth.vel = {0, -moon.vel.y * moon.mass / earth.mass}
+	sun.vel = -(earth.vel * earth.mass + moon.vel * moon.mass) / sun.mass
 
-	append(&bodies, earth, moon)
+	append(&bodies, sun, earth, moon)
 
 	glfw.Init()
 	glfw.WindowHint(glfw.CONTEXT_VERSION_MAJOR, 3)
@@ -79,13 +88,16 @@ main :: proc() {
 
 		fb_width, fb_height := glfw.GetFramebufferSize(window)
 
-		gl.ClearColor(0.2, 0.3, 0.3, 1.0)
+		gl.ClearColor(0.0, 0.0, 0.0, 0.0)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 
 		gl.UseProgram(shader_program)
 
 		// Physics step
-		physics_step(bodies[:], DT)
+		STEPS_PER_FRAME :: 10
+		for _ in 0..< STEPS_PER_FRAME {
+			physics_step(bodies[:], DT)
+		}
 
 		// Draw bodies
 		draw_bodies(bodies[:], circle_mesh, shader_program, fb_width, fb_height)
