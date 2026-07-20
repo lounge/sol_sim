@@ -34,7 +34,7 @@ The physics of an Earth–Moon system is identical in 2D and 3D (two bodies orbi
 2. One circle you can draw at any position. - DONE
 3. Two bodies with gravity and a naive integrator — watch it misbehave. - DONE
 4. Fix the integrator. - DONE (semi-implicit Euler)
-5. Add the sun, make earth/moon orbit sun
+5. Add the sun, make earth/moon orbit sun - DONE
 6. Real masses and distances with proper scaling.
 7. Make 3D, camera, lighting.
 8. Make interactive.
