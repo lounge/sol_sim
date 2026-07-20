@@ -6,7 +6,6 @@ import "core:c"
 import "core:fmt"
 import "core:os"
 import "core:math"
-import "core:mem"
 import "vendor:glfw"
 
 
@@ -18,14 +17,6 @@ process_input :: proc(window: glfw.WindowHandle) {
 	if glfw.GetKey(window, glfw.KEY_ESCAPE) == glfw.PRESS {
 		glfw.SetWindowShouldClose(window, true)
 	}
-}
-
-shader_set_float :: proc(id: u32, name: cstring, value: f32) {
-	gl.Uniform1f(gl.GetUniformLocation(id, name), value)
-}
-
-shader_set_vec2 :: proc(id: u32, name: cstring, x: f32, y: f32) {
-	gl.Uniform2f(gl.GetUniformLocation(id, name), x, y)
 }
 
 DT :: 0.05
