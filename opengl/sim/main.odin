@@ -8,12 +8,6 @@ import "core:os"
 import "core:math"
 import "vendor:glfw"
 
-Body :: struct {
-	pos: [2]f32,
-	vel: [2]f32,
-	mass: f32,
-	size: f32
-}
 
 framebuffer_size_callback :: proc "c" (window: glfw.WindowHandle, width: i32, height: i32) {
 	gl.Viewport(0, 0, width, height)
@@ -33,29 +27,32 @@ shader_set_vec2 :: proc(id: u32, name: cstring, x: f32, y: f32) {
 	gl.Uniform2f(gl.GetUniformLocation(id, name), x, y)
 }
 
-G :: 1.0
 DT :: 0.05
 SCR_WIDTH :: 800
 SCR_HEIGHT :: 600
 
-earth := Body {
-	{0.0, 0.0},
-	{0.0, 0.0},
-	1.0,
-	0.4
-}
-
-moon_orbit_r: f32 = 0.8
-moon_init_vel := math.sqrt(G * earth.mass / moon_orbit_r)
-moon := Body {
-	{moon_orbit_r, 0.0},
-	{0.0, moon_init_vel},
-	0.0123,
-	0.1
-}
-
 main :: proc() {
+	bodies: [dynamic]Body
+
+	earth := Body {
+		{0.0, 0.0},
+		{0.0, 0.0},
+		1.0,
+		0.4
+	}
+
+	moon_orbit_r: f32 = 0.8
+	moon_init_vel := math.sqrt(G * earth.mass / moon_orbit_r)
+	moon := Body {
+		{moon_orbit_r, 0.0},
+		{0.0, moon_init_vel},
+		0.0123,
+		0.1
+	}
+
 	earth.vel = {0, -moon.vel.y * moon.mass / earth.mass}
+
+	append(&bodies, earth, moon)
 
 	glfw.Init()
 	glfw.WindowHint(glfw.CONTEXT_VERSION_MAJOR, 3)
@@ -84,9 +81,8 @@ main :: proc() {
 	}
 
 	VBO, VAO: u32
-	segments: int = 32
 
-	circle_verts := create_circle_vertices(segments)
+	circle_verts := create_circle_vertices()
 
 	gl.GenVertexArrays(1, &VAO)
 	gl.GenBuffers(1, &VBO)
@@ -107,61 +103,15 @@ main :: proc() {
 		gl.UseProgram(shader_program)
 		gl.BindVertexArray(VAO)
 
-		// Integrator: Calculate motion
-		r_vec := earth.pos - moon.pos
-		distance := math.sqrt(r_vec.x * r_vec.x + r_vec.y * r_vec.y)
-        force := G * earth.mass * moon.mass / (distance * distance)
-        direction := r_vec / distance
+		// Physics step
+		physics_step(bodies[:], DT)
 
-        earth_accel := force / earth.mass
-        moon_accel := force / moon.mass
-
-        // semi-implicit (symplectic) Euler
-        earth.vel -= direction * (earth_accel * DT)
-        moon.vel += direction * (moon_accel * DT)
-
-        earth.pos += earth.vel * DT
-        moon.pos += moon.vel * DT
-
-		// Earth
-		shader_set_vec2(shader_program, "offset", earth.pos.x, earth.pos.y)
-		shader_set_float(shader_program, "scale", earth.size)
-		shader_set_float(shader_program, "aspect", f32(fb_height) / f32(fb_width))
-
-		gl.DrawArrays(gl.TRIANGLE_FAN, 0, i32(segments + 2))
-
-		// Moon
-		shader_set_vec2(shader_program, "offset", moon.pos.x, moon.pos.y)
-		shader_set_float(shader_program, "scale", moon.size)
-		shader_set_float(shader_program, "aspect", f32(fb_height) / f32(fb_width))
-
-		gl.DrawArrays(gl.TRIANGLE_FAN, 0, i32(segments + 2))
+		// Draw bodies
+		draw_bodies(bodies[:], shader_program, fb_width, fb_height)
 
 		glfw.SwapBuffers(window)
 		glfw.PollEvents()
 	}
 
 	glfw.Terminate()
-}
-
-create_circle_vertices :: proc(segments: int) -> [dynamic]f32 {
-	vertices: [dynamic]f32
-
-	// TODO: make params
-	radius: f32 = 1.0
-	origin_x: f32 = 0.0
-	origin_y: f32 = 0.0
-
-	append(&vertices, origin_x, origin_y)
-
-	for i := 0; i <= segments; i += 1 {
-		angle := f32(i) * (2 * math.PI / f32(segments))
-
-		x := origin_x + f32(radius) * math.cos(angle)
-		y := origin_y + f32(radius) * math.sin(angle)
-
-		append(&vertices, x, y)
-	}
-
-	return vertices
 }
