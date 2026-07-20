@@ -6,6 +6,7 @@ import "core:c"
 import "core:fmt"
 import "core:os"
 import "core:math"
+import "core:mem"
 import "vendor:glfw"
 
 
@@ -80,17 +81,7 @@ main :: proc() {
 		os.exit(-1)
 	}
 
-	VBO, VAO: u32
-
-	circle_verts := create_circle_vertices()
-
-	gl.GenVertexArrays(1, &VAO)
-	gl.GenBuffers(1, &VBO)
-	gl.BindVertexArray(VAO)
-	gl.BindBuffer(gl.ARRAY_BUFFER, VBO)
-	gl.BufferData(gl.ARRAY_BUFFER, len(circle_verts) * size_of(f32), raw_data(circle_verts), gl.STATIC_DRAW)
-	gl.VertexAttribPointer(0, 2, gl.FLOAT, gl.FALSE, 2 * size_of(f32), 0)
-	gl.EnableVertexAttribArray(0)
+	circle_mesh := create_circle_mesh(32)
 
 	for !glfw.WindowShouldClose(window) {
 		process_input(window)
@@ -101,13 +92,12 @@ main :: proc() {
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 
 		gl.UseProgram(shader_program)
-		gl.BindVertexArray(VAO)
 
 		// Physics step
 		physics_step(bodies[:], DT)
 
 		// Draw bodies
-		draw_bodies(bodies[:], shader_program, fb_width, fb_height)
+		draw_bodies(bodies[:], circle_mesh, shader_program, fb_width, fb_height)
 
 		glfw.SwapBuffers(window)
 		glfw.PollEvents()
