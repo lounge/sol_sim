@@ -51,11 +51,12 @@ create_circle_mesh :: proc(segments: i32) -> Mesh {
 }
 
 draw_bodies :: proc(bodies: []Body, mesh: Mesh, program: u32, width: i32, height: i32) {
+	half_extent: f64 = 1.1 // 2D camera: ndc = (world_pos - camera_center) / half_extent
 	gl.BindVertexArray(mesh.vao)
 
 	for &body in bodies {
-		shader_set_vec2(program, "offset", body.pos.x, body.pos.y)
-		shader_set_float(program, "scale", body.size)
+		shader_set_vec2(program, "offset", f32(body.pos.x / half_extent), f32(body.pos.y / half_extent))
+		shader_set_float(program, "scale", f32(body.size / half_extent))
 		shader_set_float(program, "aspect", f32(height) / f32(width))
 
 		gl.DrawArrays(mesh.primitive, 0, mesh.vertex_count)

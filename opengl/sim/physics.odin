@@ -3,15 +3,15 @@ package main
 import "core:math"
 
 Body :: struct {
-	pos: [2]f32,
-	vel: [2]f32,
-	mass: f32,
-	size: f32
+	pos: [2]f64,
+	vel: [2]f64,
+	mass: f64,
+	size: f64
 }
 
 G :: 1.0
 
-physics_step :: proc(bodies: []Body, dt: f32) {
+physics_step :: proc(bodies: []Body, dt: f64) {
  for i := 0; i < len(bodies); i += 1 {
  	for j := i + 1; j < len(bodies); j += 1 {
   		bodyA := &bodies[i]
@@ -21,7 +21,8 @@ physics_step :: proc(bodies: []Body, dt: f32) {
         // semi-implicit (symplectic) Euler
         r_vec := bodyA.pos - bodyB.pos
         distance := math.sqrt(r_vec.x * r_vec.x + r_vec.y * r_vec.y)
-        force := G * bodyA.mass * bodyB.mass / (distance * distance)
+
+        force: f64 = G * bodyA.mass * bodyB.mass / (distance * distance)
         direction := r_vec / distance
 
         bodyA_accel := force / bodyA.mass

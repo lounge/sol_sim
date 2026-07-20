@@ -8,7 +8,6 @@ import "core:os"
 import "core:math"
 import "vendor:glfw"
 
-
 framebuffer_size_callback :: proc "c" (window: glfw.WindowHandle, width: i32, height: i32) {
 	gl.Viewport(0, 0, width, height)
 }
@@ -29,25 +28,25 @@ main :: proc() {
 	sun := Body {
 		{0.0, 0.0},
 		{0.0, 0.0},
-		100.0,
+		1.0,
 		0.15
 	}
 
-	earth_orbit_r: f32 = 0.7
+	earth_orbit_r: f64 = 1
 	earth_init_vel := math.sqrt(G * sun.mass / earth_orbit_r)
 	earth := Body {
 		{earth_orbit_r, 0.0},
 		{0.0, earth_init_vel},
-		1.0,
+		3.003 * math.pow10(f64(-6.0)),
 		0.05
 	}
 
-	moon_orbit_r: f32 = 0.04
+	moon_orbit_r: f64 =  2.570 * math.pow10(f64(-3))
 	moon_init_vel := math.sqrt(G * earth.mass / moon_orbit_r)
 	moon := Body {
 		earth.pos + {moon_orbit_r, 0.0},
 		earth.vel + {0.0, moon_init_vel},
-		0.0123,
+		3.69 * math.pow10(f64(-8.0)),
 		0.02
 	}
 
