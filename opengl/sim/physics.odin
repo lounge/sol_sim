@@ -2,14 +2,14 @@ package main
 
 import "core:math"
 
+G :: 1.0
+
 Body :: struct {
 	pos: [2]f64,
 	vel: [2]f64,
 	mass: f64,
 	size: f64
 }
-
-G :: 1.0
 
 physics_step :: proc(bodies: []Body, dt: f64) {
  for i := 0; i < len(bodies); i += 1 {
