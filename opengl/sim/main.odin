@@ -8,19 +8,10 @@ import "core:os"
 import "core:math"
 import "vendor:glfw"
 
-framebuffer_size_callback :: proc "c" (window: glfw.WindowHandle, width: i32, height: i32) {
-	gl.Viewport(0, 0, width, height)
-}
-
-process_input :: proc(window: glfw.WindowHandle) {
-	if glfw.GetKey(window, glfw.KEY_ESCAPE) == glfw.PRESS {
-		glfw.SetWindowShouldClose(window, true)
-	}
-}
-
 DT :: 0.0001
 SCR_WIDTH :: 800
 SCR_HEIGHT :: 600
+VIEW_SCALE :: 60
 
 main :: proc() {
 	bodies: [dynamic]Body
@@ -66,6 +57,9 @@ main :: proc() {
 		os.exit(-1)
 	}
 
+	glfw.SetFramebufferSizeCallback(window, framebuffer_size_callback)
+	glfw.SetScrollCallback(window, scroll_callback)
+
 	glfw.MakeContextCurrent(window)
 
 	gl.load_up_to(3, 3, glfw.gl_set_proc_address)
@@ -73,7 +67,6 @@ main :: proc() {
 	fb_width, fb_height := glfw.GetFramebufferSize(window)
 	gl.Viewport(0, 0, fb_width, fb_height)
 
-	glfw.SetFramebufferSizeCallback(window, framebuffer_size_callback)
 
 	shader_program, loaded_ok := gl.load_shaders_file(#directory + "res/vertex.vert.glsl", #directory + "res/fragment.frag.glsl")
 	if !loaded_ok {
@@ -83,7 +76,7 @@ main :: proc() {
 	circle_mesh := create_circle_mesh(32)
 
 	for !glfw.WindowShouldClose(window) {
-		process_input(window)
+		process_input(window, bodies[:])
 
 		fb_width, fb_height := glfw.GetFramebufferSize(window)
 
@@ -98,12 +91,35 @@ main :: proc() {
 			physics_step(bodies[:], DT)
 		}
 
-		// Draw bodies
-		draw_bodies(bodies[:], circle_mesh, shader_program, fb_width, fb_height)
+		camera_update(bodies[:])
+		draw_bodies(bodies[:], circle_mesh, shader_program, camera, fb_width, fb_height)
 
 		glfw.SwapBuffers(window)
 		glfw.PollEvents()
 	}
 
 	glfw.Terminate()
+}
+
+framebuffer_size_callback :: proc "c" (window: glfw.WindowHandle, width, height: i32) {
+	gl.Viewport(0, 0, width, height)
+}
+
+scroll_callback :: proc "c" (window: glfw.WindowHandle, xOffset, yOffset: f64) {
+	camera_zoom(yOffset)
+}
+
+process_input :: proc(window: glfw.WindowHandle, bodies: []Body) {
+	if glfw.GetKey(window, glfw.KEY_ESCAPE) == glfw.PRESS {
+		glfw.SetWindowShouldClose(window, true)
+	}
+	if glfw.GetKey(window, glfw.KEY_1) == glfw.PRESS {
+		camera_track(0, bodies[0])
+	}
+	if glfw.GetKey(window, glfw.KEY_2) == glfw.PRESS {
+		camera_track(1, bodies[1])
+	}
+	if glfw.GetKey(window, glfw.KEY_3) == glfw.PRESS {
+		camera_track(2, bodies[2])
+	}
 }

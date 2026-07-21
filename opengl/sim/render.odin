@@ -50,15 +50,21 @@ create_circle_mesh :: proc(segments: i32) -> Mesh {
 	return mesh
 }
 
-draw_bodies :: proc(bodies: []Body, mesh: Mesh, program: u32, width: i32, height: i32) {
-	half_extent: f64 = 1.1 // 2D camera: ndc = (world_pos - camera_center) / half_extent
+draw_bodies :: proc(bodies: []Body, mesh: Mesh, program: u32, camera: Camera,  width: i32, height: i32) {
 	gl.BindVertexArray(mesh.vao)
 
 	for &body in bodies {
-		shader_set_vec2(program, "offset", f32(body.pos.x / half_extent), f32(body.pos.y / half_extent))
-		shader_set_float(program, "scale", f32(body.size / half_extent))
+		ndc_pos := calc_ndc(camera, body)
+
+		shader_set_vec2(program, "offset", f32(ndc_pos.x), f32(ndc_pos.y))
+		shader_set_float(program, "scale", f32(body.size / camera.half_extent))
 		shader_set_float(program, "aspect", f32(height) / f32(width))
 
 		gl.DrawArrays(mesh.primitive, 0, mesh.vertex_count)
 	}
+}
+
+calc_ndc :: proc(camera: Camera, body: Body) -> [2]f64 {
+	ndc := (body.pos - camera.center) / camera.half_extent
+	return ndc
 }
