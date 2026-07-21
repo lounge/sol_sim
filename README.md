@@ -10,8 +10,8 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 4. Fix the integrator. - DONE (semi-implicit Euler)
 5. Add the sun, make earth/moon orbit sun - DONE
 6. Real masses and distances with proper scaling. - DONE
-7. 2D Camera. Zoom / Tracking
+7. 2D Camera. Zoom / Tracking - DONE
 8. Real sizes of objects (Clamp into minimum markers).
 9. Make 3D.
 10. Lighting (Sun).
-10. Make interactive.
+11. Make interactive.
