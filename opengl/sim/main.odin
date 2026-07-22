@@ -5,7 +5,6 @@ import gl "vendor:OpenGL"
 import "core:c"
 import "core:fmt"
 import "core:os"
-import "core:math"
 import "vendor:glfw"
 
 DT :: 0.0001
@@ -14,52 +13,12 @@ SCR_HEIGHT :: 600
 VIEW_SCALE :: 60
 MIN_MARKER_PX :: 4
 TRAIL_CAP :: 6400
+TRAIL_FRACTION :: 0.95
 STEPS_PER_FRAME :: 10
 
 
 main :: proc() {
-	bodies: [dynamic]Body
-	trails: [dynamic]Trail
-
-	sun := Body {
-		{0.0, 0.0},
-		{0.0, 0.0},
-		1.0,
-		4.654e-3
-	}
-
-	earth_orbit_r: f64 = 1
-	earth_init_vel := math.sqrt(G * sun.mass / earth_orbit_r)
-	earth_T := 2 * math.PI * earth_orbit_r / earth_init_vel
-	earth_frames_per_orbit := earth_T / (DT * STEPS_PER_FRAME)
-	earth := Body {
-		{earth_orbit_r, 0.0},
-		{0.0, earth_init_vel},
-		3.003 * math.pow10(f64(-6.0)),
-		4.259e-5
-	}
-
-	moon_orbit_r: f64 =  2.570 * math.pow10(f64(-3))
-	moon_init_vel := math.sqrt(G * earth.mass / moon_orbit_r)
-	moon_T := 2 * math.PI * moon_orbit_r / moon_init_vel
-	moon_frames_per_orbit := moon_T / (DT * STEPS_PER_FRAME)
-	moon := Body {
-		earth.pos + {moon_orbit_r, 0.0},
-		earth.vel + {0.0, moon_init_vel},
-		3.69 * math.pow10(f64(-8.0)),
-		1.161e-5
-	}
-
-	sun.vel = -(earth.vel * earth.mass + moon.vel * moon.mass) / sun.mass
-
-	append(&bodies, sun, earth, moon)
-	append(&trails, Trail {parent = -1, cap = int(0.85 * earth_frames_per_orbit)})
-	append(&trails, Trail {parent = 0, cap = int(0.85 * earth_frames_per_orbit)})
-	append(&trails, Trail {parent = 1, cap = int(0.85 * moon_frames_per_orbit)})
-
-	for &trail in trails {
-		assert(trail.cap <= TRAIL_CAP)
-	}
+	bodies, trails := create_system()
 
 	glfw.Init()
 	glfw.WindowHint(glfw.CONTEXT_VERSION_MAJOR, 3)
@@ -132,13 +91,10 @@ process_input :: proc(window: glfw.WindowHandle, bodies: []Body) {
 	if glfw.GetKey(window, glfw.KEY_ESCAPE) == glfw.PRESS {
 		glfw.SetWindowShouldClose(window, true)
 	}
-	if glfw.GetKey(window, glfw.KEY_1) == glfw.PRESS {
-		camera_track(0, bodies[0])
-	}
-	if glfw.GetKey(window, glfw.KEY_2) == glfw.PRESS {
-		camera_track(1, bodies[1])
-	}
-	if glfw.GetKey(window, glfw.KEY_3) == glfw.PRESS {
-		camera_track(2, bodies[2])
+
+	for &body, i in bodies {
+		if glfw.GetKey(window, i32(glfw.KEY_1 + i)) == glfw.PRESS {
+			camera_track(i, body)
+		}
 	}
 }
