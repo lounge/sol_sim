@@ -11,7 +11,10 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 5. Add the sun, make earth/moon orbit sun - DONE
 6. Real masses and distances with proper scaling. - DONE
 7. 2D Camera. Zoom / Tracking - DONE
-8. Real sizes of objects (Clamp into minimum markers).
-9. Make 3D.
-10. Lighting (Sun).
-11. Make interactive.
+8. Real sizes of objects (Clamp into minimum markers). - DONE
+9. Add orbit paths.
+10. Add Mercury, Venus, Mars
+11. Different shaders/colors for bodies.
+12. Make 3D.
+13. Lighting (Sun).
+14. Make interactive.
