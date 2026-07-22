@@ -19,6 +19,20 @@ specs := []BodySpec {
 		name = "Sun"
 	},
 	BodySpec {
+		mass = 1.660e-7,
+		radius = 1.631e-5,
+		orbit_r = 0.387,
+		parent = 0,
+		name = "Mercury"
+	},
+	BodySpec {
+		mass = 2.447e-6,
+		radius = 4.045e-5,
+		orbit_r = 0.723,
+		parent = 0,
+		name = "Venus"
+	},
+	BodySpec {
 		mass = 3.003 * math.pow10(f64(-6.0)),
 		radius = 4.259e-5,
 		orbit_r = 1,
@@ -29,8 +43,15 @@ specs := []BodySpec {
 		mass = 3.69 * math.pow10(f64(-8.0)),
 		radius = 1.161e-5,
 		orbit_r = 2.570 * math.pow10(f64(-3)),
-		parent = 1,
+		parent = 3,
 		name = "Moon"
+	},
+	BodySpec {
+		mass = 3.227e-7,
+		radius = 2.266e-5,
+		orbit_r = 1.524,
+		parent = 0,
+		name = "Mars"
 	}
 }
 
