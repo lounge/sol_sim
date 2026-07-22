@@ -13,9 +13,13 @@ SCR_WIDTH :: 800
 SCR_HEIGHT :: 600
 VIEW_SCALE :: 60
 MIN_MARKER_PX :: 4
+TRAIL_CAP :: 6400
+STEPS_PER_FRAME :: 10
+
 
 main :: proc() {
 	bodies: [dynamic]Body
+	trails: [dynamic]Trail
 
 	sun := Body {
 		{0.0, 0.0},
@@ -26,6 +30,8 @@ main :: proc() {
 
 	earth_orbit_r: f64 = 1
 	earth_init_vel := math.sqrt(G * sun.mass / earth_orbit_r)
+	earth_T := 2 * math.PI * earth_orbit_r / earth_init_vel
+	earth_frames_per_orbit := earth_T / (DT * STEPS_PER_FRAME)
 	earth := Body {
 		{earth_orbit_r, 0.0},
 		{0.0, earth_init_vel},
@@ -35,6 +41,8 @@ main :: proc() {
 
 	moon_orbit_r: f64 =  2.570 * math.pow10(f64(-3))
 	moon_init_vel := math.sqrt(G * earth.mass / moon_orbit_r)
+	moon_T := 2 * math.PI * moon_orbit_r / moon_init_vel
+	moon_frames_per_orbit := moon_T / (DT * STEPS_PER_FRAME)
 	moon := Body {
 		earth.pos + {moon_orbit_r, 0.0},
 		earth.vel + {0.0, moon_init_vel},
@@ -45,6 +53,13 @@ main :: proc() {
 	sun.vel = -(earth.vel * earth.mass + moon.vel * moon.mass) / sun.mass
 
 	append(&bodies, sun, earth, moon)
+	append(&trails, Trail {parent = -1, cap = int(0.85 * earth_frames_per_orbit)})
+	append(&trails, Trail {parent = 0, cap = int(0.85 * earth_frames_per_orbit)})
+	append(&trails, Trail {parent = 1, cap = int(0.85 * moon_frames_per_orbit)})
+
+	for &trail in trails {
+		assert(trail.cap <= TRAIL_CAP)
+	}
 
 	glfw.Init()
 	glfw.WindowHint(glfw.CONTEXT_VERSION_MAJOR, 3)
@@ -68,13 +83,14 @@ main :: proc() {
 	fb_width, fb_height := glfw.GetFramebufferSize(window)
 	gl.Viewport(0, 0, fb_width, fb_height)
 
-
 	shader_program, loaded_ok := gl.load_shaders_file(#directory + "res/vertex.vert.glsl", #directory + "res/fragment.frag.glsl")
 	if !loaded_ok {
 		os.exit(-1)
 	}
 
 	circle_mesh := create_circle_mesh(32)
+	trail_mesh := create_trail_mesh()
+
 
 	for !glfw.WindowShouldClose(window) {
 		process_input(window, bodies[:])
@@ -87,13 +103,15 @@ main :: proc() {
 		gl.UseProgram(shader_program)
 
 		// Physics step
-		STEPS_PER_FRAME :: 10
 		for _ in 0..< STEPS_PER_FRAME {
 			physics_step(bodies[:], DT)
 		}
 
 		camera_update(bodies[:])
 		draw_bodies(bodies[:], circle_mesh, shader_program, camera, fb_width, fb_height)
+
+		record_trail(bodies[:], trails[:])
+		draw_trails(trails[:], bodies[:], trail_mesh, shader_program, camera, fb_width, fb_height)
 
 		glfw.SwapBuffers(window)
 		glfw.PollEvents()

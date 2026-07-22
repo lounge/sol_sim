@@ -10,6 +10,84 @@ Mesh :: struct {
 	primitive: u32
 }
 
+Trail :: struct {
+	points: [TRAIL_CAP][2]f64,
+	head: int,
+	count: int,
+	parent: int,
+	cap: int
+}
+
+record_trail :: proc(bodies: []Body, trails: []Trail) {
+	for &body, i in bodies {
+		trail := &trails[i]
+		trail.points[trail.head] = body.pos
+
+		if trail.parent >= 0 {
+			trail.points[trail.head] = body.pos - bodies[trail.parent].pos
+		}
+
+		trail.head = (trail.head + 1) % trail.cap
+		trail.count = min(trail.count + 1, trail.cap)
+	}
+}
+
+create_trail_mesh :: proc() -> Mesh {
+	VBO, VAO: u32
+
+	gl.GenVertexArrays(1, &VAO)
+	gl.GenBuffers(1, &VBO)
+	gl.BindVertexArray(VAO)
+	gl.BindBuffer(gl.ARRAY_BUFFER, VBO)
+	gl.BufferData(gl.ARRAY_BUFFER, TRAIL_CAP * 2 * size_of(f32), nil, gl.DYNAMIC_DRAW)
+	gl.VertexAttribPointer(0, 2, gl.FLOAT, gl.FALSE, 2 * size_of(f32), 0)
+	gl.EnableVertexAttribArray(0)
+	gl.BindVertexArray(0)
+
+	mesh := Mesh {
+		VAO,
+		VBO,
+		0,
+		gl.LINE_STRIP
+	}
+
+	return mesh
+}
+
+draw_trails :: proc(trails: []Trail, bodies: []Body, mesh: Mesh, program: u32, camera: Camera,  width: i32, height: i32) {
+	scratch_buffer: [TRAIL_CAP][2]f32
+
+	gl.BindVertexArray(mesh.vao)
+	gl.BindBuffer(gl.ARRAY_BUFFER, mesh.vbo)
+
+	shader_set_vec2(program, "offset", f32(0.0), f32(0.0))
+	shader_set_float(program, "scale", f32(1))
+	shader_set_float(program, "aspect", f32(height) / f32(width))
+
+	for trail, i in trails {
+		oldest_point := 0
+
+		if trail.count == trail.cap {
+			oldest_point = trail.head
+		}
+
+		for j := 0; j < trail.count ; j += 1 {
+			point := trail.points[(oldest_point + j) % trail.cap]
+
+			world := point
+		 	if trail.parent >= 0 {
+				world = point + bodies[trail.parent].pos
+			}
+
+			ndc_pos := calc_ndc_offset(world, camera)
+			scratch_buffer[j] = [2]f32{f32(ndc_pos.x),f32(ndc_pos.y)}
+		}
+
+		gl.BufferSubData(gl.ARRAY_BUFFER, 0, trail.count  * 2 * size_of(f32), raw_data(&scratch_buffer))
+		gl.DrawArrays(mesh.primitive, 0, i32(trail.count ))
+	}
+}
+
 create_circle_mesh :: proc(segments: i32) -> Mesh {
 	VBO, VAO: u32
 
@@ -64,7 +142,6 @@ draw_bodies :: proc(bodies: []Body, mesh: Mesh, program: u32, camera: Camera,  w
 		gl.DrawArrays(mesh.primitive, 0, mesh.vertex_count)
 	}
 }
-
 
 // NDC: Normalized Device Coordinates
 calc_ndc_offset :: proc(pos: [2]f64, camera: Camera) -> [2]f64 {
