@@ -8,7 +8,7 @@ Body :: struct {
 	pos: [2]f64,
 	vel: [2]f64,
 	mass: f64,
-	size: f64
+	radius: f64
 }
 
 physics_step :: proc(bodies: []Body, dt: f64) {

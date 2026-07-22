@@ -54,17 +54,27 @@ draw_bodies :: proc(bodies: []Body, mesh: Mesh, program: u32, camera: Camera,  w
 	gl.BindVertexArray(mesh.vao)
 
 	for &body in bodies {
-		ndc_pos := calc_ndc(camera, body)
-
+		ndc_pos := calc_ndc_offset(body.pos, camera)
 		shader_set_vec2(program, "offset", f32(ndc_pos.x), f32(ndc_pos.y))
-		shader_set_float(program, "scale", f32(body.size / camera.half_extent))
+
+		ndc_scale := calc_ndc_scale(body.radius, height, camera)
+		shader_set_float(program, "scale", f32(ndc_scale))
 		shader_set_float(program, "aspect", f32(height) / f32(width))
 
 		gl.DrawArrays(mesh.primitive, 0, mesh.vertex_count)
 	}
 }
 
-calc_ndc :: proc(camera: Camera, body: Body) -> [2]f64 {
-	ndc := (body.pos - camera.center) / camera.half_extent
+
+// NDC: Normalized Device Coordinates
+calc_ndc_offset :: proc(pos: [2]f64, camera: Camera) -> [2]f64 {
+	ndc := (pos - camera.center) / camera.half_extent
+	return ndc
+}
+
+calc_ndc_scale :: proc(radius: f64, height: i32, camera: Camera) -> f64 {
+	min_marker := MIN_MARKER_PX / (f64(height) / 2)
+
+	ndc := math.max(min_marker, radius / camera.half_extent)
 	return ndc
 }

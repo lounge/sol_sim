@@ -12,6 +12,7 @@ DT :: 0.0001
 SCR_WIDTH :: 800
 SCR_HEIGHT :: 600
 VIEW_SCALE :: 60
+MIN_MARKER_PX :: 4
 
 main :: proc() {
 	bodies: [dynamic]Body
@@ -20,7 +21,7 @@ main :: proc() {
 		{0.0, 0.0},
 		{0.0, 0.0},
 		1.0,
-		0.15
+		4.654e-3
 	}
 
 	earth_orbit_r: f64 = 1
@@ -29,7 +30,7 @@ main :: proc() {
 		{earth_orbit_r, 0.0},
 		{0.0, earth_init_vel},
 		3.003 * math.pow10(f64(-6.0)),
-		0.05
+		4.259e-5
 	}
 
 	moon_orbit_r: f64 =  2.570 * math.pow10(f64(-3))
@@ -38,7 +39,7 @@ main :: proc() {
 		earth.pos + {moon_orbit_r, 0.0},
 		earth.vel + {0.0, moon_init_vel},
 		3.69 * math.pow10(f64(-8.0)),
-		0.02
+		1.161e-5
 	}
 
 	sun.vel = -(earth.vel * earth.mass + moon.vel * moon.mass) / sun.mass

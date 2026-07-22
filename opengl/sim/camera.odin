@@ -23,5 +23,5 @@ camera_update :: proc(bodies: []Body) {
 camera_track :: proc(index: int, body: Body) {
 	if index == camera.tracked_body do return
 	camera.tracked_body = index
-	camera.half_extent = body.size * VIEW_SCALE
+	camera.half_extent = body.radius * VIEW_SCALE
 }
