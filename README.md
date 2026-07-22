@@ -13,8 +13,9 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 7. 2D Camera. Zoom / Tracking - DONE
 8. Real sizes of objects (Clamp into minimum markers). - DONE
 9. Add orbit paths. - DONE
-10. Add Mercury, Venus, Mars
-11. Different shaders/colors for bodies.
-12. Make 3D.
-13. Lighting (Sun).
-14. Make interactive.
+10. Add Mercury, Venus, Mars - DONE
+11. Correct orbits: real eccentricities (ellipses, perihelion/aphelion) instead of idealized circles.
+12. Different shaders/colors for bodies.
+13. Make 3D.
+14. Lighting (Sun).
+15. Make interactive.
