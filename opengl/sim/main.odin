@@ -1,6 +1,5 @@
 package main
 
-import "vendor:stb/vorbis"
 import gl "vendor:OpenGL"
 
 import "core:c"
