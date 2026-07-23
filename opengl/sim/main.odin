@@ -102,7 +102,7 @@ update_window_title :: proc (window: glfw.WindowHandle, bodies: []Body) {
 	if camera.tracked_body == prev_tracked_body && sim_speed == prev_sim_speed do return
 	if camera.tracked_body >= 0 {
 		tracked_body_name := bodies[camera.tracked_body].name
-		title = fmt.ctprintf("%s - %s - %d days/sec - %d years/sec", "Sol_Sim", tracked_body_name, sim_speed / 86400, sim_speed / 3.156e7)
+		title = fmt.ctprintf("%s - %s - %d days/sec - %f years/sec", "Sol_Sim", tracked_body_name, sim_speed / 86400, f64(sim_speed) / 3.156e7)
 	} else {
 		title = fmt.ctprintf("%s - %d days/sec - %f years/sec", "Sol_Sim", sim_speed / 86400, f64(sim_speed) / 3.156e7)
 	}
