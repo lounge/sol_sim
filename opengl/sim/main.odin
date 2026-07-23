@@ -16,8 +16,9 @@ MIN_MARKER_PX :: 4
 TRAIL_CAP :: 12800
 TRAIL_FRACTION :: 0.95
 PICK_RADIUS_PX :: 8
+T_UNIT_SECONDS :: 5.023e6 // 1yr / 2π
 
-sim_speed: int =  10
+sim_speed: int = 200000
 
 main :: proc() {
 	bodies, trails := create_system()
@@ -40,6 +41,7 @@ main :: proc() {
 	glfw.SetKeyCallback(window, key_callback)
 
 	glfw.MakeContextCurrent(window)
+	glfw.SwapInterval(0)
 
 	gl.load_up_to(3, 3, glfw.gl_set_proc_address)
 
@@ -54,7 +56,8 @@ main :: proc() {
 	circle_mesh := create_circle_mesh(32)
 	trail_mesh := create_trail_mesh()
 
-
+	accumulator: f64
+	last_time := glfw.GetTime()
 	for !glfw.WindowShouldClose(window) {
 		fb_width, fb_height := glfw.GetFramebufferSize(window)
 		window_width, window_height := glfw.GetWindowSize(window)
@@ -65,9 +68,16 @@ main :: proc() {
 		gl.UseProgram(shader_program)
 
 		// Physics step
-		for _ in 0..< sim_speed {
+		now := glfw.GetTime()
+		frame_time := now - last_time
+		frame_time = min(frame_time, 0.1)
+		last_time = now
+		accumulator += frame_time * f64(sim_speed) / T_UNIT_SECONDS
+
+		for accumulator >= DT {
 			physics_step(bodies[:], DT)
 			record_trail(bodies[:], trails[:])
+			accumulator -= DT
 		}
 
 		camera_update(bodies[:], window_width, window_height)
@@ -92,9 +102,9 @@ update_window_title :: proc (window: glfw.WindowHandle, bodies: []Body) {
 	if camera.tracked_body == prev_tracked_body && sim_speed == prev_sim_speed do return
 	if camera.tracked_body >= 0 {
 		tracked_body_name := bodies[camera.tracked_body].name
-		title = fmt.ctprintf("%s - %s - %dx", "Sol_Sim", tracked_body_name, sim_speed)
+		title = fmt.ctprintf("%s - %s - %d days/sec - %d years/sec", "Sol_Sim", tracked_body_name, sim_speed / 86400, sim_speed / 3.156e7)
 	} else {
-		title = fmt.ctprintf("%s - %dx", "Sol_Sim", sim_speed)
+		title = fmt.ctprintf("%s - %d days/sec - %d years/sec", "Sol_Sim", sim_speed / 86400, sim_speed / 3.156e7)
 	}
 
 	glfw.SetWindowTitle(window, title)
