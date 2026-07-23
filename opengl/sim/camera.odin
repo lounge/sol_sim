@@ -16,7 +16,6 @@ camera_zoom :: proc "contextless" (yOffset: f64) {
 }
 
 camera_update :: proc(bodies: []Body, width, height: i32) {
-
 	if camera.tracked_body >= 0 {
 		camera.center = bodies[camera.tracked_body].pos
 	}
