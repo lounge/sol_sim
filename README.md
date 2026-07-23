@@ -14,8 +14,8 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 8. Real sizes of objects (Clamp into minimum markers). - DONE
 9. Add orbit paths. - DONE
 10. Add Mercury, Venus, Mars - DONE
-11. Add Jupiter, Saturn, Uranus, Neptune, Pluto
-12. Correct orbits: real eccentricities (ellipses, perihelion/aphelion) instead of idealized circles. - DONE
+11. Correct orbits: real eccentricities (ellipses, perihelion/aphelion) instead of idealized circles. - DONE
+12. Add Jupiter, Saturn, Uranus, Neptune, Pluto
 13. Different shaders/colors for bodies.
 14. Make 3D.
 15. Lighting (Sun).
