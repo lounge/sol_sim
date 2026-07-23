@@ -130,6 +130,7 @@ create_system :: proc() -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
 		}
 
 		body := Body {
+			spec.name,
 			pos,
 			vel,
 			spec.mass,

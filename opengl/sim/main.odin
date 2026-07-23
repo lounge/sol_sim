@@ -1,5 +1,6 @@
 package main
 
+import "vendor:stb/vorbis"
 import gl "vendor:OpenGL"
 
 import "core:c"
@@ -18,7 +19,6 @@ TRAIL_FRACTION :: 0.95
 PICK_RADIUS_PX :: 8
 
 sim_speed: int =  10
-
 
 main :: proc() {
 	bodies, trails := create_system()
@@ -73,14 +73,35 @@ main :: proc() {
 
 		camera_update(bodies[:], window_width, window_height)
 		draw_bodies(bodies[:], circle_mesh, shader_program, camera, fb_width, fb_height)
-
 		draw_trails(trails[:], bodies[:], trail_mesh, shader_program, camera, fb_width, fb_height)
+		update_window_title(window, bodies[:])
 
 		glfw.SwapBuffers(window)
 		glfw.PollEvents()
+
+		free_all(context.temp_allocator)
 	}
 
 	glfw.Terminate()
+}
+
+update_window_title :: proc (window: glfw.WindowHandle, bodies: []Body) {
+	@(static) prev_tracked_body := -2
+	@(static) prev_sim_speed := -1
+	title: cstring
+
+	if camera.tracked_body == prev_tracked_body && sim_speed == prev_sim_speed do return
+	if camera.tracked_body >= 0 {
+		tracked_body_name := bodies[camera.tracked_body].name
+		title = fmt.ctprintf("%s - %s - %dx", "Sol_Sim", tracked_body_name, sim_speed)
+	} else {
+		title = fmt.ctprintf("%s - %dx", "Sol_Sim", sim_speed)
+	}
+
+	glfw.SetWindowTitle(window, title)
+
+	prev_tracked_body = camera.tracked_body
+	prev_sim_speed = sim_speed
 }
 
 framebuffer_size_callback :: proc "c" (window: glfw.WindowHandle, width, height: i32) {

@@ -5,6 +5,7 @@ import "core:math"
 G :: 1.0
 
 Body :: struct {
+	name: string,
 	pos: [2]f64,
 	vel: [2]f64,
 	mass: f64,
