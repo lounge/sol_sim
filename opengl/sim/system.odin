@@ -8,6 +8,7 @@ BodySpec :: struct {
 	ecc: f64,
 	semi_major_axis: f64,
 	parent: int,
+	start_at_aphelion: bool,
 	name: string
 }
 
@@ -59,6 +60,47 @@ specs := []BodySpec {
 		semi_major_axis = 1.524,
 		parent = 0,
 		name = "Mars"
+	},
+	BodySpec {
+		mass = 9.545e-4,
+		radius = 4.673e-4,
+		ecc = 0.0489,
+		semi_major_axis = 5.203,
+		parent = 0,
+		name = "Jupiter"
+	},
+	BodySpec {
+		mass = 2.858e-4,
+		radius = 3.893e-4,
+		ecc = 0.0565,
+		semi_major_axis = 9.537,
+		parent = 0,
+		name = "Saturn"
+	},
+	BodySpec {
+		mass = 4.366e-5,
+		radius = 1.695e-4,
+		ecc = 0.0457,
+		semi_major_axis = 19.19,
+		parent = 0,
+		name = "Uranus"
+	},
+	BodySpec {
+		mass = 5.150e-5,
+		radius = 1.646e-4,
+		ecc = 0.0113,
+		semi_major_axis = 30.07,
+		parent = 0,
+		name = "Neptune"
+	},
+	BodySpec {
+		mass = 6.55e-9,
+		radius = 7.94e-6,
+		ecc = 0.2488,
+		semi_major_axis = 39.48,
+		parent = 0,
+		start_at_aphelion = true,
+		name = "Pluto"
 	}
 }
 
@@ -66,20 +108,25 @@ create_system :: proc() -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
 	for &spec, i in specs {
 		pos: [2]f64 = {0.0, 0.0}
 		vel: [2]f64 = {0.0, 0.0}
-		frames_per_orbit: f64 = 0.0
+		steps_per_orbit: f64 = 0.0
 		stride: int = 1
 
 		if spec.parent >= 0  {
-			start_dist := spec.semi_major_axis * (1 - spec.ecc)
+			ecc_factor := 1 - spec.ecc
+			if spec.start_at_aphelion {
+    			ecc_factor = 1 + spec.ecc
+			}
+
+			start_dist := spec.semi_major_axis * ecc_factor
 			start_speed := math.sqrt(G * bodies[spec.parent].mass * (2 / start_dist - 1 / spec.semi_major_axis))
 
 			pos = bodies[spec.parent].pos + {start_dist, 0}
 			vel = bodies[spec.parent].vel + {0, start_speed}
 
 			T := 2 * math.PI * math.sqrt(math.pow(f64(spec.semi_major_axis), f64(3)) / (G * bodies[spec.parent].mass))
-			frames_per_orbit = T / (DT * STEPS_PER_FRAME)
+			steps_per_orbit = T / DT
 
-			stride = math.max(1, int(math.ceil(TRAIL_FRACTION * frames_per_orbit / TRAIL_CAP)))
+			stride = math.max(1, int(math.ceil(TRAIL_FRACTION * steps_per_orbit / TRAIL_CAP)))
 		}
 
 		body := Body {
@@ -91,7 +138,7 @@ create_system :: proc() -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
 
 		trail := Trail {
 			parent = spec.parent,
-			cap = int(TRAIL_FRACTION * frames_per_orbit / f64(stride)),
+			cap = int(TRAIL_FRACTION * steps_per_orbit / f64(stride)),
 			stride = stride
 		}
 

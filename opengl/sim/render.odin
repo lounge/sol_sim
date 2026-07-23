@@ -24,7 +24,8 @@ record_trail :: proc(bodies: []Body, trails: []Trail) {
 	for &body, i in bodies {
 		trail := &trails[i]
 
-		if trail.frame_count % trail.stride == 0 {
+		trail.frame_count += 1
+		if trail.frame_count >= trail.stride {
 			trail.points[trail.head] = body.pos
 
 			if trail.parent >= 0 {
@@ -35,7 +36,7 @@ record_trail :: proc(bodies: []Body, trails: []Trail) {
 			trail.count = min(trail.count + 1, trail.cap)
 		}
 
-		trail.frame_count = (trail.frame_count + 1) % trail.stride
+		trail.frame_count %= trail.stride
 	}
 }
 
@@ -161,4 +162,13 @@ calc_ndc_scale :: proc(radius: f64, height: i32, camera: Camera) -> f64 {
 
 	ndc := math.max(min_marker, radius / camera.half_extent)
 	return ndc
+}
+
+calc_screen_pos :: proc(pos: [2]f64, camera: Camera, width, height: i32) -> [2]f64 {
+	ndc := calc_ndc_offset(pos, camera)
+	clip := [2]f64{ndc.x * f64(height) / f64(width), ndc.y}
+	return {
+		(clip.x + 1) * 0.5 * f64(width),
+		(1- clip.y) * 0.5 * f64(height)
+	}
 }

@@ -4,6 +4,7 @@ import gl "vendor:OpenGL"
 
 import "core:c"
 import "core:fmt"
+import "core:math"
 import "core:os"
 import "vendor:glfw"
 
@@ -14,7 +15,9 @@ VIEW_SCALE :: 60
 MIN_MARKER_PX :: 4
 TRAIL_CAP :: 12800
 TRAIL_FRACTION :: 0.95
-STEPS_PER_FRAME :: 10
+PICK_RADIUS_PX :: 8
+
+sim_speed: int =  10
 
 
 main :: proc() {
@@ -34,6 +37,8 @@ main :: proc() {
 
 	glfw.SetFramebufferSizeCallback(window, framebuffer_size_callback)
 	glfw.SetScrollCallback(window, scroll_callback)
+	glfw.SetMouseButtonCallback(window, click_callback)
+	glfw.SetKeyCallback(window, key_callback)
 
 	glfw.MakeContextCurrent(window)
 
@@ -52,9 +57,8 @@ main :: proc() {
 
 
 	for !glfw.WindowShouldClose(window) {
-		process_input(window, bodies[:])
-
 		fb_width, fb_height := glfw.GetFramebufferSize(window)
+		window_width, window_height := glfw.GetWindowSize(window)
 
 		gl.ClearColor(0.0, 0.0, 0.0, 0.0)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
@@ -62,14 +66,14 @@ main :: proc() {
 		gl.UseProgram(shader_program)
 
 		// Physics step
-		for _ in 0..< STEPS_PER_FRAME {
+		for _ in 0..< sim_speed {
 			physics_step(bodies[:], DT)
+			record_trail(bodies[:], trails[:])
 		}
 
-		camera_update(bodies[:])
+		camera_update(bodies[:], window_width, window_height)
 		draw_bodies(bodies[:], circle_mesh, shader_program, camera, fb_width, fb_height)
 
-		record_trail(bodies[:], trails[:])
 		draw_trails(trails[:], bodies[:], trail_mesh, shader_program, camera, fb_width, fb_height)
 
 		glfw.SwapBuffers(window)
@@ -87,14 +91,25 @@ scroll_callback :: proc "c" (window: glfw.WindowHandle, xOffset, yOffset: f64) {
 	camera_zoom(yOffset)
 }
 
-process_input :: proc(window: glfw.WindowHandle, bodies: []Body) {
-	if glfw.GetKey(window, glfw.KEY_ESCAPE) == glfw.PRESS {
-		glfw.SetWindowShouldClose(window, true)
-	}
+click_callback :: proc "c" (window: glfw.WindowHandle, button, action, mods: i32) {
+    if button == glfw.MOUSE_BUTTON_LEFT && action == glfw.RELEASE {
+    	posX, posY := glfw.GetCursorPos(window)
+     	camera.pending_click = [2]f64{posX, posY}
+    }
+}
 
-	for &body, i in bodies {
-		if glfw.GetKey(window, i32(glfw.KEY_1 + i)) == glfw.PRESS {
-			camera_track(i, body)
+key_callback :: proc "c" (window: glfw.WindowHandle, key, scancode, action, mods: i32) {
+	if action == glfw.PRESS || action == glfw.REPEAT {
+		if key == glfw.KEY_ESCAPE {
+			glfw.SetWindowShouldClose(window, true)
+		}
+
+		if key ==  glfw.KEY_LEFT {
+			sim_speed = math.max(1, sim_speed / 2)
+		}
+
+		if key == glfw.KEY_RIGHT {
+			sim_speed *= 2
 		}
 	}
 }
