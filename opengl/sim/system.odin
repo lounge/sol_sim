@@ -67,6 +67,7 @@ create_system :: proc() -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
 		pos: [2]f64 = {0.0, 0.0}
 		vel: [2]f64 = {0.0, 0.0}
 		frames_per_orbit: f64 = 0.0
+		stride: int = 1
 
 		if spec.parent >= 0  {
 			start_dist := spec.semi_major_axis * (1 - spec.ecc)
@@ -77,6 +78,8 @@ create_system :: proc() -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
 
 			T := 2 * math.PI * math.sqrt(math.pow(f64(spec.semi_major_axis), f64(3)) / (G * bodies[spec.parent].mass))
 			frames_per_orbit = T / (DT * STEPS_PER_FRAME)
+
+			stride = math.max(1, int(math.ceil(TRAIL_FRACTION * frames_per_orbit / TRAIL_CAP)))
 		}
 
 		body := Body {
@@ -88,7 +91,8 @@ create_system :: proc() -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
 
 		trail := Trail {
 			parent = spec.parent,
-			cap = int(TRAIL_FRACTION * frames_per_orbit)
+			cap = int(TRAIL_FRACTION * frames_per_orbit / f64(stride)),
+			stride = stride
 		}
 
 		assert(trail.cap <= TRAIL_CAP, spec.name)
@@ -97,19 +101,27 @@ create_system :: proc() -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
 		append(&trails, trail)
 	}
 
-	max_cap := trails[0].cap
-	for trail in trails[1:] {
-    	max_cap = max(max_cap, trail.cap)
-	}
+	largest_mass_index := 1
+    for i in 2..<len(bodies) {
+        if bodies[i].mass > bodies[largest_mass_index].mass do largest_mass_index = i
+    }
 
-	trails[0].cap = max_cap
+    // Copy the most massive body cap / stride to the Sun
+	trails[0].cap = trails[largest_mass_index].cap
+	trails[0].stride = trails[largest_mass_index].stride
 
+	total_mass: f64
 	momentum_sum := [2]f64{0, 0}
-	for body in bodies {
+	for &body in bodies {
+		total_mass += body.mass
     	momentum_sum += body.mass * body.vel
 	}
 
-	bodies[0].vel -= momentum_sum / bodies[0].mass
+	// Barycenter velocity
+	v_cm := momentum_sum / total_mass
+	for &body in bodies {
+		body.vel -= v_cm
+	}
 
 	return bodies, trails
 }

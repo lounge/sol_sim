@@ -15,20 +15,27 @@ Trail :: struct {
 	head: int,
 	count: int,
 	parent: int,
-	cap: int
+	cap: int,
+	stride: int,
+	frame_count: int
 }
 
 record_trail :: proc(bodies: []Body, trails: []Trail) {
 	for &body, i in bodies {
 		trail := &trails[i]
-		trail.points[trail.head] = body.pos
 
-		if trail.parent >= 0 {
-			trail.points[trail.head] = body.pos - bodies[trail.parent].pos
+		if trail.frame_count % trail.stride == 0 {
+			trail.points[trail.head] = body.pos
+
+			if trail.parent >= 0 {
+				trail.points[trail.head] = body.pos - bodies[trail.parent].pos
+			}
+
+			trail.head = (trail.head + 1) % trail.cap
+			trail.count = min(trail.count + 1, trail.cap)
 		}
 
-		trail.head = (trail.head + 1) % trail.cap
-		trail.count = min(trail.count + 1, trail.cap)
+		trail.frame_count = (trail.frame_count + 1) % trail.stride
 	}
 }
 
