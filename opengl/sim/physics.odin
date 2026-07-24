@@ -1,6 +1,7 @@
 package main
 
 import "core:math"
+import "core:fmt"
 
 G :: 1.0
 
@@ -40,4 +41,22 @@ compute_accels :: proc(bodies: []Body) {
 			bodyB.accel += direction * (G * bodyA.mass / (distance * distance))
 		}
 	}
+}
+
+apply_pending_vel :: proc (bodies: []Body) {
+	if pending_vel == 0 do return
+
+	if camera.tracked_body < 0{
+		pending_vel = 0
+		return
+	}
+
+	body := &bodies[camera.tracked_body]
+
+	factor := 1.0 + f64(pending_vel) / 100
+	body.vel *= factor
+
+	fmt.printfln("Body: %s, Factor: %f, Speed: %v", body.name, factor, body.vel)
+
+	pending_vel = 0
 }

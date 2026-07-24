@@ -22,6 +22,8 @@ MAX_SIM_SPEED :: int(15 * SECONDS_IN_YEAR)
 
 sim_speed: int = 200000
 
+pending_vel: int
+
 main :: proc() {
 	bodies, trails := create_system()
 
@@ -80,6 +82,8 @@ main :: proc() {
 		frame_time = min(frame_time, 0.1)
 		last_time = now
 		accumulator += frame_time * f64(sim_speed) / T_UNIT_SECONDS
+
+		apply_pending_vel(bodies[:])
 
 		// Drain loop
 		for accumulator >= DT {
@@ -155,6 +159,14 @@ key_callback :: proc "c" (window: glfw.WindowHandle, key, scancode, action, mods
 
 		if key == glfw.KEY_RIGHT {
 			sim_speed = math.min(MAX_SIM_SPEED, sim_speed * 2)
+		}
+
+		if key == glfw.KEY_UP {
+			pending_vel += 1
+		}
+
+		if key == glfw.KEY_DOWN {
+			pending_vel = math.max(-99, pending_vel - 1)
 		}
 	}
 }
