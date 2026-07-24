@@ -16,7 +16,9 @@ MIN_MARKER_PX :: 4
 TRAIL_CAP :: 12800
 TRAIL_FRACTION :: 0.95
 PICK_RADIUS_PX :: 8
-T_UNIT_SECONDS :: 5.023e6 // 1yr / 2π
+SECONDS_IN_YEAR :: 3.156e7
+T_UNIT_SECONDS :: SECONDS_IN_YEAR / (2 * math.PI) // ≈5.023e6, the G=1/AU/solar-mass time unit
+MAX_SIM_SPEED :: int(15 * SECONDS_IN_YEAR)
 
 sim_speed: int = 200000
 
@@ -149,7 +151,7 @@ key_callback :: proc "c" (window: glfw.WindowHandle, key, scancode, action, mods
 		}
 
 		if key == glfw.KEY_RIGHT {
-			sim_speed *= 2
+			sim_speed = math.min(MAX_SIM_SPEED, sim_speed * 2)
 		}
 	}
 }
