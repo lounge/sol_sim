@@ -8,31 +8,34 @@ Body :: struct {
 	name: string,
 	color: [3]f32,
 	pos: [2]f64,
+	prev_pos: [2]f64,
 	vel: [2]f64,
 	mass: f64,
 	radius: f64
 }
 
 physics_step :: proc(bodies: []Body, dt: f64) {
- for i := 0; i < len(bodies); i += 1 {
- 	for j := i + 1; j < len(bodies); j += 1 {
-  		bodyA := &bodies[i]
-     	bodyB := &bodies[j]
+	for &body in bodies do body.prev_pos = body.pos
 
-     	// Integrator: Calculate motion
-        // semi-implicit (symplectic) Euler
-        r_vec := bodyA.pos - bodyB.pos
-        distance := math.sqrt(r_vec.x * r_vec.x + r_vec.y * r_vec.y)
+	for i := 0; i < len(bodies); i += 1 {
+	 	for j := i + 1; j < len(bodies); j += 1 {
+	  		bodyA := &bodies[i]
+	     	bodyB := &bodies[j]
 
-        force: f64 = G * bodyA.mass * bodyB.mass / (distance * distance)
-        direction := r_vec / distance
+	     	// Integrator: Calculate motion
+	        // semi-implicit (symplectic) Euler
+	        r_vec := bodyA.pos - bodyB.pos
+	        distance := math.sqrt(r_vec.x * r_vec.x + r_vec.y * r_vec.y)
 
-        bodyA_accel := force / bodyA.mass
-        bodyB_accel := force / bodyB.mass
+	        force: f64 = G * bodyA.mass * bodyB.mass / (distance * distance)
+	        direction := r_vec / distance
 
-        bodyA.vel -= direction * (bodyA_accel * dt)
-        bodyB.vel += direction * (bodyB_accel * dt)
-  	}
+	        bodyA_accel := force / bodyA.mass
+	        bodyB_accel := force / bodyB.mass
+
+	        bodyA.vel -= direction * (bodyA_accel * dt)
+	        bodyB.vel += direction * (bodyB_accel * dt)
+	  	}
  }
 
  for &body in bodies {

@@ -81,19 +81,22 @@ main :: proc() {
 		last_time = now
 		accumulator += frame_time * f64(sim_speed) / T_UNIT_SECONDS
 
+		// Drain loop
 		for accumulator >= DT {
 			physics_step(bodies[:], DT)
 			record_trail(bodies[:], trails[:])
 			accumulator -= DT
 		}
 
-		camera_update(bodies[:], window_width, window_height)
+		alpha := accumulator / DT
+
+		camera_update(bodies[:], window_width, window_height, alpha)
 
 		gl.UseProgram(body_program)
-		draw_bodies(bodies[:], circle_mesh, body_program, camera, fb_width, fb_height)
+		draw_bodies(bodies[:], circle_mesh, body_program, camera, fb_width, fb_height, alpha)
 
 		gl.UseProgram(trail_program)
-		draw_trails(trails[:], bodies[:], trail_mesh, trail_program, camera, fb_width, fb_height)
+		draw_trails(trails[:], bodies[:], trail_mesh, trail_program, camera, fb_width, fb_height, alpha)
 
 		update_window_title(window, bodies[:])
 

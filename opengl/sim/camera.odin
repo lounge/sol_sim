@@ -15,9 +15,10 @@ camera_zoom :: proc "contextless" (yOffset: f64) {
 	camera.half_extent *= math.pow(0.9, yOffset)
 }
 
-camera_update :: proc(bodies: []Body, width, height: i32) {
+camera_update :: proc(bodies: []Body, width, height: i32, alpha: f64) {
 	if camera.tracked_body >= 0 {
-		camera.center = bodies[camera.tracked_body].pos
+		world := render_pos(bodies[camera.tracked_body], alpha)
+		camera.center = world
 	}
 
 	if click, ok := camera.pending_click.?; ok {
@@ -27,7 +28,8 @@ camera_update :: proc(bodies: []Body, width, height: i32) {
 		best_dist := math.INF_F64
 		for body, i in bodies {
 			// Forward transform chain -> World -> Screen
-			screen := calc_screen_pos(body.pos, camera, width, height)
+			world := render_pos(body, alpha)
+			screen := calc_screen_pos(world, camera, width, height)
 			diff := screen - click
 			dist := math.sqrt(diff.x * diff.x + diff.y * diff.y)
 

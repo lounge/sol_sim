@@ -47,7 +47,7 @@ create_trail_mesh :: proc() -> Mesh {
 	gl.GenBuffers(1, &VBO)
 	gl.BindVertexArray(VAO)
 	gl.BindBuffer(gl.ARRAY_BUFFER, VBO)
-	gl.BufferData(gl.ARRAY_BUFFER, TRAIL_CAP * 2 * size_of(f32), nil, gl.DYNAMIC_DRAW)
+	gl.BufferData(gl.ARRAY_BUFFER, (TRAIL_CAP + 1) * 2 * size_of(f32), nil, gl.DYNAMIC_DRAW)
 	gl.VertexAttribPointer(0, 2, gl.FLOAT, gl.FALSE, 2 * size_of(f32), 0)
 	gl.EnableVertexAttribArray(0)
 	gl.BindVertexArray(0)
@@ -62,8 +62,8 @@ create_trail_mesh :: proc() -> Mesh {
 	return mesh
 }
 
-draw_trails :: proc(trails: []Trail, bodies: []Body, mesh: Mesh, program: u32, camera: Camera,  width: i32, height: i32) {
-	scratch_buffer: [TRAIL_CAP][2]f32
+draw_trails :: proc(trails: []Trail, bodies: []Body, mesh: Mesh, program: u32, camera: Camera,  width: i32, height: i32, alpha: f64) {
+	scratch_buffer: [TRAIL_CAP + 1][2]f32
 
 	gl.BindVertexArray(mesh.vao)
 	gl.BindBuffer(gl.ARRAY_BUFFER, mesh.vbo)
@@ -73,6 +73,8 @@ draw_trails :: proc(trails: []Trail, bodies: []Body, mesh: Mesh, program: u32, c
 	shader_set_float(program, "aspect", f32(height) / f32(width))
 
 	for trail, i in trails {
+		if trail.count == 0 do continue
+
 		oldest_point := 0
 		body := bodies[i]
 
@@ -83,22 +85,28 @@ draw_trails :: proc(trails: []Trail, bodies: []Body, mesh: Mesh, program: u32, c
 		for j := 0; j < trail.count ; j += 1 {
 			point := trail.points[(oldest_point + j) % trail.cap]
 
-			world := point
+			point_pos := point
 		 	if trail.parent >= 0 {
-				world = point + bodies[trail.parent].pos
+				world := render_pos(bodies[trail.parent], alpha)
+				point_pos = point + world
 			}
 
-			ndc_pos := calc_ndc_offset(world, camera)
+			ndc_pos := calc_ndc_offset(point_pos, camera)
 			scratch_buffer[j] = [2]f32{f32(ndc_pos.x),f32(ndc_pos.y)}
 		}
 
-		color := body.color// * 0.6
+		world := render_pos(bodies[i], alpha)
+		ndc := calc_ndc_offset(world, camera)
+		scratch_buffer[trail.count] = {f32(ndc.x), f32(ndc.y)}
+
+		color := body.color
+		trail_count := trail.count + 1
 
 		shader_set_vec3(program, "color", color.x, color.y, color.z)
-		shader_set_int(program, "count", i32(trail.count))
+		shader_set_int(program, "count", i32(trail_count))
 
-		gl.BufferSubData(gl.ARRAY_BUFFER, 0, trail.count  * 2 * size_of(f32), raw_data(&scratch_buffer))
-		gl.DrawArrays(mesh.primitive, 0, i32(trail.count ))
+		gl.BufferSubData(gl.ARRAY_BUFFER, 0, trail_count  * 2 * size_of(f32), raw_data(&scratch_buffer))
+		gl.DrawArrays(mesh.primitive, 0, i32(trail_count))
 	}
 }
 
@@ -142,11 +150,12 @@ create_circle_mesh :: proc(segments: i32) -> Mesh {
 	return mesh
 }
 
-draw_bodies :: proc(bodies: []Body, mesh: Mesh, program: u32, camera: Camera,  width: i32, height: i32) {
+draw_bodies :: proc(bodies: []Body, mesh: Mesh, program: u32, camera: Camera,  width: i32, height: i32, alpha: f64) {
 	gl.BindVertexArray(mesh.vao)
 
 	for &body in bodies {
-		ndc_pos := calc_ndc_offset(body.pos, camera)
+		world := render_pos(body, alpha)
+		ndc_pos := calc_ndc_offset(world, camera)
 		shader_set_vec2(program, "offset", f32(ndc_pos.x), f32(ndc_pos.y))
 
 		ndc_scale := calc_ndc_scale(body.radius, height, camera)
@@ -178,4 +187,8 @@ calc_screen_pos :: proc(pos: [2]f64, camera: Camera, width, height: i32) -> [2]f
 		(clip.x + 1) * 0.5 * f64(width),
 		(1- clip.y) * 0.5 * f64(height)
 	}
+}
+
+render_pos :: proc(body: Body, alpha: f64) -> [2]f64 {
+	return body.prev_pos + (body.pos - body.prev_pos) * alpha
 }
