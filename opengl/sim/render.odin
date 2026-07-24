@@ -26,10 +26,10 @@ record_trail :: proc(bodies: []Body, trails: []Trail) {
 
 		trail.frame_count += 1
 		if trail.frame_count >= trail.stride {
-			trail.points[trail.head] = body.pos
+			trail.points[trail.head] = body.prev_pos
 
 			if trail.parent >= 0 {
-				trail.points[trail.head] = body.pos - bodies[trail.parent].pos
+				trail.points[trail.head] = body.prev_pos - bodies[trail.parent].prev_pos
 			}
 
 			trail.head = (trail.head + 1) % trail.cap
