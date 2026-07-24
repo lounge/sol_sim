@@ -17,7 +17,7 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 11. Correct orbits: real eccentricities (ellipses, perihelion/aphelion) instead of idealized circles. - DONE
 12. Add Jupiter, Saturn, Uranus, Neptune, Pluto (plus per-body trail strides, click-to-track, adjustable sim speed) - DONE
 13. Decouple sim time from render rate: fixed-timestep accumulator loop ("Fix Your Timestep"), so sim speed is identical on any display/frame rate. - DONE
-14. Different shaders/colors for bodies/trails.
+14. Different shaders/colors for bodies/trails. - DONE (per-body palette, trail fade via gl_VertexID, sim speed clamp)
 15. Make 3D.
 16. Lighting (Sun).
 17. Make interactive.
