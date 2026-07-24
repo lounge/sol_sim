@@ -74,6 +74,7 @@ draw_trails :: proc(trails: []Trail, bodies: []Body, mesh: Mesh, program: u32, c
 
 	for trail, i in trails {
 		oldest_point := 0
+		body := bodies[i]
 
 		if trail.count == trail.cap {
 			oldest_point = trail.head
@@ -90,6 +91,11 @@ draw_trails :: proc(trails: []Trail, bodies: []Body, mesh: Mesh, program: u32, c
 			ndc_pos := calc_ndc_offset(world, camera)
 			scratch_buffer[j] = [2]f32{f32(ndc_pos.x),f32(ndc_pos.y)}
 		}
+
+		color := body.color// * 0.6
+
+		shader_set_vec3(program, "color", color.x, color.y, color.z)
+		shader_set_int(program, "count", i32(trail.count))
 
 		gl.BufferSubData(gl.ARRAY_BUFFER, 0, trail.count  * 2 * size_of(f32), raw_data(&scratch_buffer))
 		gl.DrawArrays(mesh.primitive, 0, i32(trail.count ))
@@ -146,6 +152,7 @@ draw_bodies :: proc(bodies: []Body, mesh: Mesh, program: u32, camera: Camera,  w
 		ndc_scale := calc_ndc_scale(body.radius, height, camera)
 		shader_set_float(program, "scale", f32(ndc_scale))
 		shader_set_float(program, "aspect", f32(height) / f32(width))
+		shader_set_vec3(program, "color", body.color.x, body.color.y, body.color.z)
 
 		gl.DrawArrays(mesh.primitive, 0, mesh.vertex_count)
 	}

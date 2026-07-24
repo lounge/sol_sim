@@ -2,6 +2,8 @@ package main
 
 import "core:math"
 
+palette := realistic.body
+
 BodySpec :: struct {
 	mass: f64,
 	radius: f64,
@@ -9,7 +11,8 @@ BodySpec :: struct {
 	semi_major_axis: f64,
 	parent: int,
 	start_at_aphelion: bool,
-	name: string
+	color: [3]f32,
+	name: string,
 }
 
 specs := []BodySpec {
@@ -19,6 +22,7 @@ specs := []BodySpec {
 		ecc = 0,
 		semi_major_axis = 0,
 		parent = -1,
+		color = palette.Sun,
 		name = "Sun"
 	},
 	BodySpec {
@@ -27,6 +31,7 @@ specs := []BodySpec {
 		ecc = 0.2056,
 		semi_major_axis = 0.387,
 		parent = 0,
+		color = palette.Mercury,
 		name = "Mercury"
 	},
 	BodySpec {
@@ -35,6 +40,7 @@ specs := []BodySpec {
 		ecc = 0.0068,
 		semi_major_axis = 0.723,
 		parent = 0,
+		color = palette.Venus,
 		name = "Venus"
 	},
 	BodySpec {
@@ -43,6 +49,7 @@ specs := []BodySpec {
 		ecc = 0.0167,
 		semi_major_axis = 1,
 		parent = 0,
+		color = palette.Earth,
 		name = "Earth"
 	},
 	BodySpec {
@@ -51,6 +58,7 @@ specs := []BodySpec {
 		ecc = 0.0549,
 		semi_major_axis = 2.570 * math.pow10(f64(-3)),
 		parent = 3,
+		color = palette.Moon,
 		name = "Moon"
 	},
 	BodySpec {
@@ -59,6 +67,7 @@ specs := []BodySpec {
 		ecc = 0.0934,
 		semi_major_axis = 1.524,
 		parent = 0,
+		color = palette.Mars,
 		name = "Mars"
 	},
 	BodySpec {
@@ -67,6 +76,7 @@ specs := []BodySpec {
 		ecc = 0.0489,
 		semi_major_axis = 5.203,
 		parent = 0,
+		color = palette.Jupiter,
 		name = "Jupiter"
 	},
 	BodySpec {
@@ -75,6 +85,7 @@ specs := []BodySpec {
 		ecc = 0.0565,
 		semi_major_axis = 9.537,
 		parent = 0,
+		color = palette.Saturn,
 		name = "Saturn"
 	},
 	BodySpec {
@@ -83,6 +94,7 @@ specs := []BodySpec {
 		ecc = 0.0457,
 		semi_major_axis = 19.19,
 		parent = 0,
+		color = palette.Uranus,
 		name = "Uranus"
 	},
 	BodySpec {
@@ -91,6 +103,7 @@ specs := []BodySpec {
 		ecc = 0.0113,
 		semi_major_axis = 30.07,
 		parent = 0,
+		color = palette.Neptune,
 		name = "Neptune"
 	},
 	BodySpec {
@@ -100,6 +113,7 @@ specs := []BodySpec {
 		semi_major_axis = 39.48,
 		parent = 0,
 		start_at_aphelion = true,
+		color = palette.Pluto,
 		name = "Pluto"
 	}
 }
@@ -131,6 +145,7 @@ create_system :: proc() -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
 
 		body := Body {
 			spec.name,
+			spec.color,
 			pos,
 			vel,
 			spec.mass,

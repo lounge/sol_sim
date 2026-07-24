@@ -6,6 +6,7 @@ G :: 1.0
 
 Body :: struct {
 	name: string,
+	color: [3]f32,
 	pos: [2]f64,
 	vel: [2]f64,
 	mass: f64,

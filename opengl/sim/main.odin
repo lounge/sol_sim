@@ -44,12 +44,19 @@ main :: proc() {
 	glfw.SwapInterval(1)
 
 	gl.load_up_to(3, 3, glfw.gl_set_proc_address)
+	gl.Enable(gl.BLEND)
+	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
 	fb_width, fb_height := glfw.GetFramebufferSize(window)
 	gl.Viewport(0, 0, fb_width, fb_height)
 
-	shader_program, loaded_ok := gl.load_shaders_file(#directory + "res/vertex.vert.glsl", #directory + "res/fragment.frag.glsl")
-	if !loaded_ok {
+	body_program, body_loaded_ok := gl.load_shaders_file(#directory + "res/body.vert.glsl", #directory + "res/body.frag.glsl")
+	if !body_loaded_ok {
+		os.exit(-1)
+	}
+
+	trail_program, trail_loaded_ok := gl.load_shaders_file(#directory + "res/trail.vert.glsl", #directory + "res/trail.frag.glsl")
+	if !trail_loaded_ok {
 		os.exit(-1)
 	}
 
@@ -65,8 +72,6 @@ main :: proc() {
 		gl.ClearColor(0.0, 0.0, 0.0, 0.0)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 
-		gl.UseProgram(shader_program)
-
 		// Physics step
 		now := glfw.GetTime()
 		frame_time := now - last_time
@@ -81,8 +86,13 @@ main :: proc() {
 		}
 
 		camera_update(bodies[:], window_width, window_height)
-		draw_bodies(bodies[:], circle_mesh, shader_program, camera, fb_width, fb_height)
-		draw_trails(trails[:], bodies[:], trail_mesh, shader_program, camera, fb_width, fb_height)
+
+		gl.UseProgram(body_program)
+		draw_bodies(bodies[:], circle_mesh, body_program, camera, fb_width, fb_height)
+
+		gl.UseProgram(trail_program)
+		draw_trails(trails[:], bodies[:], trail_mesh, trail_program, camera, fb_width, fb_height)
+
 		update_window_title(window, bodies[:])
 
 		glfw.SwapBuffers(window)
