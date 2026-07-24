@@ -20,6 +20,6 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 14. Different shaders/colors for bodies/trails. - DONE (per-body palette, trail fade via gl_VertexID, sim speed clamp)
 15. Add Jupiter's moons (Io, Europa, Ganymede, Callisto) and watch the fast ones artificially precess (~300 steps/orbit for Io under semi-implicit Euler). - DONE
 16. Replace semi-implicit Euler with Velocity Verlet or leapfrog — measure the precession before/after, watch it collapse. - DONE (plot twist: precession didn't collapse — measured it, kick-all-before-drift Euler is exactly conjugate to leapfrog, so orbit geometry was already second-order. What collapsed ~80× was the energy oscillation. Explicit Euler comparison showed the real non-symplectic failure: Io escapes Jupiter within ~30 orbits)
-17. Make 3D.
-18. Lighting (Sun).
-19. Make interactive.
+17. Make interactive: mutate the tracked body (mass, prograde/retrograde burns), spawn a body with click-drag (position + velocity), delete a body.
+18. Make 3D.
+19. Lighting (Sun).
