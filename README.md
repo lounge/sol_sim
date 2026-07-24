@@ -18,6 +18,8 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 12. Add Jupiter, Saturn, Uranus, Neptune, Pluto (plus per-body trail strides, click-to-track, adjustable sim speed) - DONE
 13. Decouple sim time from render rate: fixed-timestep accumulator loop ("Fix Your Timestep"), so sim speed is identical on any display/frame rate. - DONE
 14. Different shaders/colors for bodies/trails. - DONE (per-body palette, trail fade via gl_VertexID, sim speed clamp)
-15. Make 3D.
-16. Lighting (Sun).
-17. Make interactive.
+15. Add Jupiter's moons (Io, Europa, Ganymede, Callisto) and watch the fast ones artificially precess (~300 steps/orbit for Io under semi-implicit Euler).
+16. Replace semi-implicit Euler with Velocity Verlet or leapfrog — measure the precession before/after, watch it collapse.
+17. Make 3D.
+18. Lighting (Sun).
+19. Make interactive.
