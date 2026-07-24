@@ -150,7 +150,8 @@ create_system :: proc() -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
 			prev_pos = pos,
 			vel = vel,
 			mass = spec.mass,
-			radius = spec.radius
+			radius = spec.radius,
+			accel = {0.0, 0.0}
 		}
 
 		trail := Trail {
@@ -186,6 +187,9 @@ create_system :: proc() -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
 	for &body in bodies {
 		body.vel -= v_cm
 	}
+
+	// Set priming force
+	compute_accels(bodies[:])
 
 	return bodies, trails
 }
