@@ -19,7 +19,9 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 13. Decouple sim time from render rate: fixed-timestep accumulator loop ("Fix Your Timestep"), so sim speed is identical on any display/frame rate. - DONE
 14. Different shaders/colors for bodies/trails. - DONE (per-body palette, trail fade via gl_VertexID, sim speed clamp)
 15. Add Jupiter's moons (Io, Europa, Ganymede, Callisto) and watch the fast ones artificially precess (~300 steps/orbit for Io under semi-implicit Euler). - DONE
-16. Replace semi-implicit Euler with Velocity Verlet or leapfrog — measure the precession before/after, watch it collapse. - DONE (plot twist: precession didn't collapse — measured it, kick-all-before-drift Euler is exactly conjugate to leapfrog, so orbit geometry was already second-order. What collapsed ~80× was the energy oscillation. Explicit Euler comparison showed the real non-symplectic failure: Io escapes Jupiter within ~30 orbits)
-17. Make interactive: mutate the tracked body (mass, prograde/retrograde burns), spawn a body with click-drag (position + velocity), delete a body.
-18. Make 3D.
-19. Lighting (Sun).
+16. Replace semi-implicit Euler with Velocity Verlet or leapfrog — measure the precession before/after, watch it collapse. (plot twist: precession didn't collapse — measured it, kick-all-before-drift Euler is exactly conjugate to leapfrog, so orbit geometry was already second-order. What collapsed ~80× was the energy oscillation. Explicit Euler comparison showed the real non-symplectic failure: Io escapes Jupiter within ~30 orbits) - DONE
+17. Mutate the tracked body (mass, prograde/retrograde burns), 
+18. Spawn a body with click-drag (position + velocity)
+19. Delete a body.
+20. Make 3D.
+21. Lighting (Sun).
