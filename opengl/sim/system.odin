@@ -70,6 +70,8 @@ specs := []BodySpec {
 		color = palette.Mars,
 		name = "Mars"
 	},
+
+
 	BodySpec {
 		mass = 9.545e-4,
 		radius = 4.673e-4,
@@ -78,6 +80,42 @@ specs := []BodySpec {
 		parent = 0,
 		color = palette.Jupiter,
 		name = "Jupiter"
+	},
+	BodySpec {
+		mass = 4.49e-8,
+		radius = 1.218e-5,
+		ecc = 0.0041,
+		semi_major_axis = 2.819e-3,
+		parent = 6,
+		color = palette.Moon,
+		name = "Io"
+	},
+	BodySpec {
+		mass = 2.41e-8,
+		radius = 1.043e-5,
+		ecc = 0.0094,
+		semi_major_axis = 4.486e-3,
+		parent = 6,
+		color = palette.Moon,
+		name = "Europa"
+	},
+	BodySpec {
+		mass = 7.45e-8,
+		radius = 1.761e-5,
+		ecc = 0.0013,
+		semi_major_axis = 7.155e-3,
+		parent = 6,
+		color = palette.Moon,
+		name = "Ganymede"
+	},
+	BodySpec {
+		mass = 5.41e-8,
+		radius = 1.611e-5,
+		ecc = 0.0074,
+		semi_major_axis = 1.259e-2,
+		parent = 6,
+		color = palette.Moon,
+		name = "Callisto"
 	},
 	BodySpec {
 		mass = 2.858e-4,
