@@ -20,7 +20,7 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 14. Different shaders/colors for bodies/trails. - DONE (per-body palette, trail fade via gl_VertexID, sim speed clamp)
 15. Add Jupiter's moons (Io, Europa, Ganymede, Callisto) and watch the fast ones artificially precess (~300 steps/orbit for Io under semi-implicit Euler). - DONE
 16. Replace semi-implicit Euler with Velocity Verlet or leapfrog — measure the precession before/after, watch it collapse. (plot twist: precession didn't collapse — measured it, kick-all-before-drift Euler is exactly conjugate to leapfrog, so orbit geometry was already second-order. What collapsed ~80× was the energy oscillation. Explicit Euler comparison showed the real non-symplectic failure: Io escapes Jupiter within ~30 orbits) - DONE
-17. Mutate the tracked body (mass, prograde/retrograde burns) - IN PROGRESS (burns done: up/down arrows scale the tracked body's velocity ±1%/press; along the way all mutable globals moved into a `State` struct behind the GLFW window user pointer. Mass scaling remains)
+17. Mutate the tracked body (mass, prograde/retrograde burns) (up/down arrows: ±1%/press prograde/retrograde burns; ,/. halve/double mass with an accel refresh so stored Verlet state stays consistent; along the way all mutable globals moved into a `State` struct behind the GLFW window user pointer) - DONE
 18. Spawn a body with click-drag (position + velocity)
 19. Delete a body.
 20. Make 3D.
