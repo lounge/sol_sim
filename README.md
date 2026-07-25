@@ -6,7 +6,7 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 
 1. learnopengl.com ch. 1,2,3,4 - DONE
 2. One circle you can draw at any position. - DONE
-3. Two bodies with gravity and a naive integrator — watch it misbehave. - DONE
+3. Two bodies with gravity and a naive integrator ( Explicit Euler) — watch it misbehave. - DONE
 4. Fix the integrator. - DONE (semi-implicit Euler)
 5. Add the sun, make earth/moon orbit sun - DONE
 6. Real masses and distances with proper scaling. - DONE
