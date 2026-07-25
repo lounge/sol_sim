@@ -3,6 +3,10 @@ package main
 import gl "vendor:OpenGL"
 import "core:math"
 
+TRAIL_CAP :: 12800
+TRAIL_FRACTION :: 0.95
+MIN_MARKER_PX :: 4
+
 Mesh :: struct {
 	vao: u32,
 	vbo: u32,
@@ -62,7 +66,7 @@ create_trail_mesh :: proc() -> Mesh {
 	return mesh
 }
 
-draw_trails :: proc(trails: []Trail, bodies: []Body, mesh: Mesh, program: u32, camera: Camera,  width: i32, height: i32, alpha: f64) {
+draw_trails :: proc(trails: []Trail, bodies: []Body, mesh: Mesh, program: u32, camera_state: ^Camera,  width: i32, height: i32, alpha: f64) {
 	scratch_buffer: [TRAIL_CAP + 1][2]f32
 
 	gl.BindVertexArray(mesh.vao)
@@ -91,12 +95,12 @@ draw_trails :: proc(trails: []Trail, bodies: []Body, mesh: Mesh, program: u32, c
 				point_pos = point + world
 			}
 
-			ndc_pos := calc_ndc_offset(point_pos, camera)
+			ndc_pos := calc_ndc_offset(point_pos, camera_state)
 			scratch_buffer[j] = [2]f32{f32(ndc_pos.x),f32(ndc_pos.y)}
 		}
 
 		world := render_pos(bodies[i], alpha)
-		ndc := calc_ndc_offset(world, camera)
+		ndc := calc_ndc_offset(world, camera_state)
 		scratch_buffer[trail.count] = {f32(ndc.x), f32(ndc.y)}
 
 		color := body.color
@@ -150,15 +154,15 @@ create_circle_mesh :: proc(segments: i32) -> Mesh {
 	return mesh
 }
 
-draw_bodies :: proc(bodies: []Body, mesh: Mesh, program: u32, camera: Camera,  width: i32, height: i32, alpha: f64) {
+draw_bodies :: proc(bodies: []Body, mesh: Mesh, program: u32,  camera_state: ^Camera,  width: i32, height: i32, alpha: f64) {
 	gl.BindVertexArray(mesh.vao)
 
 	for &body in bodies {
 		world := render_pos(body, alpha)
-		ndc_pos := calc_ndc_offset(world, camera)
+		ndc_pos := calc_ndc_offset(world, camera_state)
 		shader_set_vec2(program, "offset", f32(ndc_pos.x), f32(ndc_pos.y))
 
-		ndc_scale := calc_ndc_scale(body.radius, height, camera)
+		ndc_scale := calc_ndc_scale(body.radius, height, camera_state)
 		shader_set_float(program, "scale", f32(ndc_scale))
 		shader_set_float(program, "aspect", f32(height) / f32(width))
 		shader_set_vec3(program, "color", body.color.x, body.color.y, body.color.z)
@@ -168,20 +172,20 @@ draw_bodies :: proc(bodies: []Body, mesh: Mesh, program: u32, camera: Camera,  w
 }
 
 // NDC: Normalized Device Coordinates
-calc_ndc_offset :: proc(pos: [2]f64, camera: Camera) -> [2]f64 {
-	ndc := (pos - camera.center) / camera.half_extent
+calc_ndc_offset :: proc(pos: [2]f64, camera_state: ^Camera) -> [2]f64 {
+	ndc := (pos - camera_state.center) / camera_state.half_extent
 	return ndc
 }
 
-calc_ndc_scale :: proc(radius: f64, height: i32, camera: Camera) -> f64 {
+calc_ndc_scale :: proc(radius: f64, height: i32, camera_state: ^Camera) -> f64 {
 	min_marker := MIN_MARKER_PX / (f64(height) / 2)
 
-	ndc := math.max(min_marker, radius / camera.half_extent)
+	ndc := math.max(min_marker, radius / camera_state.half_extent)
 	return ndc
 }
 
-calc_screen_pos :: proc(pos: [2]f64, camera: Camera, width, height: i32) -> [2]f64 {
-	ndc := calc_ndc_offset(pos, camera)
+calc_screen_pos :: proc(pos: [2]f64, camera_state: ^Camera, width, height: i32) -> [2]f64 {
+	ndc := calc_ndc_offset(pos, camera_state)
 	clip := [2]f64{ndc.x * f64(height) / f64(width), ndc.y}
 	return {
 		(clip.x + 1) * 0.5 * f64(width),

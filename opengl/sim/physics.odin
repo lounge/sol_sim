@@ -4,6 +4,7 @@ import "core:math"
 import "core:fmt"
 
 G :: 1.0
+DT :: #config(DT, 0.0001)
 
 Body :: struct {
 	name: string,
@@ -16,7 +17,7 @@ Body :: struct {
 	accel: [2]f64
 }
 
-// // Integrator: Kick–drift–kick velocity Verlet
+// Integrator: Kick–drift–kick velocity Verlet
 physics_step :: proc(bodies: []Body, dt: f64) {
 	for &body in bodies do body.prev_pos = body.pos
 	for &body in bodies do body.vel += body.accel * (dt / 2) // half-kick
@@ -43,20 +44,20 @@ compute_accels :: proc(bodies: []Body) {
 	}
 }
 
-apply_pending_vel :: proc (bodies: []Body) {
-	if pending_vel == 0 do return
+apply_pending_vel :: proc (state: ^State, bodies: []Body) {
+	if state.input.pending_vel == 0 do return
 
-	if camera.tracked_body < 0{
-		pending_vel = 0
+	if state.camera.tracked_body < 0{
+		state.input.pending_vel = 0
 		return
 	}
 
-	body := &bodies[camera.tracked_body]
+	body := &bodies[state.camera.tracked_body]
 
-	factor := 1.0 + f64(pending_vel) / 100
+	factor := 1.0 + f64(state.input.pending_vel) / 100
 	body.vel *= factor
 
 	fmt.printfln("Body: %s, Factor: %f, Speed: %v", body.name, factor, body.vel)
 
-	pending_vel = 0
+	state.input.pending_vel = 0
 }
