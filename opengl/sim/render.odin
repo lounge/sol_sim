@@ -5,6 +5,7 @@ import "core:math"
 
 TRAIL_CAP :: 12800
 TRAIL_FRACTION :: 0.95
+TRAIL_STRIDE_DEFAULT :: 5
 MIN_MARKER_PX :: 4
 
 Mesh :: struct {
@@ -184,13 +185,35 @@ calc_ndc_scale :: proc(radius: f64, height: i32, camera_state: ^Camera) -> f64 {
 	return ndc
 }
 
-calc_screen_pos :: proc(pos: [2]f64, camera_state: ^Camera, width, height: i32) -> [2]f64 {
-	ndc := calc_ndc_offset(pos, camera_state)
-	clip := [2]f64{ndc.x * f64(height) / f64(width), ndc.y}
+// World -> Screen
+calc_screen_pos :: proc(world_pos: [2]f64, camera_state: ^Camera, width, height: i32) -> [2]f64 {
+	w := f64(width)
+	h := f64(height)
+
+	ndc := calc_ndc_offset(world_pos, camera_state)
+	clip := [2]f64{ndc.x * f64(h) / f64(w), ndc.y}
 	return {
-		(clip.x + 1) * 0.5 * f64(width),
-		(1- clip.y) * 0.5 * f64(height)
+		(clip.x + 1) * 0.5 * f64(w),
+		(1- clip.y) * 0.5 * f64(h)
 	}
+}
+
+// Screen -> World
+calc_world_pos :: proc(screen_pos: [2]f64, camera_state: ^Camera, width, height: i32,) -> [2]f64 {
+	w := f64(width)
+	h := f64(height)
+
+	clip := [2]f64 {
+		screen_pos.x / (w/2) - 1,
+		1 - screen_pos.y / (h/2),
+	}
+
+	ndc := [2]f64{
+		clip.x * w / h,
+		clip.y,
+	}
+
+	return ndc * camera_state.half_extent + camera_state.center
 }
 
 render_pos :: proc(body: Body, alpha: f64) -> [2]f64 {

@@ -73,3 +73,35 @@ apply_pending_edits :: proc (state: ^State, bodies: []Body) {
 	state.input.pending_vel = 0
 	state.input.pending_mass = 0
 }
+
+apply_pending_spawn :: proc (state: ^State, bodies: ^[dynamic]Body, trails: ^[dynamic]Trail, width, height: i32) {
+	if spawn, ok := state.input.pending_spawn.?; ok {
+		world_pos_start := calc_world_pos(spawn.start_pos, &state.camera, width, height)
+		world_pos_end := calc_world_pos(spawn.end_pos, &state.camera, width, height)
+
+		world_drag := world_pos_end - world_pos_start
+
+		body := Body {
+			name = "TODO NAME",  // TODO: Set Name
+			color = palette.Sun, //Sun // TODO: Set a color
+			pos = world_pos_start,
+			prev_pos = world_pos_start,
+			vel = world_drag / DRAG_TIME,
+			mass = spawn.mass,
+			radius = spawn.radius
+		}
+
+		trail := Trail {
+			parent = -1,
+			cap = TRAIL_CAP,
+			stride = TRAIL_STRIDE_DEFAULT
+		}
+
+		append(bodies, body)
+		append(trails, trail)
+
+		compute_accels(bodies[:])
+
+		state.input.pending_spawn = nil
+	}
+}

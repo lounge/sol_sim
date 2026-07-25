@@ -9,7 +9,7 @@ State :: struct {
 state_init :: proc() -> State {
 	return State{
 		sim_speed = 200000,
-		input = Input {nil, 0, 0},
+		input = Input {},
 		camera = Camera {
 			{0.0, 0.0},
 			1.1,

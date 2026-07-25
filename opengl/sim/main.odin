@@ -78,6 +78,7 @@ main :: proc() {
 
 		// Apply interaction
 		apply_pending_edits(&state, bodies[:])
+		apply_pending_spawn(&state, &bodies, &trails,  window_width, window_height)
 
 		// Drain loop
 		for accumulator >= DT {
@@ -137,10 +138,30 @@ scroll_callback :: proc "c" (window: glfw.WindowHandle, xOffset, yOffset: f64) {
 }
 
 click_callback :: proc "c" (window: glfw.WindowHandle, button, action, mods: i32) {
+	state := get_state(window)
+
     if button == glfw.MOUSE_BUTTON_LEFT && action == glfw.RELEASE {
-    	state := get_state(window)
     	posX, posY := glfw.GetCursorPos(window)
      	state.input.pending_click = [2]f64{posX, posY}
+    }
+
+    if button == glfw.MOUSE_BUTTON_RIGHT && action == glfw.PRESS {
+	   	posX, posY := glfw.GetCursorPos(window)
+		state.input.drag_start = [2]f64{posX, posY}
+    }
+
+    if button == glfw.MOUSE_BUTTON_RIGHT && action == glfw.RELEASE {
+	    if drag, ok := state.input.drag_start.?; ok {
+			posX, posY := glfw.GetCursorPos(window)
+			state.input.pending_spawn = Spawn_Request {
+				start_pos = drag.xy,
+				end_pos = {posX, posY},
+				mass = 3.69 * math.pow10(f64(-8.0)), // Moon mass // TODO: dynamic mass,
+				radius = 1.161e-5 // Sun Radii // TODO: Dynamic radius
+	    	}
+		}
+
+		state.input.drag_start = nil
     }
 }
 
