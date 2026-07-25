@@ -44,20 +44,32 @@ compute_accels :: proc(bodies: []Body) {
 	}
 }
 
-apply_pending_vel :: proc (state: ^State, bodies: []Body) {
-	if state.input.pending_vel == 0 do return
+apply_pending_edits :: proc (state: ^State, bodies: []Body) {
+	if state.input.pending_vel == 0 && state.input.pending_mass == 0 do return
 
-	if state.camera.tracked_body < 0{
+	if state.camera.tracked_body < 0 {
 		state.input.pending_vel = 0
+		state.input.pending_mass = 0
 		return
 	}
 
 	body := &bodies[state.camera.tracked_body]
 
-	factor := 1.0 + f64(state.input.pending_vel) / 100
-	body.vel *= factor
+	if state.input.pending_vel != 0 {
+		vel_factor := 1.0 + f64(state.input.pending_vel) / 100
+		body.vel *= vel_factor
+		fmt.printfln("Body: %s, Factor: %f, Speed: %v", body.name, vel_factor, body.vel)
+	}
 
-	fmt.printfln("Body: %s, Factor: %f, Speed: %v", body.name, factor, body.vel)
+	if state.input.pending_mass != 0 {
+		mass_factor :=  math.pow_f64(MASS_FACTOR, f64(state.input.pending_mass))
+		body.mass *= mass_factor
+
+		fmt.printfln("Body: %s, Factor: %f, Mass: %v", body.name, mass_factor, body.mass)
+
+		compute_accels(bodies)
+	}
 
 	state.input.pending_vel = 0
+	state.input.pending_mass = 0
 }

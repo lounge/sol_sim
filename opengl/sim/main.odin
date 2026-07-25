@@ -76,7 +76,8 @@ main :: proc() {
 		last_time = now
 		accumulator += frame_time * f64(state.sim_speed) / T_UNIT_SECONDS
 
-		apply_pending_vel(&state, bodies[:])
+		// Apply interaction
+		apply_pending_edits(&state, bodies[:])
 
 		// Drain loop
 		for accumulator >= DT {
@@ -154,7 +155,6 @@ key_callback :: proc "c" (window: glfw.WindowHandle, key, scancode, action, mods
 		if key ==  glfw.KEY_LEFT {
 			state.sim_speed = math.max(1, state.sim_speed / 2)
 		}
-
 		if key == glfw.KEY_RIGHT {
 			state.sim_speed = math.min(MAX_SIM_SPEED, state.sim_speed * 2)
 		}
@@ -162,9 +162,15 @@ key_callback :: proc "c" (window: glfw.WindowHandle, key, scancode, action, mods
 		if key == glfw.KEY_UP {
 			state.input.pending_vel += 1
 		}
-
 		if key == glfw.KEY_DOWN {
 			state.input.pending_vel = math.max(-99, state.input.pending_vel - 1)
+		}
+
+		if key == glfw.KEY_PERIOD {
+			state.input.pending_mass += 1
+		}
+		if key == glfw.KEY_COMMA {
+			state.input.pending_mass -= 1
 		}
 	}
 }
