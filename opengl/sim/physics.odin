@@ -83,9 +83,9 @@ apply_pending_spawn :: proc (state: ^State, bodies: ^[dynamic]Body, trails: ^[dy
 
 		body := Body {
 			name = "TODO NAME",  // TODO: Set Name
-			color = palette.Sun, //Sun // TODO: Set a color
-			pos = world_pos_start,
-			prev_pos = world_pos_start,
+			color = palette.Spawn,
+			pos = world_pos_end,
+			prev_pos = world_pos_end,
 			vel = world_drag / DRAG_TIME,
 			mass = spawn.mass,
 			radius = spawn.radius
