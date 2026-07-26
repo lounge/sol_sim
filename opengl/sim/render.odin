@@ -70,6 +70,8 @@ create_trail_mesh :: proc() -> Mesh {
 draw_trails :: proc(trails: []Trail, bodies: []Body, mesh: Mesh, program: u32, camera_state: ^Camera,  width: i32, height: i32, alpha: f64) {
 	scratch_buffer: [TRAIL_CAP + 1][2]f32
 
+	gl.UseProgram(program)
+
 	gl.BindVertexArray(mesh.vao)
 	gl.BindBuffer(gl.ARRAY_BUFFER, mesh.vbo)
 
@@ -156,20 +158,60 @@ create_circle_mesh :: proc(segments: i32) -> Mesh {
 }
 
 draw_bodies :: proc(bodies: []Body, mesh: Mesh, program: u32,  camera_state: ^Camera,  width: i32, height: i32, alpha: f64) {
+	gl.UseProgram(program)
 	gl.BindVertexArray(mesh.vao)
 
 	for &body in bodies {
 		world := render_pos(body, alpha)
-		ndc_pos := calc_ndc_offset(world, camera_state)
-		shader_set_vec2(program, "offset", f32(ndc_pos.x), f32(ndc_pos.y))
-
-		ndc_scale := calc_ndc_scale(body.radius, height, camera_state)
-		shader_set_float(program, "scale", f32(ndc_scale))
-		shader_set_float(program, "aspect", f32(height) / f32(width))
-		shader_set_vec3(program, "color", body.color.x, body.color.y, body.color.z)
-
-		gl.DrawArrays(mesh.primitive, 0, mesh.vertex_count)
+		draw_circle(world, body.radius, body.color, mesh, program, camera_state, width, height)
 	}
+}
+
+draw_circle :: proc (world: [2]f64, radius: f64, color: [3]f32, mesh: Mesh, program: u32, camera: ^Camera, width, height: i32) {
+	ndc_pos := calc_ndc_offset(world, camera)
+	shader_set_vec2(program, "offset", f32(ndc_pos.x), f32(ndc_pos.y))
+
+	ndc_scale := calc_ndc_scale(radius, height, camera)
+	shader_set_float(program, "scale", f32(ndc_scale))
+	shader_set_float(program, "aspect", f32(height) / f32(width))
+	shader_set_vec3(program, "color", color.x, color.y, color.z)
+
+	gl.DrawArrays(mesh.primitive, 0, mesh.vertex_count)
+}
+
+draw_drag_preview :: proc (start_px, end_px: [2]f64, mesh: Mesh, program: u32, camera: ^Camera, width, height: i32) -> [2]f64 {
+	scratch_buffer: [2][2]f32
+
+	start_world := calc_world_pos(start_px, camera, width, height)
+	end_world := calc_world_pos(end_px, camera, width, height)
+
+	start_ndc := calc_ndc_offset(start_world, camera)
+	end_ndc := calc_ndc_offset(end_world, camera)
+
+	gl.UseProgram(program)
+
+	gl.BindVertexArray(mesh.vao)
+	gl.BindBuffer(gl.ARRAY_BUFFER, mesh.vbo)
+	scratch_buffer[0] = {f32(start_ndc.x), f32(start_ndc.y)}
+	scratch_buffer[1] = {f32(end_ndc.x), f32(end_ndc.y)}
+
+	shader_set_vec2(program, "offset", f32(0.0), f32(0.0))
+	shader_set_float(program, "scale", f32(1))
+	shader_set_float(program, "aspect", f32(height) / f32(width))
+	shader_set_vec3(program, "color", 1.0, 1.0, 1.0)
+	shader_set_int(program, "count", i32(1))
+
+	gl.BufferSubData(gl.ARRAY_BUFFER, 0, size_of(scratch_buffer), raw_data(&scratch_buffer))
+	gl.DrawArrays(gl.LINE_STRIP, 0, 2)
+
+	return end_world
+}
+
+draw_mass_preview :: proc (world: [2]f64, radius: f64, color: [3]f32, mesh: Mesh, program: u32, camera: ^Camera, width, height: i32) {
+	gl.UseProgram(program)
+	gl.BindVertexArray(mesh.vao)
+
+	draw_circle(world, radius, color, mesh, program, camera, width, height)
 }
 
 // NDC: Normalized Device Coordinates

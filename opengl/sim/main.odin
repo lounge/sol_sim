@@ -14,6 +14,8 @@ SECONDS_IN_YEAR :: 3.156e7
 T_UNIT_SECONDS :: SECONDS_IN_YEAR / (2 * math.PI) // ≈5.023e6, the G=1/AU/solar-mass time unit
 MAX_SIM_SPEED :: #config(MAX_SIM_SPEED, int(15 * SECONDS_IN_YEAR))
 
+palette := realistic.body
+
 main :: proc() {
 	bodies, trails := create_system()
 
@@ -91,11 +93,18 @@ main :: proc() {
 
 		camera_update(&state, bodies[:], window_width, window_height, alpha)
 
-		gl.UseProgram(body_program)
 		draw_bodies(bodies[:], circle_mesh, body_program, &state.camera, fb_width, fb_height, alpha)
-
-		gl.UseProgram(trail_program)
 		draw_trails(trails[:], bodies[:], trail_mesh, trail_program, &state.camera, fb_width, fb_height, alpha)
+
+		if drag, ok := state.input.drag_start.?; ok {
+			start_pos := drag
+			end_x, end_y := glfw.GetCursorPos(window)
+			end_world := draw_drag_preview(start_pos, {end_x, end_y}, trail_mesh, trail_program, &state.camera, window_width, window_height)
+
+			_, radius := spawn_mass_radius(state.input.spawn_mass_exp);
+
+			draw_mass_preview(end_world, radius, palette.Spawn, circle_mesh, body_program, &state.camera, fb_width, fb_height)
+		}
 
 		update_window_title(window, &state, bodies[:])
 
@@ -112,6 +121,10 @@ update_window_title :: proc (window: glfw.WindowHandle, state: ^State, bodies: [
 	@(static) prev_tracked_body := -2
 	@(static) prev_sim_speed := -1
 	title: cstring
+
+	if drag, ok := state.input.drag_start.?; ok {
+		// TODO: Update title with drag speed
+	}
 
 	if state.camera.tracked_body == prev_tracked_body && state.sim_speed == prev_sim_speed do return
 	if state.camera.tracked_body >= 0 {
@@ -134,7 +147,11 @@ framebuffer_size_callback :: proc "c" (window: glfw.WindowHandle, width, height:
 scroll_callback :: proc "c" (window: glfw.WindowHandle, xOffset, yOffset: f64) {
 	state := get_state(window)
 
-	camera_zoom(&state.camera, yOffset)
+	if drag, ok := state.input.drag_start.?; ok {
+		state.input.spawn_mass_exp += yOffset * SPAWN_MASS_SENS
+	} else {
+		camera_zoom(&state.camera, yOffset)
+	}
 }
 
 click_callback :: proc "c" (window: glfw.WindowHandle, button, action, mods: i32) {
@@ -153,11 +170,13 @@ click_callback :: proc "c" (window: glfw.WindowHandle, button, action, mods: i32
     if button == glfw.MOUSE_BUTTON_RIGHT && action == glfw.RELEASE {
 	    if drag, ok := state.input.drag_start.?; ok {
 			posX, posY := glfw.GetCursorPos(window)
+			mass, radius := spawn_mass_radius(state.input.spawn_mass_exp);
+
 			state.input.pending_spawn = Spawn_Request {
 				start_pos = drag.xy,
 				end_pos = {posX, posY},
-				mass = 3.69 * math.pow10(f64(-8.0)), // Moon mass // TODO: dynamic mass,
-				radius = 1.161e-5 // Sun Radii // TODO: Dynamic radius
+				mass = mass,
+				radius = radius
 	    	}
 		}
 

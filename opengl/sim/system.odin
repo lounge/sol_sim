@@ -2,8 +2,6 @@ package main
 
 import "core:math"
 
-palette := realistic.body
-
 BodySpec :: struct {
 	mass: f64,
 	radius: f64,
