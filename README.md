@@ -21,7 +21,7 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 15. Add Jupiter's moons (Io, Europa, Ganymede, Callisto) and watch the fast ones artificially precess (~300 steps/orbit for Io under semi-implicit Euler). - DONE
 16. Replace semi-implicit Euler with Velocity Verlet or leapfrog — measure the precession before/after, watch it collapse. (plot twist: precession didn't collapse — measured it, kick-all-before-drift Euler is exactly conjugate to leapfrog, so orbit geometry was already second-order. What collapsed ~80× was the energy oscillation. Explicit Euler comparison showed the real non-symplectic failure: Io escapes Jupiter within ~30 orbits) - DONE
 17. Mutate the tracked body (mass, prograde/retrograde burns) (up/down arrows: ±1%/press prograde/retrograde burns; ,/. halve/double mass with an accel refresh so stored Verlet state stays consistent; along the way all mutable globals moved into a `State` struct behind the GLFW window user pointer) - DONE
-18. Spawn a body with click-drag (position + velocity) - IN PROGRESS (core + preview + mass control work: right-drag shows a fading arrow, release spawns at the cursor with the drag velocity, scroll-during-drag scales mass with constant-density radius and a live size marker; left: spawn naming, drag mass/speed readout in title)
+18. Spawn a body with click-drag (position + velocity) - DONE (right-drag arrow preview, spawn at the cursor with the drag velocity, scroll-during-drag mass with constant-density radius and live marker, drag mass/speed title readout, numbered spawn names; three space-mixing bugs along the way turned pixel/world coordinates into distinct types)
 19. Delete a body.
 20. Make 3D.
 21. Lighting (Sun).
