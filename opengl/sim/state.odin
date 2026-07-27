@@ -2,6 +2,7 @@ package main
 
 State :: struct {
 	sim_speed: int,
+	spawned_bodies: int,
 	input: Input,
 	camera: Camera
 }

@@ -82,11 +82,11 @@ apply_pending_spawn :: proc (state: ^State, bodies: ^[dynamic]Body, trails: ^[dy
 		world_drag := world_pos_end - world_pos_start
 
 		body := Body {
-			name = "TODO NAME",  // TODO: Set Name
+			name = fmt.aprintf("Spawnius %d", state.spawned_bodies + 1),
 			color = palette.Spawn,
-			pos = world_pos_end,
-			prev_pos = world_pos_end,
-			vel = world_drag / DRAG_TIME,
+			pos = ([2]f64)(world_pos_end),
+			prev_pos = ([2]f64)(world_pos_end),
+			vel = ([2]f64)(world_drag) / DRAG_TIME,
 			mass = spawn.mass,
 			radius = spawn.radius
 		}
@@ -103,5 +103,6 @@ apply_pending_spawn :: proc (state: ^State, bodies: ^[dynamic]Body, trails: ^[dy
 		compute_accels(bodies[:])
 
 		state.input.pending_spawn = nil
+		state.spawned_bodies += 1
 	}
 }
