@@ -14,7 +14,8 @@ Body :: struct {
 	vel: [2]f64,
 	mass: f64,
 	radius: f64,
-	accel: [2]f64
+	accel: [2]f64,
+	spawned: bool // if dynamicaly spawned
 }
 
 // Integrator: Kick–drift–kick velocity Verlet
