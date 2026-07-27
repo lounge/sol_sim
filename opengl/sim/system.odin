@@ -2,204 +2,151 @@ package main
 
 import "core:math"
 
-BodySpec :: struct {
+Body_Spec :: struct {
 	mass: f64,
 	radius: f64,
 	ecc: f64,
 	semi_major_axis: f64,
-	parent: int,
 	start_at_aphelion: bool,
 	color: [3]f32,
 	name: string,
+	satellites: []Body_Spec,
+
 }
 
-specs := []BodySpec {
-	BodySpec {
+specs := []Body_Spec {
+	Body_Spec {
 		mass = 1.0,
 		radius = 4.654e-3,
 		ecc = 0,
 		semi_major_axis = 0,
-		parent = -1,
 		color = palette.Sun,
-		name = "Sun"
+		name = "Sun",
+		satellites = {
+			{
+				mass = 1.660e-7,
+				radius = 1.631e-5,
+				ecc = 0.2056,
+				semi_major_axis = 0.387,
+				color = palette.Mercury,
+				name = "Mercury"
+			},
+			{
+				mass = 2.447e-6,
+				radius = 4.045e-5,
+				ecc = 0.0068,
+				semi_major_axis = 0.723,
+				color = palette.Venus,
+				name = "Venus"
+			},
+			{
+				mass = 3.003 * math.pow10(f64(-6.0)),
+				radius = 4.259e-5,
+				ecc = 0.0167,
+				semi_major_axis = 1,
+				color = palette.Earth,
+				name = "Earth",
+				satellites = {
+					{
+						mass = 3.69 * math.pow10(f64(-8.0)),
+						radius = 1.161e-5,
+						ecc = 0.0549,
+						semi_major_axis = 2.570 * math.pow10(f64(-3)),
+						color = palette.Moon,
+						name = "Moon"
+					},
+				}
+			},
+			{
+				mass = 3.227e-7,
+				radius = 2.266e-5,
+				ecc = 0.0934,
+				semi_major_axis = 1.524,
+				color = palette.Mars,
+				name = "Mars"
+			},
+			{
+				mass = 9.545e-4,
+				radius = 4.673e-4,
+				ecc = 0.0489,
+				semi_major_axis = 5.203,
+				color = palette.Jupiter,
+				name = "Jupiter",
+				satellites = {
+					{
+						mass = 4.49e-8,
+						radius = 1.218e-5,
+						ecc = 0.0041,
+						semi_major_axis = 2.819e-3,
+						color = palette.Moon,
+						name = "Io"
+					},
+					{
+						mass = 2.41e-8,
+						radius = 1.043e-5,
+						ecc = 0.0094,
+						semi_major_axis = 4.486e-3,
+						color = palette.Moon,
+						name = "Europa"
+					},
+					{
+						mass = 7.45e-8,
+						radius = 1.761e-5,
+						ecc = 0.0013,
+						semi_major_axis = 7.155e-3,
+						color = palette.Moon,
+						name = "Ganymede"
+					},
+					{
+						mass = 5.41e-8,
+						radius = 1.611e-5,
+						ecc = 0.0074,
+						semi_major_axis = 1.259e-2,
+						color = palette.Moon,
+						name = "Callisto"
+					},
+				}
+			},
+			{
+				mass = 2.858e-4,
+				radius = 3.893e-4,
+				ecc = 0.0565,
+				semi_major_axis = 9.537,
+				color = palette.Saturn,
+				name = "Saturn"
+			},
+			{
+				mass = 4.366e-5,
+				radius = 1.695e-4,
+				ecc = 0.0457,
+				semi_major_axis = 19.19,
+				color = palette.Uranus,
+				name = "Uranus"
+			},
+			{
+				mass = 5.150e-5,
+				radius = 1.646e-4,
+				ecc = 0.0113,
+				semi_major_axis = 30.07,
+				color = palette.Neptune,
+				name = "Neptune"
+			},
+			{
+				mass = 6.55e-9,
+				radius = 7.94e-6,
+				ecc = 0.2488,
+				semi_major_axis = 39.48,
+				start_at_aphelion = true,
+				color = palette.Pluto,
+				name = "Pluto"
+			}
+		}
 	},
-	BodySpec {
-		mass = 1.660e-7,
-		radius = 1.631e-5,
-		ecc = 0.2056,
-		semi_major_axis = 0.387,
-		parent = 0,
-		color = palette.Mercury,
-		name = "Mercury"
-	},
-	BodySpec {
-		mass = 2.447e-6,
-		radius = 4.045e-5,
-		ecc = 0.0068,
-		semi_major_axis = 0.723,
-		parent = 0,
-		color = palette.Venus,
-		name = "Venus"
-	},
-	BodySpec {
-		mass = 3.003 * math.pow10(f64(-6.0)),
-		radius = 4.259e-5,
-		ecc = 0.0167,
-		semi_major_axis = 1,
-		parent = 0,
-		color = palette.Earth,
-		name = "Earth"
-	},
-	BodySpec {
-		mass = 3.69 * math.pow10(f64(-8.0)),
-		radius = 1.161e-5,
-		ecc = 0.0549,
-		semi_major_axis = 2.570 * math.pow10(f64(-3)),
-		parent = 3,
-		color = palette.Moon,
-		name = "Moon"
-	},
-	BodySpec {
-		mass = 3.227e-7,
-		radius = 2.266e-5,
-		ecc = 0.0934,
-		semi_major_axis = 1.524,
-		parent = 0,
-		color = palette.Mars,
-		name = "Mars"
-	},
-
-
-	BodySpec {
-		mass = 9.545e-4,
-		radius = 4.673e-4,
-		ecc = 0.0489,
-		semi_major_axis = 5.203,
-		parent = 0,
-		color = palette.Jupiter,
-		name = "Jupiter"
-	},
-	BodySpec {
-		mass = 4.49e-8,
-		radius = 1.218e-5,
-		ecc = 0.0041,
-		semi_major_axis = 2.819e-3,
-		parent = 6,
-		color = palette.Moon,
-		name = "Io"
-	},
-	BodySpec {
-		mass = 2.41e-8,
-		radius = 1.043e-5,
-		ecc = 0.0094,
-		semi_major_axis = 4.486e-3,
-		parent = 6,
-		color = palette.Moon,
-		name = "Europa"
-	},
-	BodySpec {
-		mass = 7.45e-8,
-		radius = 1.761e-5,
-		ecc = 0.0013,
-		semi_major_axis = 7.155e-3,
-		parent = 6,
-		color = palette.Moon,
-		name = "Ganymede"
-	},
-	BodySpec {
-		mass = 5.41e-8,
-		radius = 1.611e-5,
-		ecc = 0.0074,
-		semi_major_axis = 1.259e-2,
-		parent = 6,
-		color = palette.Moon,
-		name = "Callisto"
-	},
-	BodySpec {
-		mass = 2.858e-4,
-		radius = 3.893e-4,
-		ecc = 0.0565,
-		semi_major_axis = 9.537,
-		parent = 0,
-		color = palette.Saturn,
-		name = "Saturn"
-	},
-	BodySpec {
-		mass = 4.366e-5,
-		radius = 1.695e-4,
-		ecc = 0.0457,
-		semi_major_axis = 19.19,
-		parent = 0,
-		color = palette.Uranus,
-		name = "Uranus"
-	},
-	BodySpec {
-		mass = 5.150e-5,
-		radius = 1.646e-4,
-		ecc = 0.0113,
-		semi_major_axis = 30.07,
-		parent = 0,
-		color = palette.Neptune,
-		name = "Neptune"
-	},
-	BodySpec {
-		mass = 6.55e-9,
-		radius = 7.94e-6,
-		ecc = 0.2488,
-		semi_major_axis = 39.48,
-		parent = 0,
-		start_at_aphelion = true,
-		color = palette.Pluto,
-		name = "Pluto"
-	}
 }
 
 create_system :: proc() -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
-	for &spec, i in specs {
-		pos: [2]f64 = {0.0, 0.0}
-		vel: [2]f64 = {0.0, 0.0}
-		steps_per_orbit: f64 = 0.0
-		stride: int = 1
-
-		if spec.parent >= 0  {
-			ecc_factor := 1 - spec.ecc
-			if spec.start_at_aphelion {
-    			ecc_factor = 1 + spec.ecc
-			}
-
-			start_dist := spec.semi_major_axis * ecc_factor
-			start_speed := math.sqrt(G * bodies[spec.parent].mass * (2 / start_dist - 1 / spec.semi_major_axis))
-
-			pos = bodies[spec.parent].pos + {start_dist, 0}
-			vel = bodies[spec.parent].vel + {0, start_speed}
-
-			T := 2 * math.PI * math.sqrt(math.pow(f64(spec.semi_major_axis), f64(3)) / (G * bodies[spec.parent].mass))
-			steps_per_orbit = T / DT
-
-			stride = math.max(1, int(math.ceil(TRAIL_FRACTION * steps_per_orbit / TRAIL_CAP)))
-		}
-
-		body := Body {
-			name = spec.name,
-			color = spec.color,
-			pos = pos,
-			prev_pos = pos,
-			vel = vel,
-			mass = spec.mass,
-			radius = spec.radius,
-			accel = {0.0, 0.0}
-		}
-
-		trail := Trail {
-			parent = spec.parent,
-			cap = int(TRAIL_FRACTION * steps_per_orbit / f64(stride)),
-			stride = stride
-		}
-
-		assert(trail.cap <= TRAIL_CAP, spec.name)
-
-		append(&bodies, body)
-		append(&trails, trail)
+	for spec in specs {
+		add_body(spec, -1, &bodies, &trails)
 	}
 
 	largest_mass_index := 1
@@ -228,4 +175,57 @@ create_system :: proc() -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
 	compute_accels(bodies[:])
 
 	return bodies, trails
+}
+
+add_body :: proc (spec: Body_Spec, parent_index: int, bodies: ^[dynamic]Body, trails: ^[dynamic]Trail) {
+	pos: [2]f64 = {0.0, 0.0}
+	vel: [2]f64 = {0.0, 0.0}
+	steps_per_orbit: f64 = 0.0
+	stride: int = 1
+
+	if parent_index >= 0  {
+		parent := bodies[parent_index]
+		ecc_factor := 1 - spec.ecc
+		if spec.start_at_aphelion {
+    			ecc_factor = 1 + spec.ecc
+		}
+
+		start_dist := spec.semi_major_axis * ecc_factor
+		start_speed := math.sqrt(G * parent.mass * (2 / start_dist - 1 / spec.semi_major_axis))
+
+		pos = parent.pos + {start_dist, 0}
+		vel = parent.vel + {0, start_speed}
+
+		T := 2 * math.PI * math.sqrt(math.pow(f64(spec.semi_major_axis), f64(3)) / (G * parent.mass))
+		steps_per_orbit = T / DT
+
+		stride = math.max(1, int(math.ceil(TRAIL_FRACTION * steps_per_orbit / TRAIL_CAP)))
+	}
+
+	body := Body {
+		name = spec.name,
+		color = spec.color,
+		pos = pos,
+		prev_pos = pos,
+		vel = vel,
+		mass = spec.mass,
+		radius = spec.radius,
+		accel = {0.0, 0.0}
+	}
+
+	trail := Trail {
+		parent = parent_index,
+		cap = int(TRAIL_FRACTION * steps_per_orbit / f64(stride)),
+		stride = stride
+	}
+
+	assert(trail.cap <= TRAIL_CAP, spec.name)
+
+	append(bodies, body)
+	append(trails, trail)
+
+	body_index := len(bodies) - 1
+	for sat in spec.satellites {
+		add_body(sat, body_index, bodies, trails)
+	}
 }
