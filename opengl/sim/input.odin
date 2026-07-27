@@ -9,17 +9,17 @@ SPAWN_BASE_MASS :: 3.69e-8 // Moon
 SPAWN_BASE_RADIUS :: 1.161e-5 // Moon
 
 Input :: struct {
-	pending_click: Maybe([2]f64),
+	pending_click: Maybe(Pixel_Pos),
 	pending_vel: int,
 	pending_mass: int,
 	pending_spawn: Maybe(Spawn_Request),
-	drag_start: Maybe([2]f64),
+	drag_start: Maybe(Pixel_Pos),
 	spawn_mass_exp: f64
 }
 
 Spawn_Request :: struct {
-	start_pos: [2]f64,
-	end_pos: [2]f64,
+	start_pos: Pixel_Pos,
+	end_pos: Pixel_Pos,
 	mass: f64,
 	radius: f64
 }

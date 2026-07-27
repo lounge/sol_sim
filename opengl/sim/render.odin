@@ -25,6 +25,9 @@ Trail :: struct {
 	frame_count: int
 }
 
+Pixel_Pos :: distinct [2]f64
+World_Pos :: distinct [2]f64
+
 record_trail :: proc(bodies: []Body, trails: []Trail) {
 	for &body, i in bodies {
 		trail := &trails[i]
@@ -98,12 +101,12 @@ draw_trails :: proc(trails: []Trail, bodies: []Body, mesh: Mesh, program: u32, c
 				point_pos = point + world
 			}
 
-			ndc_pos := calc_ndc_offset(point_pos, camera_state)
+			ndc_pos := calc_ndc_offset(World_Pos(point_pos), camera_state)
 			scratch_buffer[j] = [2]f32{f32(ndc_pos.x),f32(ndc_pos.y)}
 		}
 
 		world := render_pos(bodies[i], alpha)
-		ndc := calc_ndc_offset(world, camera_state)
+		ndc := calc_ndc_offset(World_Pos(world), camera_state)
 		scratch_buffer[trail.count] = {f32(ndc.x), f32(ndc.y)}
 
 		color := body.color
@@ -163,11 +166,11 @@ draw_bodies :: proc(bodies: []Body, mesh: Mesh, program: u32,  camera_state: ^Ca
 
 	for &body in bodies {
 		world := render_pos(body, alpha)
-		draw_circle(world, body.radius, body.color, mesh, program, camera_state, width, height)
+		draw_circle(World_Pos(world), body.radius, body.color, mesh, program, camera_state, width, height)
 	}
 }
 
-draw_circle :: proc (world: [2]f64, radius: f64, color: [3]f32, mesh: Mesh, program: u32, camera: ^Camera, width, height: i32) {
+draw_circle :: proc (world: World_Pos, radius: f64, color: [3]f32, mesh: Mesh, program: u32, camera: ^Camera, width, height: i32) {
 	ndc_pos := calc_ndc_offset(world, camera)
 	shader_set_vec2(program, "offset", f32(ndc_pos.x), f32(ndc_pos.y))
 
@@ -179,7 +182,7 @@ draw_circle :: proc (world: [2]f64, radius: f64, color: [3]f32, mesh: Mesh, prog
 	gl.DrawArrays(mesh.primitive, 0, mesh.vertex_count)
 }
 
-draw_drag_preview :: proc (start_px, end_px: [2]f64, mesh: Mesh, program: u32, camera: ^Camera, width, height: i32) -> [2]f64 {
+draw_drag_preview :: proc (start_px, end_px: Pixel_Pos, mesh: Mesh, program: u32, camera: ^Camera, width, height: i32) -> World_Pos {
 	scratch_buffer: [2][2]f32
 
 	start_world := calc_world_pos(start_px, camera, width, height)
@@ -207,7 +210,7 @@ draw_drag_preview :: proc (start_px, end_px: [2]f64, mesh: Mesh, program: u32, c
 	return end_world
 }
 
-draw_mass_preview :: proc (world: [2]f64, radius: f64, color: [3]f32, mesh: Mesh, program: u32, camera: ^Camera, width, height: i32) {
+draw_mass_preview :: proc (world: World_Pos, radius: f64, color: [3]f32, mesh: Mesh, program: u32, camera: ^Camera, width, height: i32) {
 	gl.UseProgram(program)
 	gl.BindVertexArray(mesh.vao)
 
@@ -215,8 +218,8 @@ draw_mass_preview :: proc (world: [2]f64, radius: f64, color: [3]f32, mesh: Mesh
 }
 
 // NDC: Normalized Device Coordinates
-calc_ndc_offset :: proc(pos: [2]f64, camera_state: ^Camera) -> [2]f64 {
-	ndc := (pos - camera_state.center) / camera_state.half_extent
+calc_ndc_offset :: proc(pos: World_Pos, camera_state: ^Camera) -> [2]f64 {
+	ndc := (([2]f64)(pos) - camera_state.center) / camera_state.half_extent
 	return ndc
 }
 
@@ -228,7 +231,7 @@ calc_ndc_scale :: proc(radius: f64, height: i32, camera_state: ^Camera) -> f64 {
 }
 
 // World -> Screen
-calc_screen_pos :: proc(world_pos: [2]f64, camera_state: ^Camera, width, height: i32) -> [2]f64 {
+calc_screen_pos :: proc(world_pos: World_Pos, camera_state: ^Camera, width, height: i32) -> Pixel_Pos {
 	w := f64(width)
 	h := f64(height)
 
@@ -241,21 +244,21 @@ calc_screen_pos :: proc(world_pos: [2]f64, camera_state: ^Camera, width, height:
 }
 
 // Screen -> World
-calc_world_pos :: proc(screen_pos: [2]f64, camera_state: ^Camera, width, height: i32,) -> [2]f64 {
+calc_world_pos :: proc(px_pos: Pixel_Pos, camera_state: ^Camera, width, height: i32,) -> World_Pos {
 	w := f64(width)
 	h := f64(height)
 
 	clip := [2]f64 {
-		screen_pos.x / (w/2) - 1,
-		1 - screen_pos.y / (h/2),
+		px_pos.x / (w/2) - 1,
+		1 - px_pos.y / (h/2),
 	}
 
-	ndc := [2]f64{
+	ndc := [2]f64 {
 		clip.x * w / h,
 		clip.y,
 	}
 
-	return ndc * camera_state.half_extent + camera_state.center
+	return (World_Pos)(ndc * camera_state.half_extent + camera_state.center)
 }
 
 render_pos :: proc(body: Body, alpha: f64) -> [2]f64 {

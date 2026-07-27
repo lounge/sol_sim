@@ -29,7 +29,7 @@ camera_update :: proc(state: ^State,  bodies: []Body, width, height: i32, alpha:
 		for body, i in bodies {
 			// Forward transform chain -> World -> Screen
 			world := render_pos(body, alpha)
-			screen := calc_screen_pos(world, &state.camera, width, height)
+			screen := calc_screen_pos(World_Pos(world), &state.camera, width, height)
 			diff := screen - click
 			dist := math.sqrt(diff.x * diff.x + diff.y * diff.y)
 

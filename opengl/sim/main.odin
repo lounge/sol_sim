@@ -5,11 +5,13 @@ import gl "vendor:OpenGL"
 import "core:c"
 import "core:fmt"
 import "core:math"
+import "core:math/linalg"
 import "core:os"
 import "vendor:glfw"
 
 SCR_WIDTH :: 800
 SCR_HEIGHT :: 600
+SECONDS_IN_DAY :: 86400
 SECONDS_IN_YEAR :: 3.156e7
 T_UNIT_SECONDS :: SECONDS_IN_YEAR / (2 * math.PI) // ≈5.023e6, the G=1/AU/solar-mass time unit
 MAX_SIM_SPEED :: #config(MAX_SIM_SPEED, int(15 * SECONDS_IN_YEAR))
@@ -123,15 +125,27 @@ update_window_title :: proc (window: glfw.WindowHandle, state: ^State, bodies: [
 	title: cstring
 
 	if drag, ok := state.input.drag_start.?; ok {
-		// TODO: Update title with drag speed
+		end_x, end_y := glfw.GetCursorPos(window)
+		width, height := glfw.GetWindowSize(window)
+		start_world := calc_world_pos(drag, &state.camera, width, height)
+		end_world := calc_world_pos({end_x, end_y}, &state.camera, width, height)
+
+		speed := linalg.length(end_world - start_world) / DRAG_TIME
+		mass, _ := spawn_mass_radius(state.input.spawn_mass_exp)
+
+		title = fmt.ctprintf("%s - Spawn %e sol (x%.0f Moon) - %.1f km/s", "Sol_Sim", mass, math.pow(2, state.input.spawn_mass_exp), speed * 29.78)
+		glfw.SetWindowTitle(window, title)
+
+		prev_sim_speed = -1
+		return
 	}
 
 	if state.camera.tracked_body == prev_tracked_body && state.sim_speed == prev_sim_speed do return
 	if state.camera.tracked_body >= 0 {
 		tracked_body_name := bodies[state.camera.tracked_body].name
-		title = fmt.ctprintf("%s - %s - %d days/sec - %f years/sec - sim_speed %d", "Sol_Sim", tracked_body_name, state.sim_speed / 86400, f64(state.sim_speed) / 3.156e7, state.sim_speed)
+		title = fmt.ctprintf("%s - %s - %d days/sec - %f years/sec - sim_speed %d", "Sol_Sim", tracked_body_name, state.sim_speed / SECONDS_IN_DAY, f64(state.sim_speed) / SECONDS_IN_YEAR, state.sim_speed)
 	} else {
-		title = fmt.ctprintf("%s - %d days/sec - %f years/sec - sim_speed %d", "Sol_Sim", state.sim_speed / 86400, f64(state.sim_speed) / 3.156e7, state.sim_speed)
+		title = fmt.ctprintf("%s - %d days/sec - %f years/sec - sim_speed %d", "Sol_Sim", state.sim_speed / SECONDS_IN_DAY, f64(state.sim_speed) / SECONDS_IN_YEAR, state.sim_speed)
 	}
 
 	glfw.SetWindowTitle(window, title)
@@ -159,12 +173,12 @@ click_callback :: proc "c" (window: glfw.WindowHandle, button, action, mods: i32
 
     if button == glfw.MOUSE_BUTTON_LEFT && action == glfw.RELEASE {
     	posX, posY := glfw.GetCursorPos(window)
-     	state.input.pending_click = [2]f64{posX, posY}
+     	state.input.pending_click = Pixel_Pos({posX, posY})
     }
 
     if button == glfw.MOUSE_BUTTON_RIGHT && action == glfw.PRESS {
 	   	posX, posY := glfw.GetCursorPos(window)
-		state.input.drag_start = [2]f64{posX, posY}
+		state.input.drag_start = Pixel_Pos({posX, posY})
     }
 
     if button == glfw.MOUSE_BUTTON_RIGHT && action == glfw.RELEASE {
