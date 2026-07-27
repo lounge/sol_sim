@@ -5,22 +5,18 @@ import gl "vendor:OpenGL"
 import "core:c"
 import "core:fmt"
 import "core:math"
+import "core:math/linalg"
 import "core:os"
 import "vendor:glfw"
 
-DT :: 0.0001
 SCR_WIDTH :: 800
 SCR_HEIGHT :: 600
-VIEW_SCALE :: 60
-MIN_MARKER_PX :: 4
-TRAIL_CAP :: 12800
-TRAIL_FRACTION :: 0.95
-PICK_RADIUS_PX :: 8
+SECONDS_IN_DAY :: 86400
 SECONDS_IN_YEAR :: 3.156e7
 T_UNIT_SECONDS :: SECONDS_IN_YEAR / (2 * math.PI) // ≈5.023e6, the G=1/AU/solar-mass time unit
-MAX_SIM_SPEED :: int(15 * SECONDS_IN_YEAR)
+MAX_SIM_SPEED :: #config(MAX_SIM_SPEED, int(15 * SECONDS_IN_YEAR))
 
-sim_speed: int = 200000
+palette := realistic.body
 
 main :: proc() {
 	bodies, trails := create_system()
@@ -30,12 +26,15 @@ main :: proc() {
 	glfw.WindowHint(glfw.CONTEXT_VERSION_MINOR, 3)
 	glfw.WindowHint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
 
-	window := glfw.CreateWindow(800, 600, "Sol_Sim", nil, nil)
+	window := glfw.CreateWindow(SCR_WIDTH, SCR_HEIGHT, "Sol_Sim", nil, nil)
 	if window == nil {
 		fmt.println("Failed to create GLFW window")
 		glfw.Terminate()
 		os.exit(-1)
 	}
+
+	state := state_init()
+	glfw.SetWindowUserPointer(window, &state)
 
 	glfw.SetFramebufferSizeCallback(window, framebuffer_size_callback)
 	glfw.SetScrollCallback(window, scroll_callback)
@@ -79,7 +78,11 @@ main :: proc() {
 		frame_time := now - last_time
 		frame_time = min(frame_time, 0.1)
 		last_time = now
-		accumulator += frame_time * f64(sim_speed) / T_UNIT_SECONDS
+		accumulator += frame_time * f64(state.sim_speed) / T_UNIT_SECONDS
+
+		// Apply interaction
+		apply_pending_edits(&state, bodies[:])
+		apply_pending_spawn(&state, &bodies, &trails,  window_width, window_height)
 
 		// Drain loop
 		for accumulator >= DT {
@@ -90,15 +93,22 @@ main :: proc() {
 
 		alpha := accumulator / DT
 
-		camera_update(bodies[:], window_width, window_height, alpha)
+		camera_update(&state, bodies[:], window_width, window_height, alpha)
 
-		gl.UseProgram(body_program)
-		draw_bodies(bodies[:], circle_mesh, body_program, camera, fb_width, fb_height, alpha)
+		draw_bodies(bodies[:], circle_mesh, body_program, &state.camera, fb_width, fb_height, alpha)
+		draw_trails(trails[:], bodies[:], trail_mesh, trail_program, &state.camera, fb_width, fb_height, alpha)
 
-		gl.UseProgram(trail_program)
-		draw_trails(trails[:], bodies[:], trail_mesh, trail_program, camera, fb_width, fb_height, alpha)
+		if drag, ok := state.input.drag_start.?; ok {
+			start_pos := drag
+			end_x, end_y := glfw.GetCursorPos(window)
+			end_world := draw_drag_preview(start_pos, {end_x, end_y}, trail_mesh, trail_program, &state.camera, window_width, window_height)
 
-		update_window_title(window, bodies[:])
+			_, radius := spawn_mass_radius(state.input.spawn_mass_exp);
+
+			draw_mass_preview(end_world, radius, palette.Spawn, circle_mesh, body_program, &state.camera, fb_width, fb_height)
+		}
+
+		update_window_title(window, &state, bodies[:])
 
 		glfw.SwapBuffers(window)
 		glfw.PollEvents()
@@ -109,23 +119,39 @@ main :: proc() {
 	glfw.Terminate()
 }
 
-update_window_title :: proc (window: glfw.WindowHandle, bodies: []Body) {
+update_window_title :: proc (window: glfw.WindowHandle, state: ^State, bodies: []Body) {
 	@(static) prev_tracked_body := -2
 	@(static) prev_sim_speed := -1
 	title: cstring
 
-	if camera.tracked_body == prev_tracked_body && sim_speed == prev_sim_speed do return
-	if camera.tracked_body >= 0 {
-		tracked_body_name := bodies[camera.tracked_body].name
-		title = fmt.ctprintf("%s - %s - %d days/sec - %f years/sec - sim_speed %d", "Sol_Sim", tracked_body_name, sim_speed / 86400, f64(sim_speed) / 3.156e7, sim_speed)
+	if drag, ok := state.input.drag_start.?; ok {
+		end_x, end_y := glfw.GetCursorPos(window)
+		width, height := glfw.GetWindowSize(window)
+		start_world := calc_world_pos(drag, &state.camera, width, height)
+		end_world := calc_world_pos({end_x, end_y}, &state.camera, width, height)
+
+		speed := linalg.length(end_world - start_world) / DRAG_TIME
+		mass, _ := spawn_mass_radius(state.input.spawn_mass_exp)
+
+		title = fmt.ctprintf("%s - Spawn %e sol (x%.0f Moon) - %.1f km/s", "Sol_Sim", mass, math.pow(2, state.input.spawn_mass_exp), speed * 29.78)
+		glfw.SetWindowTitle(window, title)
+
+		prev_sim_speed = -1
+		return
+	}
+
+	if state.camera.tracked_body == prev_tracked_body && state.sim_speed == prev_sim_speed do return
+	if state.camera.tracked_body >= 0 {
+		tracked_body_name := bodies[state.camera.tracked_body].name
+		title = fmt.ctprintf("%s - %s - %d days/sec - %f years/sec - sim_speed %d", "Sol_Sim", tracked_body_name, state.sim_speed / SECONDS_IN_DAY, f64(state.sim_speed) / SECONDS_IN_YEAR, state.sim_speed)
 	} else {
-		title = fmt.ctprintf("%s - %d days/sec - %f years/sec - sim_speed %d", "Sol_Sim", sim_speed / 86400, f64(sim_speed) / 3.156e7, sim_speed)
+		title = fmt.ctprintf("%s - %d days/sec - %f years/sec - sim_speed %d", "Sol_Sim", state.sim_speed / SECONDS_IN_DAY, f64(state.sim_speed) / SECONDS_IN_YEAR, state.sim_speed)
 	}
 
 	glfw.SetWindowTitle(window, title)
 
-	prev_tracked_body = camera.tracked_body
-	prev_sim_speed = sim_speed
+	prev_tracked_body = state.camera.tracked_body
+	prev_sim_speed = state.sim_speed
 }
 
 framebuffer_size_callback :: proc "c" (window: glfw.WindowHandle, width, height: i32) {
@@ -133,28 +159,77 @@ framebuffer_size_callback :: proc "c" (window: glfw.WindowHandle, width, height:
 }
 
 scroll_callback :: proc "c" (window: glfw.WindowHandle, xOffset, yOffset: f64) {
-	camera_zoom(yOffset)
+	state := get_state(window)
+
+	if drag, ok := state.input.drag_start.?; ok {
+		state.input.spawn_mass_exp += yOffset * SPAWN_MASS_SENS
+	} else {
+		camera_zoom(&state.camera, yOffset)
+	}
 }
 
 click_callback :: proc "c" (window: glfw.WindowHandle, button, action, mods: i32) {
+	state := get_state(window)
+
     if button == glfw.MOUSE_BUTTON_LEFT && action == glfw.RELEASE {
     	posX, posY := glfw.GetCursorPos(window)
-     	camera.pending_click = [2]f64{posX, posY}
+     	state.input.pending_click = Pixel_Pos({posX, posY})
+    }
+
+    if button == glfw.MOUSE_BUTTON_RIGHT && action == glfw.PRESS {
+	   	posX, posY := glfw.GetCursorPos(window)
+		state.input.drag_start = Pixel_Pos({posX, posY})
+    }
+
+    if button == glfw.MOUSE_BUTTON_RIGHT && action == glfw.RELEASE {
+	    if drag, ok := state.input.drag_start.?; ok {
+			posX, posY := glfw.GetCursorPos(window)
+			mass, radius := spawn_mass_radius(state.input.spawn_mass_exp);
+
+			state.input.pending_spawn = Spawn_Request {
+				start_pos = drag.xy,
+				end_pos = {posX, posY},
+				mass = mass,
+				radius = radius
+	    	}
+		}
+
+		state.input.drag_start = nil
     }
 }
 
 key_callback :: proc "c" (window: glfw.WindowHandle, key, scancode, action, mods: i32) {
 	if action == glfw.PRESS || action == glfw.REPEAT {
+		state := get_state(window)
+
 		if key == glfw.KEY_ESCAPE {
 			glfw.SetWindowShouldClose(window, true)
 		}
 
 		if key ==  glfw.KEY_LEFT {
-			sim_speed = math.max(1, sim_speed / 2)
+			state.sim_speed = math.max(1, state.sim_speed / 2)
+		}
+		if key == glfw.KEY_RIGHT {
+			state.sim_speed = math.min(MAX_SIM_SPEED, state.sim_speed * 2)
 		}
 
-		if key == glfw.KEY_RIGHT {
-			sim_speed = math.min(MAX_SIM_SPEED, sim_speed * 2)
+		if key == glfw.KEY_UP {
+			state.input.pending_vel += 1
+		}
+		if key == glfw.KEY_DOWN {
+			state.input.pending_vel = math.max(-99, state.input.pending_vel - 1)
+		}
+
+		if key == glfw.KEY_PERIOD {
+			state.input.pending_mass += 1
+		}
+		if key == glfw.KEY_COMMA {
+			state.input.pending_mass -= 1
 		}
 	}
+}
+
+get_state :: proc "contextless" (window: glfw.WindowHandle) -> ^State {
+	state := (^State)(glfw.GetWindowUserPointer(window))
+	return state
 }

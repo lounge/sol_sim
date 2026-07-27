@@ -14,6 +14,7 @@ Body_Colors :: struct {
 	Uranus:  Color,
 	Neptune: Color,
 	Pluto:   Color,
+	Spawn:	 Color
 }
 
 Color_Set :: struct {
@@ -33,6 +34,7 @@ albedo: Color_Set = {
 		Uranus  = {0.56, 0.86, 0.90},
 		Neptune = {0.18, 0.32, 0.78},
 		Pluto   = {0.54, 0.48, 0.42},
+		Spawn	= {1.00, 1.00, 1.00}
 	},
 }
 
@@ -49,6 +51,7 @@ realistic: Color_Set = {
 		Uranus  = {0.48, 0.75, 0.78},
 		Neptune = {0.13, 0.24, 0.56},
 		Pluto   = {0.40, 0.35, 0.31},
+		Spawn	= {1.00, 1.00, 1.00}
 	},
 }
 
@@ -65,5 +68,6 @@ vibrant: Color_Set = {
 		Uranus  = {0.40, 0.92, 1.00},
 		Neptune = {0.08, 0.25, 0.95},
 		Pluto   = {0.58, 0.47, 0.39},
+		Spawn	= {1.00, 1.00, 1.00}
 	},
 }
