@@ -89,7 +89,8 @@ apply_pending_spawn :: proc (state: ^State, bodies: ^[dynamic]Body, trails: ^[dy
 			prev_pos = ([2]f64)(world_pos_end),
 			vel = ([2]f64)(world_drag) / DRAG_TIME,
 			mass = spawn.mass,
-			radius = spawn.radius
+			radius = spawn.radius,
+			spawned = true
 		}
 
 		trail := Trail {
@@ -106,4 +107,38 @@ apply_pending_spawn :: proc (state: ^State, bodies: ^[dynamic]Body, trails: ^[dy
 		state.input.pending_spawn = nil
 		state.spawned_bodies += 1
 	}
+}
+
+apply_pending_delete :: proc (state: ^State, bodies: ^[dynamic]Body, trails: ^[dynamic]Trail) {
+	if state.input.pending_delete == false do return
+
+	if state.camera.tracked_body < 0 {
+		state.input.pending_delete = false
+		return
+	}
+
+	tracked_id := state.camera.tracked_body
+
+	if bodies[tracked_id].spawned do delete(bodies[tracked_id].name)
+
+	ordered_remove(bodies, tracked_id)
+	ordered_remove(trails, tracked_id)
+
+	for &trail in trails {
+		if trail.parent == tracked_id {
+			trail.parent = -1
+			trail.count = 0
+			trail.head = 0
+			trail.cap = TRAIL_CAP
+			trail.stride = TRAIL_STRIDE_DEFAULT
+			trail.frame_count = TRAIL_STRIDE_DEFAULT - 1
+		} else if trail.parent > tracked_id {
+			trail.parent -= 1
+		}
+	}
+
+	state.camera.tracked_body = -1
+	state.input.pending_delete = false
+
+	compute_accels(bodies[:])
 }

@@ -13,6 +13,7 @@ Input :: struct {
 	pending_vel: int,
 	pending_mass: int,
 	pending_spawn: Maybe(Spawn_Request),
+	pending_delete: bool,
 	drag_start: Maybe(Pixel_Pos),
 	spawn_mass_exp: f64
 }

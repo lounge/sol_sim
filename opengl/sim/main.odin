@@ -81,6 +81,7 @@ main :: proc() {
 		accumulator += frame_time * f64(state.sim_speed) / T_UNIT_SECONDS
 
 		// Apply interaction
+		apply_pending_delete(&state, &bodies, &trails)
 		apply_pending_edits(&state, bodies[:])
 		apply_pending_spawn(&state, &bodies, &trails,  window_width, window_height)
 
@@ -225,6 +226,14 @@ key_callback :: proc "c" (window: glfw.WindowHandle, key, scancode, action, mods
 		}
 		if key == glfw.KEY_COMMA {
 			state.input.pending_mass -= 1
+		}
+	}
+
+	if action == glfw.PRESS {
+		state := get_state(window)
+
+		if key == glfw.KEY_BACKSPACE || key == glfw.KEY_DELETE {
+			state.input.pending_delete = true
 		}
 	}
 }
