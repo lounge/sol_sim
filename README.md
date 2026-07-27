@@ -22,6 +22,6 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 16. Replace semi-implicit Euler with Velocity Verlet or leapfrog — measure the precession before/after, watch it collapse. - DONE
 17. Mutate the tracked body (mass, prograde/retrograde burns) - DONE
 18. Spawn a body with click-drag/scroll (position + velocity, mass) - DONE
-19. Delete a body.
+19. Delete a body. - DONE
 20. Make 3D.
 21. Lighting (Sun).
