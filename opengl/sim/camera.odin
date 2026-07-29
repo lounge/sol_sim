@@ -8,7 +8,7 @@ PICK_RADIUS_PX :: 8
 Camera :: struct {
 	center: [2]f64,
 	half_extent: f64,
-	tracked_body: int
+	tracked_body: int,
 }
 
 camera_zoom :: proc "contextless" (camera_state: ^Camera, yOffset: f64) {

@@ -15,7 +15,7 @@ Body :: struct {
 	mass: f64,
 	radius: f64,
 	accel: [2]f64,
-	spawned: bool // if dynamicaly spawned
+	spawned: bool, // if dynamicaly spawned
 }
 
 // Integrator: Kick–drift–kick velocity Verlet
@@ -75,7 +75,11 @@ apply_pending_edits :: proc (state: ^State, bodies: []Body) {
 	state.input.pending_mass = 0
 }
 
-apply_pending_spawn :: proc (state: ^State, bodies: ^[dynamic]Body, trails: ^[dynamic]Trail, width, height: i32) {
+apply_pending_spawn :: proc (
+	state: ^State,
+	bodies: ^[dynamic]Body,
+	trails: ^[dynamic]Trail,
+	width, height: i32) {
 	if spawn, ok := state.input.pending_spawn.?; ok {
 		world_pos_start := calc_world_pos(spawn.start_pos, &state.camera, width, height)
 		world_pos_end := calc_world_pos(spawn.end_pos, &state.camera, width, height)
@@ -90,13 +94,13 @@ apply_pending_spawn :: proc (state: ^State, bodies: ^[dynamic]Body, trails: ^[dy
 			vel = ([2]f64)(world_drag) / DRAG_TIME,
 			mass = spawn.mass,
 			radius = spawn.radius,
-			spawned = true
+			spawned = true,
 		}
 
 		trail := Trail {
 			parent = -1,
 			cap = TRAIL_CAP,
-			stride = TRAIL_STRIDE_DEFAULT
+			stride = TRAIL_STRIDE_DEFAULT,
 		}
 
 		append(bodies, body)

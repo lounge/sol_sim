@@ -29,7 +29,7 @@ specs := []Body_Spec {
 				ecc = 0.2056,
 				semi_major_axis = 0.387,
 				color = palette.Mercury,
-				name = "Mercury"
+				name = "Mercury",
 			},
 			{
 				mass = 2.447e-6,
@@ -37,7 +37,7 @@ specs := []Body_Spec {
 				ecc = 0.0068,
 				semi_major_axis = 0.723,
 				color = palette.Venus,
-				name = "Venus"
+				name = "Venus",
 			},
 			{
 				mass = 3.003 * math.pow10(f64(-6.0)),
@@ -53,9 +53,9 @@ specs := []Body_Spec {
 						ecc = 0.0549,
 						semi_major_axis = 2.570 * math.pow10(f64(-3)),
 						color = palette.Moon,
-						name = "Moon"
+						name = "Moon",
 					},
-				}
+				},
 			},
 			{
 				mass = 3.227e-7,
@@ -63,7 +63,7 @@ specs := []Body_Spec {
 				ecc = 0.0934,
 				semi_major_axis = 1.524,
 				color = palette.Mars,
-				name = "Mars"
+				name = "Mars",
 			},
 			{
 				mass = 9.545e-4,
@@ -79,7 +79,7 @@ specs := []Body_Spec {
 						ecc = 0.0041,
 						semi_major_axis = 2.819e-3,
 						color = palette.Moon,
-						name = "Io"
+						name = "Io",
 					},
 					{
 						mass = 2.41e-8,
@@ -87,7 +87,7 @@ specs := []Body_Spec {
 						ecc = 0.0094,
 						semi_major_axis = 4.486e-3,
 						color = palette.Moon,
-						name = "Europa"
+						name = "Europa",
 					},
 					{
 						mass = 7.45e-8,
@@ -95,7 +95,7 @@ specs := []Body_Spec {
 						ecc = 0.0013,
 						semi_major_axis = 7.155e-3,
 						color = palette.Moon,
-						name = "Ganymede"
+						name = "Ganymede",
 					},
 					{
 						mass = 5.41e-8,
@@ -103,9 +103,9 @@ specs := []Body_Spec {
 						ecc = 0.0074,
 						semi_major_axis = 1.259e-2,
 						color = palette.Moon,
-						name = "Callisto"
+						name = "Callisto",
 					},
-				}
+				},
 			},
 			{
 				mass = 2.858e-4,
@@ -113,7 +113,7 @@ specs := []Body_Spec {
 				ecc = 0.0565,
 				semi_major_axis = 9.537,
 				color = palette.Saturn,
-				name = "Saturn"
+				name = "Saturn",
 			},
 			{
 				mass = 4.366e-5,
@@ -121,7 +121,7 @@ specs := []Body_Spec {
 				ecc = 0.0457,
 				semi_major_axis = 19.19,
 				color = palette.Uranus,
-				name = "Uranus"
+				name = "Uranus",
 			},
 			{
 				mass = 5.150e-5,
@@ -129,7 +129,7 @@ specs := []Body_Spec {
 				ecc = 0.0113,
 				semi_major_axis = 30.07,
 				color = palette.Neptune,
-				name = "Neptune"
+				name = "Neptune",
 			},
 			{
 				mass = 6.55e-9,
@@ -138,9 +138,9 @@ specs := []Body_Spec {
 				semi_major_axis = 39.48,
 				start_at_aphelion = true,
 				color = palette.Pluto,
-				name = "Pluto"
-			}
-		}
+				name = "Pluto",
+			},
+		},
 	},
 }
 
@@ -177,7 +177,11 @@ create_system :: proc() -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
 	return bodies, trails
 }
 
-add_body :: proc (spec: Body_Spec, parent_index: int, bodies: ^[dynamic]Body, trails: ^[dynamic]Trail) {
+add_body :: proc (
+	spec: Body_Spec,
+	parent_index: int,
+	bodies: ^[dynamic]Body,
+	trails: ^[dynamic]Trail) {
 	pos: [2]f64 = {0.0, 0.0}
 	vel: [2]f64 = {0.0, 0.0}
 	steps_per_orbit: f64 = 0.0
@@ -210,13 +214,13 @@ add_body :: proc (spec: Body_Spec, parent_index: int, bodies: ^[dynamic]Body, tr
 		vel = vel,
 		mass = spec.mass,
 		radius = spec.radius,
-		accel = {0.0, 0.0}
+		accel = {0.0, 0.0},
 	}
 
 	trail := Trail {
 		parent = parent_index,
 		cap = int(TRAIL_FRACTION * steps_per_orbit / f64(stride)),
-		stride = stride
+		stride = stride,
 	}
 
 	assert(trail.cap <= TRAIL_CAP, spec.name)
