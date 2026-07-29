@@ -34,10 +34,10 @@ main :: proc() {
 	state := state_init()
 	glfw.SetWindowUserPointer(window, &state)
 
-	glfw.SetFramebufferSizeCallback(window, framebuffer_size_callback)
-	glfw.SetScrollCallback(window, scroll_callback)
-	glfw.SetMouseButtonCallback(window, click_callback)
-	glfw.SetKeyCallback(window, key_callback)
+	glfw.SetFramebufferSizeCallback(window, callback_framebuffer_size)
+	glfw.SetScrollCallback(window, callback_scroll)
+	glfw.SetMouseButtonCallback(window, callback_click)
+	glfw.SetKeyCallback(window, callback_key)
 
 	glfw.MakeContextCurrent(window)
 	glfw.SwapInterval(1)
@@ -59,8 +59,8 @@ main :: proc() {
 		os.exit(-1)
 	}
 
-	circle_mesh := create_circle_mesh(32)
-	trail_mesh := create_trail_mesh()
+	circle_mesh := circle_mesh_create(32)
+	trail_mesh := trail_mesh_create()
 
 	accumulator: f64
 	last_time := glfw.GetTime()
@@ -79,14 +79,14 @@ main :: proc() {
 		accumulator += frame_time * f64(state.sim_speed) / T_UNIT_SECONDS
 
 		// Apply interaction
-		apply_pending_delete(&state, &bodies, &trails)
-		apply_pending_edits(&state, bodies[:])
-		apply_pending_spawn(&state, &bodies, &trails,  window_width, window_height)
+		pending_delete_apply(&state, &bodies, &trails)
+		pending_edits_apply(&state, bodies[:])
+		pending_spawn_apply(&state, &bodies, &trails,  window_width, window_height)
 
 		// Drain loop
 		for accumulator >= DT {
 			physics_step(bodies[:], DT)
-			record_trail(bodies[:], trails[:])
+			trail_record(bodies[:], trails[:])
 			accumulator -= DT
 		}
 
@@ -94,20 +94,20 @@ main :: proc() {
 
 		camera_update(&state, bodies[:], window_width, window_height, alpha)
 
-		draw_bodies(bodies[:], circle_mesh, body_program, &state.camera, fb_width, fb_height, alpha)
-		draw_trails(trails[:], bodies[:], trail_mesh, trail_program, &state.camera, fb_width, fb_height, alpha)
+		bodies_draw(bodies[:], circle_mesh, body_program, &state.camera, fb_width, fb_height, alpha)
+		trails_draw(trails[:], bodies[:], trail_mesh, trail_program, &state.camera, fb_width, fb_height, alpha)
 
 		if drag, ok := state.input.drag_start.?; ok {
 			start_pos := drag
 			end_x, end_y := glfw.GetCursorPos(window)
-			end_world := draw_drag_preview(start_pos, {end_x, end_y}, trail_mesh, trail_program, &state.camera, window_width, window_height)
+			end_world := drag_preview_draw(start_pos, {end_x, end_y}, trail_mesh, trail_program, &state.camera, window_width, window_height)
 
-			_, radius := spawn_mass_radius(state.input.spawn_mass_exp)
+			_, radius := mass_radius_get(state.input.spawn_mass_exp)
 
-			draw_mass_preview(end_world, radius, palette.Spawn, circle_mesh, body_program, &state.camera, fb_width, fb_height)
+			mass_preview_draw(end_world, radius, palette.Spawn, circle_mesh, body_program, &state.camera, fb_width, fb_height)
 		}
 
-		update_window_title(window, &state, bodies[:])
+		window_title_update(window, &state, bodies[:])
 
 		glfw.SwapBuffers(window)
 		glfw.PollEvents()
@@ -118,7 +118,7 @@ main :: proc() {
 	glfw.Terminate()
 }
 
-update_window_title :: proc (window: glfw.WindowHandle, state: ^State, bodies: []Body) {
+window_title_update :: proc (window: glfw.WindowHandle, state: ^State, bodies: []Body) {
 	@(static) prev_tracked_body := -2
 	@(static) prev_sim_speed := -1
 	title: cstring
@@ -126,11 +126,11 @@ update_window_title :: proc (window: glfw.WindowHandle, state: ^State, bodies: [
 	if drag, ok := state.input.drag_start.?; ok {
 		end_x, end_y := glfw.GetCursorPos(window)
 		width, height := glfw.GetWindowSize(window)
-		start_world := calc_world_pos(drag, &state.camera, width, height)
-		end_world := calc_world_pos({end_x, end_y}, &state.camera, width, height)
+		start_world := world_pos_calc(drag, &state.camera, width, height)
+		end_world := world_pos_calc({end_x, end_y}, &state.camera, width, height)
 
 		speed := linalg.length(end_world - start_world) / DRAG_TIME
-		mass, _ := spawn_mass_radius(state.input.spawn_mass_exp)
+		mass, _ := mass_radius_get(state.input.spawn_mass_exp)
 
 		title = fmt.ctprintf("%s - Spawn %e sol (x%.0f Moon) - %.1f km/s", "Sol_Sim", mass, math.pow(2, state.input.spawn_mass_exp), speed * 29.78)
 		glfw.SetWindowTitle(window, title)
@@ -153,11 +153,11 @@ update_window_title :: proc (window: glfw.WindowHandle, state: ^State, bodies: [
 	prev_sim_speed = state.sim_speed
 }
 
-framebuffer_size_callback :: proc "c" (window: glfw.WindowHandle, width, height: i32) {
+callback_framebuffer_size :: proc "c" (window: glfw.WindowHandle, width, height: i32) {
 	gl.Viewport(0, 0, width, height)
 }
 
-get_state :: proc "contextless" (window: glfw.WindowHandle) -> ^State {
+state_get :: proc "contextless" (window: glfw.WindowHandle) -> ^State {
 	state := (^State)(glfw.GetWindowUserPointer(window))
 	return state
 }

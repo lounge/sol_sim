@@ -27,44 +27,45 @@ Spawn_Request :: struct {
 	radius: f64,
 }
 
-spawn_mass_radius :: proc "contextless" (mass_exp: f64) -> (mass: f64, radius: f64) {
+
+mass_radius_get :: proc "contextless" (mass_exp: f64) -> (mass: f64, radius: f64) {
 	mass = SPAWN_BASE_MASS * math.pow(2, mass_exp)
 	radius = SPAWN_BASE_RADIUS * math.pow(mass / SPAWN_BASE_MASS, 1.0/3.0)
 
 	return mass, radius
 }
 
-scroll_callback :: proc "c" (window: glfw.WindowHandle, xOffset, yOffset: f64) {
-	state := get_state(window)
+callback_scroll :: proc "c" (window: glfw.WindowHandle, x_offset, y_offset: f64) {
+	state := state_get(window)
 
 	if _, ok := state.input.drag_start.?; ok {
-		state.input.spawn_mass_exp += yOffset * SPAWN_MASS_SENS
+		state.input.spawn_mass_exp += y_offset * SPAWN_MASS_SENS
 	} else {
-		camera_zoom(&state.camera, yOffset)
+		camera_zoom(&state.camera, y_offset)
 	}
 }
 
-click_callback :: proc "c" (window: glfw.WindowHandle, button, action, mods: i32) {
-	state := get_state(window)
+callback_click :: proc "c" (window: glfw.WindowHandle, button, action, mods: i32) {
+	state := state_get(window)
 
     if button == glfw.MOUSE_BUTTON_LEFT && action == glfw.RELEASE {
-    	posX, posY := glfw.GetCursorPos(window)
-     	state.input.pending_click = Pixel_Pos({posX, posY})
+    	pos_x, pos_y := glfw.GetCursorPos(window)
+     	state.input.pending_click = Pixel_Pos({pos_x, pos_y})
     }
 
     if button == glfw.MOUSE_BUTTON_RIGHT && action == glfw.PRESS {
-	   	posX, posY := glfw.GetCursorPos(window)
-		state.input.drag_start = Pixel_Pos({posX, posY})
+	   	pos_x, pos_y := glfw.GetCursorPos(window)
+		state.input.drag_start = Pixel_Pos({pos_x, pos_y})
     }
 
     if button == glfw.MOUSE_BUTTON_RIGHT && action == glfw.RELEASE {
 	    if drag, ok := state.input.drag_start.?; ok {
-			posX, posY := glfw.GetCursorPos(window)
-			mass, radius := spawn_mass_radius(state.input.spawn_mass_exp)
+			pos_x, pos_y := glfw.GetCursorPos(window)
+			mass, radius := mass_radius_get(state.input.spawn_mass_exp)
 
 			state.input.pending_spawn = Spawn_Request {
 				start_pos = drag.xy,
-				end_pos = {posX, posY},
+				end_pos = {pos_x, pos_y},
 				mass = mass,
 				radius = radius,
 	    	}
@@ -74,9 +75,9 @@ click_callback :: proc "c" (window: glfw.WindowHandle, button, action, mods: i32
     }
 }
 
-key_callback :: proc "c" (window: glfw.WindowHandle, key, scancode, action, mods: i32) {
+callback_key :: proc "c" (window: glfw.WindowHandle, key, scancode, action, mods: i32) {
 	if action == glfw.PRESS || action == glfw.REPEAT {
-		state := get_state(window)
+		state := state_get(window)
 
 		if key == glfw.KEY_ESCAPE {
 			glfw.SetWindowShouldClose(window, true)
@@ -105,7 +106,7 @@ key_callback :: proc "c" (window: glfw.WindowHandle, key, scancode, action, mods
 	}
 
 	if action == glfw.PRESS {
-		state := get_state(window)
+		state := state_get(window)
 
 		if key == glfw.KEY_BACKSPACE || key == glfw.KEY_DELETE {
 			state.input.pending_delete = true

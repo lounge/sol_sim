@@ -17,7 +17,7 @@ camera_zoom :: proc "contextless" (camera_state: ^Camera, yOffset: f64) {
 
 camera_update :: proc(state: ^State,  bodies: []Body, width, height: i32, alpha: f64) {
 	if state.camera.tracked_body >= 0 {
-		world := render_pos(bodies[state.camera.tracked_body], alpha)
+		world := pos_render(bodies[state.camera.tracked_body], alpha)
 		state.camera.center = world
 	}
 
@@ -28,12 +28,12 @@ camera_update :: proc(state: ^State,  bodies: []Body, width, height: i32, alpha:
 		best_dist := math.INF_F64
 		for body, i in bodies {
 			// Forward transform chain -> World -> Screen
-			world := render_pos(body, alpha)
-			screen := calc_screen_pos(World_Pos(world), &state.camera, width, height)
+			world := pos_render(body, alpha)
+			screen :=screen_pos_calc(World_Pos(world), &state.camera, width, height)
 			diff := screen - click
 			dist := math.sqrt(diff.x * diff.x + diff.y * diff.y)
 
-			marker_px := calc_ndc_scale(body.radius, height, &state.camera) * f64(height) / 2
+			marker_px := ndc_scale_calc(body.radius, height, &state.camera) * f64(height) / 2
 			if dist < max(marker_px, PICK_RADIUS_PX) && dist < best_dist {
 				best = i
 				best_dist = dist

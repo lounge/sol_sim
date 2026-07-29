@@ -23,29 +23,29 @@ physics_step :: proc(bodies: []Body, dt: f64) {
 	for &body in bodies do body.prev_pos = body.pos
 	for &body in bodies do body.vel += body.accel * (dt / 2) // half-kick
 	for &body in bodies do body.pos += body.vel * dt // drift
-	compute_accels(bodies[:])
+	accels_compute(bodies[:])
 	for &body in bodies do body.vel += body.accel * (dt / 2) // half-kick
 }
 
-compute_accels :: proc(bodies: []Body) {
+accels_compute :: proc(bodies: []Body) {
 	for &body in bodies do body.accel = 0
 
 	for i := 0; i < len(bodies); i += 1 {
 	 	for j := i + 1; j < len(bodies); j += 1 {
-			bodyA := &bodies[i]
- 			bodyB := &bodies[j]
+			body_a := &bodies[i]
+ 			body_b := &bodies[j]
 
-	        r_vec := bodyA.pos - bodyB.pos
+	        r_vec := body_a.pos - body_b.pos
 	        distance := math.sqrt(r_vec.x * r_vec.x + r_vec.y * r_vec.y)
 	        direction := r_vec / distance
 
-			bodyA.accel -= direction * (G * bodyB.mass / (distance * distance))
-			bodyB.accel += direction * (G * bodyA.mass / (distance * distance))
+			body_a.accel -= direction * (G * body_b.mass / (distance * distance))
+			body_b.accel += direction * (G * body_a.mass / (distance * distance))
 		}
 	}
 }
 
-apply_pending_edits :: proc (state: ^State, bodies: []Body) {
+pending_edits_apply :: proc (state: ^State, bodies: []Body) {
 	if state.input.pending_vel == 0 && state.input.pending_mass == 0 do return
 
 	if state.camera.tracked_body < 0 {
@@ -68,21 +68,21 @@ apply_pending_edits :: proc (state: ^State, bodies: []Body) {
 
 		fmt.printfln("Body: %s, Factor: %f, Mass: %v", body.name, mass_factor, body.mass)
 
-		compute_accels(bodies)
+		accels_compute(bodies)
 	}
 
 	state.input.pending_vel = 0
 	state.input.pending_mass = 0
 }
 
-apply_pending_spawn :: proc (
+pending_spawn_apply :: proc (
 	state: ^State,
 	bodies: ^[dynamic]Body,
 	trails: ^[dynamic]Trail,
 	width, height: i32) {
 	if spawn, ok := state.input.pending_spawn.?; ok {
-		world_pos_start := calc_world_pos(spawn.start_pos, &state.camera, width, height)
-		world_pos_end := calc_world_pos(spawn.end_pos, &state.camera, width, height)
+		world_pos_start := world_pos_calc(spawn.start_pos, &state.camera, width, height)
+		world_pos_end := world_pos_calc(spawn.end_pos, &state.camera, width, height)
 
 		world_drag := world_pos_end - world_pos_start
 
@@ -106,14 +106,14 @@ apply_pending_spawn :: proc (
 		append(bodies, body)
 		append(trails, trail)
 
-		compute_accels(bodies[:])
+		accels_compute(bodies[:])
 
 		state.input.pending_spawn = nil
 		state.spawned_bodies += 1
 	}
 }
 
-apply_pending_delete :: proc (state: ^State, bodies: ^[dynamic]Body, trails: ^[dynamic]Trail) {
+pending_delete_apply :: proc (state: ^State, bodies: ^[dynamic]Body, trails: ^[dynamic]Trail) {
 	if state.input.pending_delete == false do return
 
 	if state.camera.tracked_body < 0 {
@@ -144,5 +144,5 @@ apply_pending_delete :: proc (state: ^State, bodies: ^[dynamic]Body, trails: ^[d
 	state.camera.tracked_body = -1
 	state.input.pending_delete = false
 
-	compute_accels(bodies[:])
+	accels_compute(bodies[:])
 }

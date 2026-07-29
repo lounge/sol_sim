@@ -146,7 +146,7 @@ specs := []Body_Spec {
 
 create_system :: proc() -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
 	for spec in specs {
-		add_body(spec, -1, &bodies, &trails)
+		body_add(spec, -1, &bodies, &trails)
 	}
 
 	largest_mass_index := 1
@@ -172,12 +172,12 @@ create_system :: proc() -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
 	}
 
 	// Set priming force
-	compute_accels(bodies[:])
+	accels_compute(bodies[:])
 
 	return bodies, trails
 }
 
-add_body :: proc (
+body_add :: proc (
 	spec: Body_Spec,
 	parent_index: int,
 	bodies: ^[dynamic]Body,
@@ -230,6 +230,6 @@ add_body :: proc (
 
 	body_index := len(bodies) - 1
 	for sat in spec.satellites {
-		add_body(sat, body_index, bodies, trails)
+		body_add(sat, body_index, bodies, trails)
 	}
 }
