@@ -1,8 +1,6 @@
 package main
 
 import gl "vendor:OpenGL"
-
-import "core:c"
 import "core:fmt"
 import "core:math"
 import "core:math/linalg"
@@ -67,7 +65,7 @@ main :: proc() {
 	accumulator: f64
 	last_time := glfw.GetTime()
 	for !glfw.WindowShouldClose(window) {
-		fb_width, fb_height := glfw.GetFramebufferSize(window)
+		fb_width, fb_height = glfw.GetFramebufferSize(window)
 		window_width, window_height := glfw.GetWindowSize(window)
 
 		gl.ClearColor(0.0, 0.0, 0.0, 0.0)
@@ -104,7 +102,7 @@ main :: proc() {
 			end_x, end_y := glfw.GetCursorPos(window)
 			end_world := draw_drag_preview(start_pos, {end_x, end_y}, trail_mesh, trail_program, &state.camera, window_width, window_height)
 
-			_, radius := spawn_mass_radius(state.input.spawn_mass_exp);
+			_, radius := spawn_mass_radius(state.input.spawn_mass_exp)
 
 			draw_mass_preview(end_world, radius, palette.Spawn, circle_mesh, body_program, &state.camera, fb_width, fb_height)
 		}
