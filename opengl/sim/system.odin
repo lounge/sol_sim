@@ -51,7 +51,7 @@ specs := []Body_Spec {
 						mass = 3.69e-8,
 						radius = 1.161e-5,
 						ecc = 0.0549,
-						semi_major_axis = 2.570 * math.pow10(f64(-3)),
+						semi_major_axis = 2.570e-3,
 						color = palette.Moon,
 						name = "Moon",
 					},
