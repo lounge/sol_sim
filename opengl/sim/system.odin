@@ -40,7 +40,7 @@ specs := []Body_Spec {
 				name = "Venus",
 			},
 			{
-				mass = 3.003 * math.pow10(f64(-6.0)),
+				mass = 3.003e-6,
 				radius = 4.259e-5,
 				ecc = 0.0167,
 				semi_major_axis = 1,
@@ -48,7 +48,7 @@ specs := []Body_Spec {
 				name = "Earth",
 				satellites = {
 					{
-						mass = 3.69 * math.pow10(f64(-8.0)),
+						mass = 3.69e-8,
 						radius = 1.161e-5,
 						ecc = 0.0549,
 						semi_major_axis = 2.570 * math.pow10(f64(-3)),
