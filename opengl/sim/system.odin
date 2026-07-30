@@ -14,7 +14,7 @@ Body_Spec :: struct {
 
 }
 
-specs := []Body_Spec {
+specs: []Body_Spec = {
 	Body_Spec {
 		mass = 1.0,
 		radius = 4.654e-3,
