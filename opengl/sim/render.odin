@@ -1,7 +1,7 @@
 package main
 
-import gl "vendor:OpenGL"
 import "core:math"
+import gl "vendor:OpenGL"
 
 TRAIL_CAP :: 12800
 TRAIL_FRACTION :: 0.95
@@ -9,19 +9,19 @@ TRAIL_STRIDE_DEFAULT :: 5
 MIN_MARKER_PX :: 4
 
 Mesh :: struct {
-	vao: u32,
-	vbo: u32,
+	vao:          u32,
+	vbo:          u32,
 	vertex_count: i32,
-	primitive: u32,
+	primitive:    u32,
 }
 
 Trail :: struct {
-	points: [TRAIL_CAP][2]f64,
-	head: int,
-	count: int,
-	parent: int,
-	cap: int,
-	stride: int,
+	points:      [TRAIL_CAP][2]f64,
+	head:        int,
+	count:       int,
+	parent:      int,
+	cap:         int,
+	stride:      int,
 	frame_count: int,
 }
 
@@ -60,12 +60,7 @@ trail_mesh_create :: proc() -> Mesh {
 	gl.EnableVertexAttribArray(0)
 	gl.BindVertexArray(0)
 
-	mesh := Mesh {
-		vao,
-		vbo,
-		0,
-		gl.LINE_STRIP,
-	}
+	mesh := Mesh{vao, vbo, 0, gl.LINE_STRIP}
 
 	return mesh
 }
@@ -77,7 +72,8 @@ trails_draw :: proc(
 	program: u32,
 	camera_state: ^Camera,
 	width, height: i32,
-	alpha: f64) {
+	alpha: f64,
+) {
 	scratch_buffer: [TRAIL_CAP + 1][2]f32
 
 	gl.UseProgram(program)
@@ -99,17 +95,17 @@ trails_draw :: proc(
 			oldest_point = trail.head
 		}
 
-		for j := 0; j < trail.count ; j += 1 {
+		for j := 0; j < trail.count; j += 1 {
 			point := trail.points[(oldest_point + j) % trail.cap]
 
 			point_pos := point
-		 	if trail.parent >= 0 {
+			if trail.parent >= 0 {
 				world := pos_render(bodies[trail.parent], alpha)
 				point_pos = point + world
 			}
 
 			ndc_pos := ndc_offset_calc(World_Pos(point_pos), camera_state)
-			scratch_buffer[j] = [2]f32{f32(ndc_pos.x),f32(ndc_pos.y)}
+			scratch_buffer[j] = [2]f32{f32(ndc_pos.x), f32(ndc_pos.y)}
 		}
 
 		world := pos_render(bodies[i], alpha)
@@ -122,7 +118,12 @@ trails_draw :: proc(
 		shader_set_vec3(program, "color", color.x, color.y, color.z)
 		shader_set_int(program, "count", i32(trail_count))
 
-		gl.BufferSubData(gl.ARRAY_BUFFER, 0, trail_count  * 2 * size_of(f32), raw_data(&scratch_buffer))
+		gl.BufferSubData(
+			gl.ARRAY_BUFFER,
+			0,
+			trail_count * 2 * size_of(f32),
+			raw_data(&scratch_buffer),
+		)
 		gl.DrawArrays(mesh.primitive, 0, i32(trail_count))
 	}
 }
@@ -152,17 +153,17 @@ circle_mesh_create :: proc(segments: i32) -> Mesh {
 	gl.GenBuffers(1, &vbo)
 	gl.BindVertexArray(vao)
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, len(vertices) * size_of(f32), raw_data(vertices), gl.STATIC_DRAW)
+	gl.BufferData(
+		gl.ARRAY_BUFFER,
+		len(vertices) * size_of(f32),
+		raw_data(vertices),
+		gl.STATIC_DRAW,
+	)
 	gl.VertexAttribPointer(0, 2, gl.FLOAT, gl.FALSE, 2 * size_of(f32), 0)
 	gl.EnableVertexAttribArray(0)
 	gl.BindVertexArray(0)
 
-	mesh := Mesh {
-		vao,
-		vbo,
-		segments + 2,
-		gl.TRIANGLE_FAN,
-	}
+	mesh := Mesh{vao, vbo, segments + 2, gl.TRIANGLE_FAN}
 
 	return mesh
 }
@@ -173,24 +174,35 @@ bodies_draw :: proc(
 	program: u32,
 	camera_state: ^Camera,
 	width, height: i32,
-	alpha: f64) {
+	alpha: f64,
+) {
 	gl.UseProgram(program)
 	gl.BindVertexArray(mesh.vao)
 
 	for &body in bodies {
 		world := pos_render(body, alpha)
-		circle_draw(World_Pos(world), body.radius, body.color, mesh, program, camera_state, width, height)
+		circle_draw(
+			World_Pos(world),
+			body.radius,
+			body.color,
+			mesh,
+			program,
+			camera_state,
+			width,
+			height,
+		)
 	}
 }
 
-circle_draw :: proc (
+circle_draw :: proc(
 	world: World_Pos,
 	radius: f64,
 	color: [3]f32,
 	mesh: Mesh,
 	program: u32,
 	camera: ^Camera,
-	width, height: i32) {
+	width, height: i32,
+) {
 	ndc_pos := ndc_offset_calc(world, camera)
 	shader_set_vec2(program, "offset", f32(ndc_pos.x), f32(ndc_pos.y))
 
@@ -202,12 +214,13 @@ circle_draw :: proc (
 	gl.DrawArrays(mesh.primitive, 0, mesh.vertex_count)
 }
 
-drag_preview_draw :: proc (
+drag_preview_draw :: proc(
 	start_px, end_px: Pixel_Pos,
 	mesh: Mesh,
 	program: u32,
 	camera: ^Camera,
-	width, height: i32) -> World_Pos {
+	width, height: i32,
+) -> World_Pos {
 	scratch_buffer: [2][2]f32
 
 	start_world := world_pos_calc(start_px, camera, width, height)
@@ -235,14 +248,15 @@ drag_preview_draw :: proc (
 	return end_world
 }
 
-mass_preview_draw :: proc (
+mass_preview_draw :: proc(
 	world: World_Pos,
 	radius: f64,
 	color: [3]f32,
 	mesh: Mesh,
 	program: u32,
 	camera: ^Camera,
-	width, height: i32) {
+	width, height: i32,
+) {
 	gl.UseProgram(program)
 	gl.BindVertexArray(mesh.vao)
 
@@ -266,35 +280,24 @@ ndc_scale_calc :: proc(radius: f64, height: i32, camera_state: ^Camera) -> f64 {
 screen_pos_calc :: proc(
 	world_pos: World_Pos,
 	camera_state: ^Camera,
-	width, height: i32) -> Pixel_Pos {
+	width, height: i32,
+) -> Pixel_Pos {
 	w := f64(width)
 	h := f64(height)
 
 	ndc := ndc_offset_calc(world_pos, camera_state)
 	clip := [2]f64{ndc.x * f64(h) / f64(w), ndc.y}
-	return {
-		(clip.x + 1) * 0.5 * f64(w),
-		(1- clip.y) * 0.5 * f64(h),
-	}
+	return {(clip.x + 1) * 0.5 * f64(w), (1 - clip.y) * 0.5 * f64(h)}
 }
 
 // Screen -> World
-world_pos_calc :: proc(
-	px_pos: Pixel_Pos,
-	camera_state: ^Camera,
-	width, height: i32,) -> World_Pos {
+world_pos_calc :: proc(px_pos: Pixel_Pos, camera_state: ^Camera, width, height: i32) -> World_Pos {
 	w := f64(width)
 	h := f64(height)
 
-	clip := [2]f64 {
-		px_pos.x / (w/2) - 1,
-		1 - px_pos.y / (h/2),
-	}
+	clip := [2]f64{px_pos.x / (w / 2) - 1, 1 - px_pos.y / (h / 2)}
 
-	ndc := [2]f64 {
-		clip.x * w / h,
-		clip.y,
-	}
+	ndc := [2]f64{clip.x * w / h, clip.y}
 
 	return (World_Pos)(ndc * camera_state.half_extent + camera_state.center)
 }

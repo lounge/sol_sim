@@ -3,15 +3,14 @@ package main
 import "core:math"
 
 Body_Spec :: struct {
-	mass: f64,
-	radius: f64,
-	ecc: f64,
-	semi_major_axis: f64,
+	mass:              f64,
+	radius:            f64,
+	ecc:               f64,
+	semi_major_axis:   f64,
 	start_at_aphelion: bool,
-	color: [3]f32,
-	name: string,
-	satellites: []Body_Spec,
-
+	color:             [3]f32,
+	name:              string,
+	satellites:        []Body_Spec,
 }
 
 specs: []Body_Spec = {
@@ -150,11 +149,11 @@ create_system :: proc() -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
 	}
 
 	largest_mass_index := 1
-    for i in 2..<len(bodies) {
-        if bodies[i].mass > bodies[largest_mass_index].mass do largest_mass_index = i
-    }
+	for i in 2 ..< len(bodies) {
+		if bodies[i].mass > bodies[largest_mass_index].mass do largest_mass_index = i
+	}
 
-    // Copy the most massive body cap / stride to the Sun
+	// Copy the most massive body cap / stride to the Sun
 	trails[0].cap = trails[largest_mass_index].cap
 	trails[0].stride = trails[largest_mass_index].stride
 
@@ -162,7 +161,7 @@ create_system :: proc() -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
 	momentum_sum := [2]f64{0, 0}
 	for &body in bodies {
 		total_mass += body.mass
-    	momentum_sum += body.mass * body.vel
+		momentum_sum += body.mass * body.vel
 	}
 
 	// Barycenter velocity
@@ -177,21 +176,22 @@ create_system :: proc() -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
 	return bodies, trails
 }
 
-body_add :: proc (
+body_add :: proc(
 	spec: Body_Spec,
 	parent_index: int,
 	bodies: ^[dynamic]Body,
-	trails: ^[dynamic]Trail) {
+	trails: ^[dynamic]Trail,
+) {
 	pos: [2]f64 = {0.0, 0.0}
 	vel: [2]f64 = {0.0, 0.0}
 	steps_per_orbit: f64 = 0.0
 	stride: int = 1
 
-	if parent_index >= 0  {
+	if parent_index >= 0 {
 		parent := bodies[parent_index]
 		ecc_factor := 1 - spec.ecc
 		if spec.start_at_aphelion {
-    			ecc_factor = 1 + spec.ecc
+			ecc_factor = 1 + spec.ecc
 		}
 
 		start_dist := spec.semi_major_axis * ecc_factor
@@ -200,26 +200,29 @@ body_add :: proc (
 		pos = parent.pos + {start_dist, 0}
 		vel = parent.vel + {0, start_speed}
 
-		T := 2 * math.PI * math.sqrt(math.pow(f64(spec.semi_major_axis), f64(3)) / (G * parent.mass))
+		T :=
+			2 *
+			math.PI *
+			math.sqrt(math.pow(f64(spec.semi_major_axis), f64(3)) / (G * parent.mass))
 		steps_per_orbit = T / DT
 
 		stride = math.max(1, int(math.ceil(TRAIL_FRACTION * steps_per_orbit / TRAIL_CAP)))
 	}
 
 	body := Body {
-		name = spec.name,
-		color = spec.color,
-		pos = pos,
+		name     = spec.name,
+		color    = spec.color,
+		pos      = pos,
 		prev_pos = pos,
-		vel = vel,
-		mass = spec.mass,
-		radius = spec.radius,
-		accel = {0.0, 0.0},
+		vel      = vel,
+		mass     = spec.mass,
+		radius   = spec.radius,
+		accel    = {0.0, 0.0},
 	}
 
 	trail := Trail {
 		parent = parent_index,
-		cap = int(TRAIL_FRACTION * steps_per_orbit / f64(stride)),
+		cap    = int(TRAIL_FRACTION * steps_per_orbit / f64(stride)),
 		stride = stride,
 	}
 

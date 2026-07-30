@@ -1,10 +1,10 @@
 package main
 
-import gl "vendor:OpenGL"
 import "core:fmt"
 import "core:math"
 import "core:math/linalg"
 import "core:os"
+import gl "vendor:OpenGL"
 import "vendor:glfw"
 
 SCR_WIDTH :: 800
@@ -49,12 +49,18 @@ main :: proc() {
 	fb_width, fb_height := glfw.GetFramebufferSize(window)
 	gl.Viewport(0, 0, fb_width, fb_height)
 
-	body_program, body_loaded_ok := gl.load_shaders_file(#directory + "res/body.vert.glsl", #directory + "res/body.frag.glsl")
+	body_program, body_loaded_ok := gl.load_shaders_file(
+		#directory + "res/body.vert.glsl",
+		#directory + "res/body.frag.glsl",
+	)
 	if !body_loaded_ok {
 		os.exit(-1)
 	}
 
-	trail_program, trail_loaded_ok := gl.load_shaders_file(#directory + "res/trail.vert.glsl", #directory + "res/trail.frag.glsl")
+	trail_program, trail_loaded_ok := gl.load_shaders_file(
+		#directory + "res/trail.vert.glsl",
+		#directory + "res/trail.frag.glsl",
+	)
 	if !trail_loaded_ok {
 		os.exit(-1)
 	}
@@ -81,7 +87,7 @@ main :: proc() {
 		// Apply interaction
 		pending_delete_apply(&state, &bodies, &trails)
 		pending_edits_apply(&state, bodies[:])
-		pending_spawn_apply(&state, &bodies, &trails,  window_width, window_height)
+		pending_spawn_apply(&state, &bodies, &trails, window_width, window_height)
 
 		// Drain loop
 		for accumulator >= DT {
@@ -94,17 +100,51 @@ main :: proc() {
 
 		camera_update(&state, bodies[:], window_width, window_height, alpha)
 
-		bodies_draw(bodies[:], circle_mesh, body_program, &state.camera, fb_width, fb_height, alpha)
-		trails_draw(trails[:], bodies[:], trail_mesh, trail_program, &state.camera, fb_width, fb_height, alpha)
+		bodies_draw(
+			bodies[:],
+			circle_mesh,
+			body_program,
+			&state.camera,
+			fb_width,
+			fb_height,
+			alpha,
+		)
+		trails_draw(
+			trails[:],
+			bodies[:],
+			trail_mesh,
+			trail_program,
+			&state.camera,
+			fb_width,
+			fb_height,
+			alpha,
+		)
 
 		if drag, ok := state.input.drag_start.?; ok {
 			start_pos := drag
 			end_x, end_y := glfw.GetCursorPos(window)
-			end_world := drag_preview_draw(start_pos, {end_x, end_y}, trail_mesh, trail_program, &state.camera, window_width, window_height)
+			end_world := drag_preview_draw(
+				start_pos,
+				{end_x, end_y},
+				trail_mesh,
+				trail_program,
+				&state.camera,
+				window_width,
+				window_height,
+			)
 
 			_, radius := mass_radius_get(state.input.spawn_mass_exp)
 
-			mass_preview_draw(end_world, radius, palette.Spawn, circle_mesh, body_program, &state.camera, fb_width, fb_height)
+			mass_preview_draw(
+				end_world,
+				radius,
+				palette.Spawn,
+				circle_mesh,
+				body_program,
+				&state.camera,
+				fb_width,
+				fb_height,
+			)
 		}
 
 		window_title_update(window, &state, bodies[:])
@@ -118,7 +158,7 @@ main :: proc() {
 	glfw.Terminate()
 }
 
-window_title_update :: proc (window: glfw.WindowHandle, state: ^State, bodies: []Body) {
+window_title_update :: proc(window: glfw.WindowHandle, state: ^State, bodies: []Body) {
 	@(static) prev_tracked_body := -2
 	@(static) prev_sim_speed := -1
 	title: cstring
@@ -132,7 +172,13 @@ window_title_update :: proc (window: glfw.WindowHandle, state: ^State, bodies: [
 		speed := linalg.length(end_world - start_world) / DRAG_TIME
 		mass, _ := mass_radius_get(state.input.spawn_mass_exp)
 
-		title = fmt.ctprintf("%s - Spawn %e sol (x%.0f Moon) - %.1f km/s", "Sol_Sim", mass, math.pow(2, state.input.spawn_mass_exp), speed * 29.78)
+		title = fmt.ctprintf(
+			"%s - Spawn %e sol (x%.0f Moon) - %.1f km/s",
+			"Sol_Sim",
+			mass,
+			math.pow(2, state.input.spawn_mass_exp),
+			speed * 29.78,
+		)
 		glfw.SetWindowTitle(window, title)
 
 		prev_sim_speed = -1
@@ -142,9 +188,22 @@ window_title_update :: proc (window: glfw.WindowHandle, state: ^State, bodies: [
 	if state.camera.tracked_body == prev_tracked_body && state.sim_speed == prev_sim_speed do return
 	if state.camera.tracked_body >= 0 {
 		tracked_body_name := bodies[state.camera.tracked_body].name
-		title = fmt.ctprintf("%s - %s - %d days/sec - %f years/sec - sim_speed %d", "Sol_Sim", tracked_body_name, state.sim_speed / SECONDS_IN_DAY, f64(state.sim_speed) / SECONDS_IN_YEAR, state.sim_speed)
+		title = fmt.ctprintf(
+			"%s - %s - %d days/sec - %f years/sec - sim_speed %d",
+			"Sol_Sim",
+			tracked_body_name,
+			state.sim_speed / SECONDS_IN_DAY,
+			f64(state.sim_speed) / SECONDS_IN_YEAR,
+			state.sim_speed,
+		)
 	} else {
-		title = fmt.ctprintf("%s - %d days/sec - %f years/sec - sim_speed %d", "Sol_Sim", state.sim_speed / SECONDS_IN_DAY, f64(state.sim_speed) / SECONDS_IN_YEAR, state.sim_speed)
+		title = fmt.ctprintf(
+			"%s - %d days/sec - %f years/sec - sim_speed %d",
+			"Sol_Sim",
+			state.sim_speed / SECONDS_IN_DAY,
+			f64(state.sim_speed) / SECONDS_IN_YEAR,
+			state.sim_speed,
+		)
 	}
 
 	glfw.SetWindowTitle(window, title)

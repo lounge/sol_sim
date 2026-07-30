@@ -6,8 +6,8 @@ VIEW_SCALE :: 60
 PICK_RADIUS_PX :: 8
 
 Camera :: struct {
-	center: [2]f64,
-	half_extent: f64,
+	center:       [2]f64,
+	half_extent:  f64,
 	tracked_body: int,
 }
 
@@ -15,7 +15,7 @@ camera_zoom :: proc "contextless" (camera_state: ^Camera, yOffset: f64) {
 	camera_state.half_extent *= math.pow(0.9, yOffset)
 }
 
-camera_update :: proc(state: ^State,  bodies: []Body, width, height: i32, alpha: f64) {
+camera_update :: proc(state: ^State, bodies: []Body, width, height: i32, alpha: f64) {
 	if state.camera.tracked_body >= 0 {
 		world := pos_render(bodies[state.camera.tracked_body], alpha)
 		state.camera.center = world
@@ -29,7 +29,7 @@ camera_update :: proc(state: ^State,  bodies: []Body, width, height: i32, alpha:
 		for body, i in bodies {
 			// Forward transform chain -> World -> Screen
 			world := pos_render(body, alpha)
-			screen :=screen_pos_calc(World_Pos(world), &state.camera, width, height)
+			screen := screen_pos_calc(World_Pos(world), &state.camera, width, height)
 			diff := screen - click
 			dist := math.sqrt(diff.x * diff.x + diff.y * diff.y)
 
