@@ -138,7 +138,7 @@ main :: proc() {
 			mass_preview_draw(
 				end_world,
 				radius,
-				palette.Spawn,
+				palette[.Spawn],
 				circle_mesh,
 				body_program,
 				&state.camera,

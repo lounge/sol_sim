@@ -197,7 +197,7 @@ bodies_draw :: proc(
 circle_draw :: proc(
 	world: World_Pos,
 	radius: f64,
-	color: [3]f32,
+	color: Color,
 	mesh: Mesh,
 	program: u32,
 	camera: ^Camera,
@@ -251,7 +251,7 @@ drag_preview_draw :: proc(
 mass_preview_draw :: proc(
 	world: World_Pos,
 	radius: f64,
-	color: [3]f32,
+	color: Color,
 	mesh: Mesh,
 	program: u32,
 	camera: ^Camera,
