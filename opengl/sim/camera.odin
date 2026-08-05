@@ -1,6 +1,7 @@
 package main
 
 import "core:math"
+import "core:math/linalg"
 
 VIEW_SCALE :: 60
 PICK_RADIUS_PX :: 8
@@ -31,7 +32,7 @@ camera_update :: proc(state: ^State, bodies: []Body, width, height: i32, alpha: 
 			world := pos_render(body, alpha)
 			screen := screen_pos_calc(World_Pos(world), &state.camera, width, height)
 			diff := screen - click
-			dist := math.sqrt(diff.x * diff.x + diff.y * diff.y)
+			dist := linalg.length(diff)
 
 			marker_px := ndc_scale_calc(body.radius, height, &state.camera) * f64(height) / 2
 			if dist < max(marker_px, PICK_RADIUS_PX) && dist < best_dist {
