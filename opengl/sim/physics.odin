@@ -6,17 +6,6 @@ import "core:math/linalg"
 G :: 1.0
 DT :: #config(DT, 0.0001)
 
-Body :: struct {
-	name:     string,
-	color:    Color,
-	pos:      [2]f64,
-	prev_pos: [2]f64,
-	vel:      [2]f64,
-	mass:     f64,
-	radius:   f64,
-	accel:    [2]f64,
-	spawned:  bool, // if dynamically spawned
-}
 
 // Integrator: Kick–drift–kick velocity Verlet
 physics_step :: proc(bodies: []Body, dt: f64) {
@@ -30,8 +19,8 @@ physics_step :: proc(bodies: []Body, dt: f64) {
 accels_compute :: proc(bodies: []Body) {
 	for &body in bodies do body.accel = 0
 
-	for i in 0..<len(bodies) {
-		for j in (i + 1)..<len(bodies) {
+	for i in 0 ..< len(bodies) {
+		for j in (i + 1) ..< len(bodies) {
 			body_a := &bodies[i]
 			body_b := &bodies[j]
 
