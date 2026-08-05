@@ -144,6 +144,9 @@ specs: []Body_Spec = {
 }
 
 create_system :: proc() -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
+	assert(len(specs) == 1, "trails[0] cap fix-up assumes exactly one root")
+	assert(len(specs[0].satellites) >= 1, "root requires at least 1 satellite")
+
 	for spec in specs {
 		body_add(spec, -1, &bodies, &trails)
 	}
