@@ -3,6 +3,7 @@ package main
 import "core:fmt"
 import "core:math"
 import gl "vendor:OpenGL"
+_ :: fmt
 
 MIN_MARKER_PX :: 4
 
