@@ -126,15 +126,23 @@ main :: proc() {
 
 		if drag, ok := state.input.drag_start.?; ok {
 			start_pos := drag
-			end_x, end_y := glfw.GetCursorPos(window)
-			end_world := drag_preview_draw(
-				start_pos,
-				{end_x, end_y},
-				trail_mesh,
-				trail_program,
+			cursor_end_x, cursor_end_y := glfw.GetCursorPos(window)
+			start_world := world_pos_calc(start_pos, &state.camera, window_width, window_height)
+			end_world := world_pos_calc(
+				{cursor_end_x, cursor_end_y},
 				&state.camera,
 				window_width,
 				window_height,
+			)
+
+			drag_preview_draw(
+				start_world,
+				end_world,
+				trail_mesh,
+				trail_program,
+				&state.camera,
+				fb_width,
+				fb_height,
 			)
 
 			_, radius := mass_radius_get(state.input.spawn_mass_exp)
@@ -149,9 +157,11 @@ main :: proc() {
 				fb_width,
 				fb_height,
 			)
-		}
 
-		window_title_update(window, &state, bodies[:])
+			window_title_drag_update(window, &state, start_world, end_world)
+		} else {
+			window_title_update(window, &state, bodies[:])
+		}
 
 		glfw.SwapBuffers(window)
 		glfw.PollEvents()
@@ -162,30 +172,28 @@ main :: proc() {
 	return
 }
 
+window_title_drag_update :: proc(
+	window: glfw.WindowHandle,
+	state: ^State,
+	start_world, end_world: World_Pos,
+) {
+	speed := linalg.length(end_world - start_world) / DRAG_TIME
+	mass, _ := mass_radius_get(state.input.spawn_mass_exp)
+
+	title := fmt.ctprintf(
+		"%s - Spawn %e sol (x%.0f Moon) - %.1f km/s",
+		"Sol_Sim",
+		mass,
+		math.pow(2, state.input.spawn_mass_exp),
+		speed * 29.78,
+	)
+	glfw.SetWindowTitle(window, title)
+
+	state.title_stale = true
+}
+
 window_title_update :: proc(window: glfw.WindowHandle, state: ^State, bodies: []Body) {
 	title: cstring
-
-	if drag, ok := state.input.drag_start.?; ok {
-		end_x, end_y := glfw.GetCursorPos(window)
-		width, height := glfw.GetWindowSize(window)
-		start_world := world_pos_calc(drag, &state.camera, width, height)
-		end_world := world_pos_calc({end_x, end_y}, &state.camera, width, height)
-
-		speed := linalg.length(end_world - start_world) / DRAG_TIME
-		mass, _ := mass_radius_get(state.input.spawn_mass_exp)
-
-		title = fmt.ctprintf(
-			"%s - Spawn %e sol (x%.0f Moon) - %.1f km/s",
-			"Sol_Sim",
-			mass,
-			math.pow(2, state.input.spawn_mass_exp),
-			speed * 29.78,
-		)
-		glfw.SetWindowTitle(window, title)
-
-		state.title_stale = true
-		return
-	}
 
 	if state.title_stale == false do return
 	if state.camera.tracked_body >= 0 {

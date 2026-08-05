@@ -182,17 +182,13 @@ circle_draw :: proc(
 }
 
 drag_preview_draw :: proc(
-	start_px, end_px: Pixel_Pos,
+	start_world, end_world: World_Pos,
 	mesh: Mesh,
 	program: u32,
 	camera: ^Camera,
 	width, height: i32,
-) -> World_Pos {
+) {
 	scratch_buffer: [2][2]f32
-
-	start_world := world_pos_calc(start_px, camera, width, height)
-	end_world := world_pos_calc(end_px, camera, width, height)
-
 	start_ndc := ndc_offset_calc(start_world, camera)
 	end_ndc := ndc_offset_calc(end_world, camera)
 
@@ -211,8 +207,6 @@ drag_preview_draw :: proc(
 
 	gl.BufferSubData(gl.ARRAY_BUFFER, 0, size_of(scratch_buffer), raw_data(&scratch_buffer))
 	gl.DrawArrays(gl.LINE_STRIP, 0, 2)
-
-	return end_world
 }
 
 mass_preview_draw :: proc(
