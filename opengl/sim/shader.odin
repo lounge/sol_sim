@@ -1,20 +1,108 @@
 package main
 
+import "core:fmt"
 import gl "vendor:OpenGL"
 
-
-shader_set_int :: proc(id: u32, name: cstring, value: i32) {
-	gl.Uniform1i(gl.GetUniformLocation(id, name), value)
+Body_Program :: struct {
+	id:     u32,
+	offset: i32,
+	scale:  i32,
+	aspect: i32,
+	color:  i32,
 }
 
-shader_set_float :: proc(id: u32, name: cstring, value: f32) {
-	gl.Uniform1f(gl.GetUniformLocation(id, name), value)
+Trail_Program :: struct {
+	id:     u32,
+	offset: i32,
+	scale:  i32,
+	aspect: i32,
+	color:  i32,
+	count:  i32,
 }
 
-shader_set_vec2 :: proc(id: u32, name: cstring, x: f32, y: f32) {
-	gl.Uniform2f(gl.GetUniformLocation(id, name), x, y)
+body_program_load :: proc(program: u32) -> Body_Program {
+	offset := gl.GetUniformLocation(program, "offset")
+	if offset == -1 {
+		fmt.println("body_program offset uniform could not load")
+	}
+
+	scale := gl.GetUniformLocation(program, "scale")
+	if scale == -1 {
+		fmt.println("body_program scale uniform could not load")
+	}
+
+	aspect := gl.GetUniformLocation(program, "aspect")
+	if aspect == -1 {
+		fmt.println("body_program aspect uniform could not load")
+	}
+
+	color := gl.GetUniformLocation(program, "color")
+	if color == -1 {
+		fmt.println("body_program color uniform could not load")
+	}
+
+	program := Body_Program {
+		id     = program,
+		offset = offset,
+		scale  = scale,
+		aspect = aspect,
+		color  = color,
+	}
+
+	return program
 }
 
-shader_set_vec3 :: proc(id: u32, name: cstring, x: f32, y: f32, z: f32) {
-	gl.Uniform3f(gl.GetUniformLocation(id, name), x, y, z)
+trail_program_load :: proc(program: u32) -> Trail_Program {
+	offset := gl.GetUniformLocation(program, "offset")
+	if offset == -1 {
+		fmt.println("trail_program offset uniform could not load")
+	}
+
+	scale := gl.GetUniformLocation(program, "scale")
+	if scale == -1 {
+		fmt.println("trail_program scale uniform could not load")
+	}
+
+	aspect := gl.GetUniformLocation(program, "aspect")
+	if aspect == -1 {
+		fmt.println("trail_program aspect uniform could not load")
+	}
+
+	color := gl.GetUniformLocation(program, "color")
+	if color == -1 {
+		fmt.println("trail_program color uniform could not load")
+	}
+
+	count := gl.GetUniformLocation(program, "count")
+	if count == -1 {
+		fmt.println("trail_program count uniform could not load")
+	}
+
+	program := Trail_Program {
+		id     = program,
+		offset = offset,
+		scale  = scale,
+		aspect = aspect,
+		color  = color,
+		count  = count,
+	}
+
+	return program
+}
+
+
+shader_set_int :: proc(location: i32, value: i32) {
+	gl.Uniform1i(location, value)
+}
+
+shader_set_float :: proc(location: i32, value: f32) {
+	gl.Uniform1f(location, value)
+}
+
+shader_set_vec2 :: proc(location: i32, x: f32, y: f32) {
+	gl.Uniform2f(location, x, y)
+}
+
+shader_set_vec3 :: proc(location: i32, x: f32, y: f32, z: f32) {
+	gl.Uniform3f(location, x, y, z)
 }

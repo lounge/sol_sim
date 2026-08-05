@@ -36,21 +36,21 @@ trails_draw :: proc(
 	trails: []Trail,
 	bodies: []Body,
 	mesh: Mesh,
-	program: u32,
+	program: Trail_Program,
 	camera_state: ^Camera,
 	width, height: i32,
 	alpha: f64,
 ) {
 	scratch_buffer: [TRAIL_CAP + 1][2]f32
 
-	gl.UseProgram(program)
+	gl.UseProgram(program.id)
 
 	gl.BindVertexArray(mesh.vao)
 	gl.BindBuffer(gl.ARRAY_BUFFER, mesh.vbo)
 
-	shader_set_vec2(program, "offset", f32(0.0), f32(0.0))
-	shader_set_float(program, "scale", f32(1))
-	shader_set_float(program, "aspect", f32(height) / f32(width))
+	shader_set_vec2(program.offset, f32(0.0), f32(0.0))
+	shader_set_float(program.scale, f32(1))
+	shader_set_float(program.aspect, f32(height) / f32(width))
 
 	for trail, i in trails {
 		if trail.count == 0 do continue
@@ -82,8 +82,8 @@ trails_draw :: proc(
 		color := body.color
 		trail_count := trail.count + 1
 
-		shader_set_vec3(program, "color", color.x, color.y, color.z)
-		shader_set_int(program, "count", i32(trail_count))
+		shader_set_vec3(program.color, color.x, color.y, color.z)
+		shader_set_int(program.count, i32(trail_count))
 
 		gl.BufferSubData(
 			gl.ARRAY_BUFFER,
@@ -138,12 +138,12 @@ circle_mesh_create :: proc(segments: i32) -> Mesh {
 bodies_draw :: proc(
 	bodies: []Body,
 	mesh: Mesh,
-	program: u32,
+	program: Body_Program,
 	camera_state: ^Camera,
 	width, height: i32,
 	alpha: f64,
 ) {
-	gl.UseProgram(program)
+	gl.UseProgram(program.id)
 	gl.BindVertexArray(mesh.vao)
 
 	for &body in bodies {
@@ -166,17 +166,17 @@ circle_draw :: proc(
 	radius: f64,
 	color: Color,
 	mesh: Mesh,
-	program: u32,
+	program: Body_Program,
 	camera: ^Camera,
 	width, height: i32,
 ) {
 	ndc_pos := ndc_offset_calc(world, camera)
-	shader_set_vec2(program, "offset", f32(ndc_pos.x), f32(ndc_pos.y))
+	shader_set_vec2(program.offset, f32(ndc_pos.x), f32(ndc_pos.y))
 
 	ndc_scale := ndc_scale_calc(radius, height, camera)
-	shader_set_float(program, "scale", f32(ndc_scale))
-	shader_set_float(program, "aspect", f32(height) / f32(width))
-	shader_set_vec3(program, "color", color.x, color.y, color.z)
+	shader_set_float(program.scale, f32(ndc_scale))
+	shader_set_float(program.aspect, f32(height) / f32(width))
+	shader_set_vec3(program.color, color.x, color.y, color.z)
 
 	gl.DrawArrays(mesh.primitive, 0, mesh.vertex_count)
 }
@@ -184,7 +184,7 @@ circle_draw :: proc(
 drag_preview_draw :: proc(
 	start_world, end_world: World_Pos,
 	mesh: Mesh,
-	program: u32,
+	program: Trail_Program,
 	camera: ^Camera,
 	width, height: i32,
 ) {
@@ -192,18 +192,18 @@ drag_preview_draw :: proc(
 	start_ndc := ndc_offset_calc(start_world, camera)
 	end_ndc := ndc_offset_calc(end_world, camera)
 
-	gl.UseProgram(program)
+	gl.UseProgram(program.id)
 
 	gl.BindVertexArray(mesh.vao)
 	gl.BindBuffer(gl.ARRAY_BUFFER, mesh.vbo)
 	scratch_buffer[0] = {f32(start_ndc.x), f32(start_ndc.y)}
 	scratch_buffer[1] = {f32(end_ndc.x), f32(end_ndc.y)}
 
-	shader_set_vec2(program, "offset", f32(0.0), f32(0.0))
-	shader_set_float(program, "scale", f32(1))
-	shader_set_float(program, "aspect", f32(height) / f32(width))
-	shader_set_vec3(program, "color", 1.0, 1.0, 1.0)
-	shader_set_int(program, "count", i32(1))
+	shader_set_vec2(program.offset, f32(0.0), f32(0.0))
+	shader_set_float(program.scale, f32(1))
+	shader_set_float(program.aspect, f32(height) / f32(width))
+	shader_set_vec3(program.color, 1.0, 1.0, 1.0)
+	shader_set_int(program.count, i32(1))
 
 	gl.BufferSubData(gl.ARRAY_BUFFER, 0, size_of(scratch_buffer), raw_data(&scratch_buffer))
 	gl.DrawArrays(gl.LINE_STRIP, 0, 2)
@@ -214,11 +214,11 @@ mass_preview_draw :: proc(
 	radius: f64,
 	color: Color,
 	mesh: Mesh,
-	program: u32,
+	program: Body_Program,
 	camera: ^Camera,
 	width, height: i32,
 ) {
-	gl.UseProgram(program)
+	gl.UseProgram(program.id)
 	gl.BindVertexArray(mesh.vao)
 
 	circle_draw(world, radius, color, mesh, program, camera, width, height)

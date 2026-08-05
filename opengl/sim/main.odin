@@ -51,7 +51,7 @@ main :: proc() {
 	fb_width, fb_height := glfw.GetFramebufferSize(window)
 	gl.Viewport(0, 0, fb_width, fb_height)
 
-	body_program, body_loaded_ok := gl.load_shaders_file(
+	body_prg, body_loaded_ok := gl.load_shaders_file(
 		#directory + "res/body.vert.glsl",
 		#directory + "res/body.frag.glsl",
 	)
@@ -60,7 +60,7 @@ main :: proc() {
 		os.exit(-1)
 	}
 
-	trail_program, trail_loaded_ok := gl.load_shaders_file(
+	trail_prg, trail_loaded_ok := gl.load_shaders_file(
 		#directory + "res/trail.vert.glsl",
 		#directory + "res/trail.frag.glsl",
 	)
@@ -68,6 +68,9 @@ main :: proc() {
 		fmt.println("Failed to load and build trail shaders")
 		os.exit(-1)
 	}
+
+	body_program := body_program_load(body_prg)
+	trail_program := trail_program_load(trail_prg)
 
 	circle_mesh := circle_mesh_create(32)
 	trail_mesh := trail_mesh_create()
