@@ -144,6 +144,7 @@ pending_delete_apply :: proc(state: ^State, bodies: ^[dynamic]Body, trails: ^[dy
 
 	state.camera.tracked_body = -1
 	state.input.pending_delete = false
+	state.title_stale = true
 
 	accels_compute(bodies[:])
 }

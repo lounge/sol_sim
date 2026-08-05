@@ -159,8 +159,6 @@ main :: proc() {
 }
 
 window_title_update :: proc(window: glfw.WindowHandle, state: ^State, bodies: []Body) {
-	@(static) prev_tracked_body := -2
-	@(static) prev_sim_speed := -1
 	title: cstring
 
 	if drag, ok := state.input.drag_start.?; ok {
@@ -181,11 +179,11 @@ window_title_update :: proc(window: glfw.WindowHandle, state: ^State, bodies: []
 		)
 		glfw.SetWindowTitle(window, title)
 
-		prev_sim_speed = -1
+		state.title_stale = true
 		return
 	}
 
-	if state.camera.tracked_body == prev_tracked_body && state.sim_speed == prev_sim_speed do return
+	if state.title_stale == false do return
 	if state.camera.tracked_body >= 0 {
 		tracked_body_name := bodies[state.camera.tracked_body].name
 		title = fmt.ctprintf(
@@ -207,9 +205,7 @@ window_title_update :: proc(window: glfw.WindowHandle, state: ^State, bodies: []
 	}
 
 	glfw.SetWindowTitle(window, title)
-
-	prev_tracked_body = state.camera.tracked_body
-	prev_sim_speed = state.sim_speed
+	state.title_stale = false
 }
 
 callback_framebuffer_size :: proc "c" (window: glfw.WindowHandle, width, height: i32) {

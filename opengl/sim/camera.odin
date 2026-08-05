@@ -41,15 +41,17 @@ camera_update :: proc(state: ^State, bodies: []Body, width, height: i32, alpha: 
 		}
 
 		if best >= 0 {
-			camera_track(&state.camera, best, bodies[best])
+			camera_track(state, best, bodies[best])
 		} else {
 			state.camera.tracked_body = -1 // empty space -> free cam
+			state.title_stale = true
 		}
 	}
 }
 
-camera_track :: proc(camera_state: ^Camera, index: int, body: Body) {
-	if index == camera_state.tracked_body do return
-	camera_state.tracked_body = index
-	camera_state.half_extent = body.radius * VIEW_SCALE
+camera_track :: proc(state: ^State, index: int, body: Body) {
+	if index == state.camera.tracked_body do return
+	state.camera.tracked_body = index
+	state.camera.half_extent = body.radius * VIEW_SCALE
+	state.title_stale = true
 }
