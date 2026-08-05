@@ -77,11 +77,13 @@ main :: proc() {
 
 	accumulator: f64
 	last_time := glfw.GetTime()
+
+	gl.ClearColor(0.0, 0.0, 0.0, 0.0)
+
 	for !glfw.WindowShouldClose(window) {
 		fb_width, fb_height = glfw.GetFramebufferSize(window)
 		window_width, window_height := glfw.GetWindowSize(window)
 
-		gl.ClearColor(0.0, 0.0, 0.0, 0.0)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 
 		// Physics step
