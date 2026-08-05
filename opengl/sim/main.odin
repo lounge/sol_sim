@@ -202,7 +202,7 @@ window_title_drag_update :: proc(
 window_title_update :: proc(window: glfw.WindowHandle, state: ^State, bodies: []Body) {
 	title: cstring
 
-	if state.title_stale == false do return
+	if !state.title_stale do return
 	if state.camera.tracked_body >= 0 {
 		tracked_body_name := bodies[state.camera.tracked_body].name
 		title = fmt.ctprintf(

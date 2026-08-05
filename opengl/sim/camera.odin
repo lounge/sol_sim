@@ -12,8 +12,8 @@ Camera :: struct {
 	tracked_body: int,
 }
 
-camera_zoom :: proc "contextless" (camera_state: ^Camera, yOffset: f64) {
-	camera_state.half_extent *= math.pow(0.9, yOffset)
+camera_zoom :: proc "contextless" (camera_state: ^Camera, y_offset: f64) {
+	camera_state.half_extent *= math.pow(0.9, y_offset)
 }
 
 camera_update :: proc(state: ^State, bodies: []Body, width, height: i32, alpha: f64) {
