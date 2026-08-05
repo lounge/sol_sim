@@ -23,5 +23,6 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 17. Mutate the tracked body (mass, prograde/retrograde burns) - DONE
 18. Spawn a body with click-drag/scroll (position + velocity, mass) - DONE
 19. Delete a body. - DONE
-20. Make 3D.
-21. Lighting (Sun).
+20. Handle close encounters: gravitational softening and/or merge two bodies on contact.
+21. Make 3D.
+22. Lighting (Sun).
