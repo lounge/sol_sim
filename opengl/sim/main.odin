@@ -20,6 +20,8 @@ main :: proc() {
 	bodies, trails := create_system()
 
 	glfw.Init()
+	defer glfw.Terminate()
+
 	glfw.WindowHint(glfw.CONTEXT_VERSION_MAJOR, 3)
 	glfw.WindowHint(glfw.CONTEXT_VERSION_MINOR, 3)
 	glfw.WindowHint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
@@ -157,7 +159,7 @@ main :: proc() {
 		free_all(context.temp_allocator)
 	}
 
-	glfw.Terminate()
+	return
 }
 
 window_title_update :: proc(window: glfw.WindowHandle, state: ^State, bodies: []Body) {
