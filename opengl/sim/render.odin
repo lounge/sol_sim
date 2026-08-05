@@ -3,9 +3,6 @@ package main
 import "core:math"
 import gl "vendor:OpenGL"
 
-TRAIL_CAP :: 12800
-TRAIL_FRACTION :: 0.95
-TRAIL_STRIDE_DEFAULT :: 5
 MIN_MARKER_PX :: 4
 
 Mesh :: struct {
@@ -15,38 +12,8 @@ Mesh :: struct {
 	primitive:    u32,
 }
 
-Trail :: struct {
-	points:      [TRAIL_CAP][2]f64,
-	head:        int,
-	count:       int,
-	parent:      int,
-	cap:         int,
-	stride:      int,
-	frame_count: int,
-}
-
 Pixel_Pos :: distinct [2]f64
 World_Pos :: distinct [2]f64
-
-trail_record :: proc(bodies: []Body, trails: []Trail) {
-	for &body, i in bodies {
-		trail := &trails[i]
-
-		trail.frame_count += 1
-		if trail.frame_count >= trail.stride {
-			trail.points[trail.head] = body.prev_pos
-
-			if trail.parent >= 0 {
-				trail.points[trail.head] = body.prev_pos - bodies[trail.parent].prev_pos
-			}
-
-			trail.head = (trail.head + 1) % trail.cap
-			trail.count = min(trail.count + 1, trail.cap)
-		}
-
-		trail.frame_count %= trail.stride
-	}
-}
 
 trail_mesh_create :: proc() -> Mesh {
 	vbo, vao: u32

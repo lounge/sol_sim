@@ -226,11 +226,7 @@ body_add :: proc(
 		accel    = {0.0, 0.0},
 	}
 
-	trail := Trail {
-		parent = parent_index,
-		cap    = int(TRAIL_FRACTION * steps_per_orbit / f64(stride)),
-		stride = stride,
-	}
+	trail := trail_make_orbital(parent_index, steps_per_orbit, stride)
 
 	assert(trail.cap <= TRAIL_CAP, spec.name)
 

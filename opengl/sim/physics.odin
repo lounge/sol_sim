@@ -98,11 +98,7 @@ pending_spawn_apply :: proc(
 			spawned  = true,
 		}
 
-		trail := Trail {
-			parent = -1,
-			cap    = TRAIL_CAP,
-			stride = TRAIL_STRIDE_DEFAULT,
-		}
+		trail := trail_make_default()
 
 		append(bodies, body)
 		append(trails, trail)
@@ -131,12 +127,7 @@ pending_delete_apply :: proc(state: ^State, bodies: ^[dynamic]Body, trails: ^[dy
 
 	for &trail in trails {
 		if trail.parent == tracked_id {
-			trail.parent = -1
-			trail.count = 0
-			trail.head = 0
-			trail.cap = TRAIL_CAP
-			trail.stride = TRAIL_STRIDE_DEFAULT
-			trail.frame_count = TRAIL_STRIDE_DEFAULT - 1
+			trail = trail_make_default()
 		} else if trail.parent > tracked_id {
 			trail.parent -= 1
 		}
