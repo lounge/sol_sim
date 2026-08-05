@@ -89,7 +89,7 @@ pending_spawn_apply :: proc(
 
 		body := Body {
 			name     = fmt.aprintf("Spawnius %d", state.spawned_bodies + 1),
-			color    = palette[.Spawn],
+			color    = PALETTE[.Spawn],
 			pos      = ([2]f64)(world_pos_end),
 			prev_pos = ([2]f64)(world_pos_end),
 			vel      = ([2]f64)(world_drag) / DRAG_TIME,

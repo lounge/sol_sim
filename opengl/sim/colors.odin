@@ -23,7 +23,7 @@ Color_Set :: struct {
 	body: Body_Colors,
 }
 
-albedo: Color_Set = {
+ALBEDO :: Color_Set {
 	body = {
 		.Sun = {1.00, 0.84, 0.32},
 		.Mercury = {0.62, 0.60, 0.58},
@@ -40,7 +40,7 @@ albedo: Color_Set = {
 	},
 }
 
-realistic: Color_Set = {
+REALISTIC :: Color_Set {
 	body = {
 		.Sun = {1.00, 0.78, 0.30},
 		.Mercury = {0.45, 0.43, 0.41},
@@ -57,7 +57,7 @@ realistic: Color_Set = {
 	},
 }
 
-vibrant: Color_Set = {
+VIBRANT :: Color_Set {
 	body = {
 		.Sun = {1.00, 0.88, 0.25},
 		.Mercury = {0.68, 0.66, 0.63},

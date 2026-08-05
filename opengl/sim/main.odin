@@ -14,7 +14,7 @@ SECONDS_IN_YEAR :: 3.156e7
 T_UNIT_SECONDS :: SECONDS_IN_YEAR / (2 * math.PI) // ≈5.023e6, the G=1/AU/solar-mass time unit
 MAX_SIM_SPEED :: #config(MAX_SIM_SPEED, int(15 * SECONDS_IN_YEAR))
 
-palette := realistic.body
+PALETTE :: REALISTIC.body
 
 main :: proc() {
 	bodies, trails := create_system()
@@ -138,7 +138,7 @@ main :: proc() {
 			mass_preview_draw(
 				end_world,
 				radius,
-				palette[.Spawn],
+				PALETTE[.Spawn],
 				circle_mesh,
 				body_program,
 				&state.camera,
