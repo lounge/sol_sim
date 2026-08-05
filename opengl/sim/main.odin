@@ -169,6 +169,8 @@ main :: proc() {
 		glfw.SwapBuffers(window)
 		glfw.PollEvents()
 
+		gl_check_error()
+
 		free_all(context.temp_allocator)
 	}
 

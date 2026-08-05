@@ -1,5 +1,6 @@
 package main
 
+import "core:fmt"
 import "core:math"
 import gl "vendor:OpenGL"
 
@@ -265,4 +266,12 @@ world_pos_calc :: proc(px_pos: Pixel_Pos, camera_state: ^Camera, width, height: 
 
 pos_render :: proc(body: Body, alpha: f64) -> [2]f64 {
 	return body.prev_pos + (body.pos - body.prev_pos) * alpha
+}
+
+gl_check_error :: proc(loc := #caller_location) {
+	when ODIN_DEBUG {
+		for err := gl.GetError(); err != gl.NO_ERROR; err = gl.GetError() {
+			fmt.printfln("GL Error 0x%x at %v", err, loc)
+		}
+	}
 }
