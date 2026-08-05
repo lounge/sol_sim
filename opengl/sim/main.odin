@@ -54,6 +54,7 @@ main :: proc() {
 		#directory + "res/body.frag.glsl",
 	)
 	if !body_loaded_ok {
+		fmt.println("Failed to load and build body shaders")
 		os.exit(-1)
 	}
 
@@ -62,6 +63,7 @@ main :: proc() {
 		#directory + "res/trail.frag.glsl",
 	)
 	if !trail_loaded_ok {
+		fmt.println("Failed to load and build trail shaders")
 		os.exit(-1)
 	}
 
