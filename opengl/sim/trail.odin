@@ -2,10 +2,12 @@ package main
 
 TRAIL_CAP :: 12800
 TRAIL_FRACTION :: 0.95
-TRAIL_STRIDE_DEFAULT :: 5
 
 SPAWN_TRAIL_CAP :: #config(SPAWN_TRAIL_CAP, 1280)
+#assert(SPAWN_TRAIL_CAP <= TRAIL_CAP)
+
 SPAWN_TRAIL_STRIDE :: #config(SPAWN_TRAIL_STRIDE, 25)
+#assert(SPAWN_TRAIL_STRIDE > 0)
 
 Trail :: struct {
 	points:      [TRAIL_CAP][2]f64,
