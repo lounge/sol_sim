@@ -19,6 +19,11 @@ PALETTE :: REALISTIC.body
 main :: proc() {
 	bodies, trails := create_system()
 
+	when MEASURE {
+		measure: Measure
+		measure_spawn(&bodies, &trails)
+	}
+
 	glfw.Init()
 	defer glfw.Terminate()
 
@@ -99,10 +104,16 @@ main :: proc() {
 		pending_spawn_apply(&state, &bodies, &trails, window_width, window_height)
 
 		// Drain loop
+		when MEASURE {
+			measure_t0 := glfw.GetTime()
+		}
 		for accumulator >= DT {
 			physics_step(bodies[:], DT)
 			trail_record(bodies[:], trails[:])
 			accumulator -= DT
+		}
+		when MEASURE {
+			measure.physics_seconds += glfw.GetTime() - measure_t0
 		}
 
 		alpha := accumulator / DT
@@ -118,6 +129,9 @@ main :: proc() {
 			fb_height,
 			alpha,
 		)
+		when MEASURE {
+			measure_t0 = glfw.GetTime()
+		}
 		trails_draw(
 			trails[:],
 			bodies[:],
@@ -128,6 +142,10 @@ main :: proc() {
 			fb_height,
 			alpha,
 		)
+		when MEASURE {
+			measure.trails_seconds += glfw.GetTime() - measure_t0
+			measure_frame_report(&measure, trails[:], glfw.GetTime())
+		}
 
 		if drag, ok := state.input.drag_start.?; ok {
 			start_pos := drag
