@@ -12,9 +12,10 @@ SCR_HEIGHT :: 600
 SECONDS_IN_DAY :: 86400
 SECONDS_IN_YEAR :: 3.156e7
 T_UNIT_SECONDS :: SECONDS_IN_YEAR / (2 * math.PI) // ≈5.023e6, the G=1/AU/solar-mass time unit
-MAX_SIM_SPEED :: #config(MAX_SIM_SPEED, int(15 * SECONDS_IN_YEAR))
+MAX_SIM_SPEED :: #config(MAX_SIM_SPEED, int(50 * SECONDS_IN_YEAR))
 
 PHYSICS_BUDGET :: #config(PHYSICS_BUDGET, 0.005) // Seconds of wall clock per frame
+GOVERNOR_FRAMES :: #config(GOVERNOR_FRAMES, 30) // COnsecutive overloaded frames before halving
 
 PALETTE :: REALISTIC.body
 
@@ -83,6 +84,7 @@ main :: proc() {
 	trail_mesh := trail_mesh_create()
 
 	accumulator: f64
+	overload_frames: int
 	last_time := glfw.GetTime()
 
 	gl.ClearColor(0.0, 0.0, 0.0, 0.0)
@@ -127,6 +129,15 @@ main :: proc() {
 		overloaded := accumulator >= DT
 		if overloaded {
 			accumulator = math.mod(accumulator, DT)
+			overload_frames += 1
+		} else {
+			overload_frames = 0
+		}
+
+		if overload_frames >= GOVERNOR_FRAMES {
+			state.sim_speed = math.max(1, state.sim_speed / 2)
+			state.title_stale = true
+			overload_frames = 0
 		}
 
 		alpha := accumulator / DT
