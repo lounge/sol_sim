@@ -3,7 +3,7 @@ package main
 import "core:math"
 import "core:math/linalg"
 
-collision_compute :: proc(bodies: []Body) -> (pair: [2]int, collision: bool){
+collision_compute :: proc(bodies: []Body) -> (pair: [2]int, collision: bool) {
 	for i in 0 ..< len(bodies) {
 		for j in (i + 1) ..< len(bodies) {
 			body_a := &bodies[i]
@@ -13,7 +13,7 @@ collision_compute :: proc(bodies: []Body) -> (pair: [2]int, collision: bool){
 			distance := linalg.length(r_vec)
 
 			if distance < body_a.radius + body_b.radius {
-				return {i,j}, true
+				return {i, j}, true
 			}
 		}
 	}
@@ -21,7 +21,12 @@ collision_compute :: proc(bodies: []Body) -> (pair: [2]int, collision: bool){
 	return
 }
 
-collision_merge :: proc(pair: [2]int, bodies: ^[dynamic]Body, trails: ^[dynamic]Trail, state: ^State) {
+collision_merge :: proc(
+	pair: [2]int,
+	bodies: ^[dynamic]Body,
+	trails: ^[dynamic]Trail,
+	state: ^State,
+) {
 	body_a := &bodies[pair.x]
 	body_b := &bodies[pair.y]
 
@@ -43,7 +48,7 @@ collision_merge :: proc(pair: [2]int, bodies: ^[dynamic]Body, trails: ^[dynamic]
 	pos := (body_a.mass * body_a.pos + body_b.mass * body_b.pos) / mass
 	prev_pos := (body_a.mass * body_a.prev_pos + body_b.mass * body_b.prev_pos) / mass
 
-	radius := math.pow((math.pow(body_a.radius, 3.0) + math.pow(body_b.radius, 3.0)), 1.0/3.0)
+	radius := math.pow((math.pow(body_a.radius, 3.0) + math.pow(body_b.radius, 3.0)), 1.0 / 3.0)
 
 	survivor.mass = mass
 	survivor.vel = vel

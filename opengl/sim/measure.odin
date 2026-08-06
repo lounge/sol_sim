@@ -17,7 +17,7 @@ when MEASURE {
 		trails_seconds:  f64,
 		bodies_seconds:  f64,
 		frames:          int,
-		steps:			 int,
+		steps:           int,
 		last_report:     f64,
 	}
 
