@@ -25,7 +25,7 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 19. Delete a body. - DONE
 20. Perf improvements: trail drawing at spawn scale. - DONE
 21. Frame-budgeted drain loop: cap physics time per frame, degrade sim speed gracefully instead of frame rate. - DONE
-22. Handle close encounters: gravitational softening and/or merge two bodies on contact.
+22. Handle close encounters: merge two bodies on contact. - DONE
 23. Barnes–Hut: O(n log n) gravity via quadtree.
 24. Make 3D.
 25. Lighting (Sun).
