@@ -120,6 +120,9 @@ main :: proc() {
 
 		camera_update(&state, bodies[:], window_width, window_height, alpha)
 
+		when MEASURE {
+			measure_t0 = glfw.GetTime()
+		}
 		bodies_draw(
 			bodies[:],
 			circle_mesh,
@@ -129,6 +132,10 @@ main :: proc() {
 			fb_height,
 			alpha,
 		)
+		when MEASURE {
+			measure.bodies_seconds += glfw.GetTime() - measure_t0
+		}
+
 		when MEASURE {
 			measure_t0 = glfw.GetTime()
 		}

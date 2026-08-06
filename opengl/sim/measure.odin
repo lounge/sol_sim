@@ -15,6 +15,7 @@ when MEASURE {
 	Measure :: struct {
 		physics_seconds: f64,
 		trails_seconds:  f64,
+		bodies_seconds:  f64,
 		frames:          int,
 		last_report:     f64,
 	}
@@ -56,8 +57,9 @@ when MEASURE {
 		fill := trails[len(trails) - 1]
 
 		fmt.printfln(
-			"[measure] physics %.3f ms | trails_draw %.3f ms | %d frames | ring fill %d/%d",
+			"[measure] physics %.3f ms | bodies_draw %.3f ms | trails_draw %.3f ms | %d frames | ring fill %d/%d",
 			m.physics_seconds / f64(m.frames) * 1000,
+			m.bodies_seconds / f64(m.frames) * 1000,
 			m.trails_seconds / f64(m.frames) * 1000,
 			m.frames,
 			fill.count,
@@ -65,6 +67,7 @@ when MEASURE {
 		)
 
 		m.physics_seconds = 0
+		m.bodies_seconds = 0
 		m.trails_seconds = 0
 		m.frames = 0
 		m.last_report = now
