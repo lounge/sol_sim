@@ -78,22 +78,9 @@ pending_delete_apply :: proc(state: ^State, bodies: ^[dynamic]Body, trails: ^[dy
 
 	tracked_id := state.camera.tracked_body
 
-	if bodies[tracked_id].spawned do delete(bodies[tracked_id].name)
-
-	ordered_remove(bodies, tracked_id)
-	ordered_remove(trails, tracked_id)
-
-	for &trail in trails {
-		if trail.parent == tracked_id {
-			trail = trail_make_default()
-		} else if trail.parent > tracked_id {
-			trail.parent -= 1
-		}
-	}
+	body_remove(tracked_id, bodies, trails)
 
 	state.camera.tracked_body = -1
 	state.input.pending_delete = false
 	state.title_stale = true
-
-	accels_compute(bodies[:])
 }
