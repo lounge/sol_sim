@@ -24,7 +24,7 @@ trail_mesh_create :: proc() -> Mesh {
 	gl.GenBuffers(1, &vbo)
 	gl.BindVertexArray(vao)
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, (TRAIL_CAP + 1) * 2 * size_of(f32), nil, gl.DYNAMIC_DRAW)
+	gl.BufferData(gl.ARRAY_BUFFER, (TRAIL_CAP + 1) * 2 * size_of(f32), nil, gl.STREAM_DRAW)
 	gl.VertexAttribPointer(0, 2, gl.FLOAT, gl.FALSE, 2 * size_of(f32), 0)
 	gl.EnableVertexAttribArray(0)
 	gl.BindVertexArray(0)
@@ -86,6 +86,8 @@ trails_draw :: proc(
 
 		shader_set_vec3(program.color, color.x, color.y, color.z)
 		shader_set_int(program.count, i32(trail_count))
+
+		gl.BufferData(gl.ARRAY_BUFFER, (TRAIL_CAP + 1) * 2 * size_of(f32), nil, gl.STREAM_DRAW)
 
 		gl.BufferSubData(
 			gl.ARRAY_BUFFER,
@@ -206,6 +208,8 @@ drag_preview_draw :: proc(
 	shader_set_float(program.aspect, f32(height) / f32(width))
 	shader_set_vec3(program.color, 1.0, 1.0, 1.0)
 	shader_set_int(program.count, i32(1))
+
+	gl.BufferData(gl.ARRAY_BUFFER, (TRAIL_CAP + 1) * 2 * size_of(f32), nil, gl.STREAM_DRAW)
 
 	gl.BufferSubData(gl.ARRAY_BUFFER, 0, size_of(scratch_buffer), raw_data(&scratch_buffer))
 	gl.DrawArrays(gl.LINE_STRIP, 0, 2)
