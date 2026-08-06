@@ -4,6 +4,9 @@ TRAIL_CAP :: 12800
 TRAIL_FRACTION :: 0.95
 TRAIL_STRIDE_DEFAULT :: 5
 
+SPAWN_TRAIL_CAP :: #config(SPAWN_TRAIL_CAP, 1280)
+SPAWN_TRAIL_STRIDE :: #config(SPAWN_TRAIL_STRIDE, 25)
+
 Trail :: struct {
 	points:      [TRAIL_CAP][2]f64,
 	head:        int,
@@ -20,9 +23,9 @@ trail_make_default :: proc() -> Trail {
 		parent      = -1,
 		count       = 0,
 		head        = 0,
-		cap         = TRAIL_CAP,
-		stride      = TRAIL_STRIDE_DEFAULT,
-		frame_count = TRAIL_STRIDE_DEFAULT - 1, // Records on the next step, so a fresh trail anchors immediately
+		cap         = SPAWN_TRAIL_CAP,
+		stride      = SPAWN_TRAIL_STRIDE,
+		frame_count = SPAWN_TRAIL_STRIDE - 1, // Records on the next step, so a fresh trail anchors immediately
 	}
 
 	return trail
