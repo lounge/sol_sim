@@ -14,6 +14,8 @@ SECONDS_IN_YEAR :: 3.156e7
 T_UNIT_SECONDS :: SECONDS_IN_YEAR / (2 * math.PI) // ≈5.023e6, the G=1/AU/solar-mass time unit
 MAX_SIM_SPEED :: #config(MAX_SIM_SPEED, int(15 * SECONDS_IN_YEAR))
 
+PHYSICS_BUDGET :: #config(PHYSICS_BUDGET, 0.005) // Seconds of wall clock per frame
+
 PALETTE :: REALISTIC.body
 
 main :: proc() {
@@ -107,13 +109,24 @@ main :: proc() {
 		when MEASURE {
 			measure_t0 := glfw.GetTime()
 		}
+
+		deadline := glfw.GetTime() + PHYSICS_BUDGET
+		steps: int
 		for accumulator >= DT {
 			physics_step(bodies[:], DT)
 			trail_record(bodies[:], trails[:])
 			accumulator -= DT
+			steps += 1
+			if glfw.GetTime() >= deadline do break
 		}
 		when MEASURE {
 			measure.physics_seconds += glfw.GetTime() - measure_t0
+			measure.steps += steps
+		}
+
+		overloaded := accumulator >= DT
+		if overloaded {
+			accumulator = math.mod(accumulator, DT)
 		}
 
 		alpha := accumulator / DT
