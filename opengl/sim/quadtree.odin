@@ -1,10 +1,12 @@
 package main
 
 import "core:math"
+import "core:math/linalg"
 
 BH_THETA :: #config(BH_THETA, 0.5)
-BH_THRESHOLD :: #config(BH_THRESHOLD, 350)
+BH_THRESHOLD :: #config(BH_THRESHOLD, 300)
 BH_MAX_DEPTH :: #config(BH_MAX_DEPTH, 32)
+BH_VALIDATE :: #config(BH_VALIDATE, false)
 BH_DEBUG :: #config(BH_DEBUG, false)
 
 Quad_Node :: struct {
@@ -17,8 +19,9 @@ Quad_Node :: struct {
 }
 
 Quadtree :: struct {
-	node:      [dynamic]Quad_Node,
-	max_depth: int,
+	node:             [dynamic]Quad_Node,
+	max_depth:        int,
+	validate_max_err: f64,
 }
 
 quadtree_build :: proc(tree: ^Quadtree, bodies: []Body) {
@@ -143,4 +146,42 @@ quadtree_calc :: proc(tree: ^Quadtree, bodies: []Body) {
 		node.mass = total_mass
 		node.com = total_com / total_mass
 	}
+}
+
+quadtree_accel :: proc(tree: ^Quadtree, node_idx: int, body_idx: i32, bodies: []Body) -> [2]f64 {
+	node := tree.node[node_idx]
+	body_pos := bodies[body_idx].pos
+
+	if node.body >= 0 {
+		if node.body == body_idx {
+			return {0, 0}
+		}
+		return quadtree_accel_toward(body_pos, bodies[node.body].pos, bodies[node.body].mass)
+	}
+
+	size := node.half_size * 2
+	distance := linalg.length(body_pos - node.com)
+	outside :=
+		math.abs(body_pos.x - node.center.x) > node.half_size ||
+		math.abs(body_pos.y - node.center.y) > node.half_size
+
+	if outside && size / distance < BH_THETA {
+		return quadtree_accel_toward(body_pos, node.com, node.mass)
+	}
+
+	sum: [2]f64 = {0, 0}
+	for child in node.children {
+		if child != -1 {
+			sum += quadtree_accel(tree, int(child), body_idx, bodies)
+		}
+	}
+
+	return sum
+}
+
+
+quadtree_accel_toward :: proc(pos: [2]f64, source_pos: [2]f64, source_mass: f64) -> [2]f64 {
+	r_vec := pos - source_pos
+	distance := linalg.length(r_vec)
+	return -(r_vec / distance) * (G * source_mass / (distance * distance))
 }
