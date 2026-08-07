@@ -8,6 +8,7 @@ BH_THRESHOLD :: #config(BH_THRESHOLD, 300)
 BH_MAX_DEPTH :: #config(BH_MAX_DEPTH, 32)
 BH_VALIDATE :: #config(BH_VALIDATE, false)
 BH_DEBUG :: #config(BH_DEBUG, false)
+BH_DEBUG_DRAW :: #config(BH_DEBUG_DRAW, false)
 
 Quad_Node :: struct {
 	center:    [2]f64,

@@ -188,6 +188,17 @@ main :: proc() {
 
 		camera_update(&state, bodies[:], window_width, window_height, alpha)
 
+		when BH_DEBUG_DRAW {
+			quadtree_cells_draw(
+				&quadtree,
+				trail_mesh,
+				trail_program,
+				&state.camera,
+				fb_width,
+				fb_height,
+			)
+		}
+
 		when MEASURE {
 			measure_t0 = glfw.GetTime()
 		}

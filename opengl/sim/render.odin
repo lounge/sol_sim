@@ -230,6 +230,47 @@ mass_preview_draw :: proc(
 	circle_draw(world, radius, color, mesh, program, camera, width, height)
 }
 
+quadtree_cells_draw :: proc(
+	tree: ^Quadtree,
+	mesh: Mesh,
+	program: Trail_Program,
+	camera: ^Camera,
+	width, height: i32,
+) {
+	gl.UseProgram(program.id)
+	gl.BindVertexArray(mesh.vao)
+
+	shader_set_vec3(program.color, 1.0, 0.0, 0.0)
+	shader_set_int(program.count, 4)
+	shader_set_vec2(program.offset, 0, 0)
+	shader_set_float(program.scale, 1)
+	shader_set_float(program.aspect, f32(height) / f32(width))
+
+	for node in tree.node {
+		hs := node.half_size
+		strip := [5][2]f64 {
+			node.center + {-hs, -hs},
+			node.center + {+hs, -hs},
+			node.center + {+hs, +hs},
+			node.center + {-hs, +hs},
+			node.center + {-hs, -hs},
+		}
+
+		scratch: [5][2]f32
+
+		for pos, i in strip {
+			ndc := ndc_offset_calc(World_Pos(pos), camera)
+			scratch[i] = ([2]f32)(ndc)
+		}
+
+		gl.BindBuffer(gl.ARRAY_BUFFER, mesh.vbo)
+		gl.BufferData(gl.ARRAY_BUFFER, size_of(scratch), nil, gl.STREAM_DRAW)
+		gl.BufferSubData(gl.ARRAY_BUFFER, 0, size_of(scratch), &scratch)
+		gl.DrawArrays(gl.LINE_STRIP, 0, 5)
+	}
+}
+
+
 // NDC: Normalized Device Coordinates
 ndc_offset_calc :: proc(pos: World_Pos, camera_state: ^Camera) -> [2]f64 {
 	ndc := (([2]f64)(pos) - camera_state.center) / camera_state.half_extent
