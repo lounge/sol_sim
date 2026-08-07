@@ -25,7 +25,7 @@ main :: proc() {
 
 	when MEASURE {
 		measure: Measure
-		measure_spawn(&bodies, &trails)
+		measure_spawn(&bodies, &trails, &quadtree)
 	}
 
 	glfw.Init()
@@ -130,14 +130,17 @@ main :: proc() {
 
 				root := quadtree.node[0]
 				fmt.printfln(
-					"BH: nodes %d - depth %d - mass diff %e - com diff %e, %e",
+					"BH: nodes %d - depth %d - mass diff %e - com diff %e, %e - max err %e",
 					len(quadtree.node),
 					quadtree.max_depth,
 					root.mass - mass_sum,
 					root.com.x - barycenter.x,
 					root.com.y - barycenter.y,
+					quadtree.validate_max_err,
 				)
+				quadtree.validate_max_err = 0
 			}
+
 		}
 
 		deadline := glfw.GetTime() + PHYSICS_BUDGET

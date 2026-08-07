@@ -23,7 +23,7 @@ when MEASURE {
 
 	// Seeded so before/after runs get the identical scene. Bodies go on
 	// circular orbits around the root so rings fill without escapes.
-	measure_spawn :: proc(bodies: ^[dynamic]Body, trails: ^[dynamic]Trail) {
+	measure_spawn :: proc(bodies: ^[dynamic]Body, trails: ^[dynamic]Trail, tree: ^Quadtree) {
 		rand.reset(1)
 
 		for i in 0 ..< MEASURE_SPAWN_COUNT {
@@ -47,7 +47,7 @@ when MEASURE {
 			append(trails, trail_make_default())
 		}
 
-		accels_compute(bodies[:])
+		accels_compute(bodies[:], tree)
 	}
 
 	measure_frame_report :: proc(m: ^Measure, trails: []Trail, now: f64) {
