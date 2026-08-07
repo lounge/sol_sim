@@ -185,3 +185,42 @@ quadtree_accel_toward :: proc(pos: [2]f64, source_pos: [2]f64, source_mass: f64)
 	distance := linalg.length(r_vec)
 	return -(r_vec / distance) * (G * source_mass / (distance * distance))
 }
+
+quadtree_contact :: proc(
+	tree: ^Quadtree,
+	node_idx: int,
+	body_idx: i32,
+	bodies: []Body,
+	r_max: f64,
+) -> (
+	partner: int,
+	found: bool,
+) {
+	node := tree.node[node_idx]
+
+	if node.body >= 0 {
+		if node.body == body_idx do return
+		if bodies_overlap(&bodies[body_idx], &bodies[node.body]) {
+			return int(node.body), true
+		}
+		return
+	}
+
+	reach := bodies[body_idx].radius + r_max
+	if !box_within_reach(node.center, node.half_size, bodies[body_idx].pos, reach) do return
+
+	for child in node.children {
+		if child != -1 {
+			partner, found = quadtree_contact(tree, int(child), body_idx, bodies, r_max)
+			if found do return
+		}
+	}
+
+	return
+}
+
+box_within_reach :: proc(center: [2]f64, half_size: f64, pos: [2]f64, reach: f64) -> bool {
+	overhang_x := max(0.0, abs(pos.x - center.x) - half_size)
+	overhang_y := max(0.0, abs(pos.y - center.y) - half_size)
+	return overhang_x * overhang_x + overhang_y * overhang_y < reach * reach
+}

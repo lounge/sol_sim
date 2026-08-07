@@ -146,10 +146,16 @@ main :: proc() {
 		deadline := glfw.GetTime() + PHYSICS_BUDGET
 		steps: int
 		for accumulator >= DT {
+			when MEASURE {
+				measure_c0 := glfw.GetTime()
+			}
 			for {
-				pair, collision := collision_compute(bodies[:])
+				pair, collision := collision_compute(bodies[:], &quadtree)
 				if !collision do break
 				collision_merge(pair, &bodies, &trails, &state, &quadtree)
+			}
+			when MEASURE {
+				measure.collision_seconds += glfw.GetTime() - measure_c0
 			}
 
 			physics_step(bodies[:], DT, &quadtree)

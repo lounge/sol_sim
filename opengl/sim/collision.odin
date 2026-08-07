@@ -1,24 +1,44 @@
 package main
 
 import "core:math"
-import "core:math/linalg"
 
-collision_compute :: proc(bodies: []Body) -> (pair: [2]int, collision: bool) {
+collision_compute :: proc(bodies: []Body, tree: ^Quadtree) -> (pair: [2]int, collision: bool) {
+	if len(bodies) < BH_THRESHOLD {
+		return collision_scan(bodies)
+	}
+
+	r_max := 0.0
+	for body in bodies do r_max = max(r_max, body.radius)
+
+	for i in 0 ..< len(bodies) {
+		partner, found := quadtree_contact(tree, 0, i32(i), bodies, r_max)
+		if found do return {i, partner}, true
+	}
+
+	when BH_VALIDATE {
+		_, brute_collision := collision_scan(bodies)
+		assert(!brute_collision)
+	}
+
+	return
+}
+
+collision_scan :: proc(bodies: []Body) -> (pair: [2]int, collision: bool) {
 	for i in 0 ..< len(bodies) {
 		for j in (i + 1) ..< len(bodies) {
-			body_a := &bodies[i]
-			body_b := &bodies[j]
-
-			r_vec := body_a.pos - body_b.pos
-			distance := linalg.length(r_vec)
-
-			if distance < body_a.radius + body_b.radius {
+			if bodies_overlap(&bodies[i], &bodies[j]) {
 				return {i, j}, true
 			}
 		}
 	}
 
 	return
+}
+
+bodies_overlap :: proc(body_a, body_b: ^Body) -> bool {
+	r_vec := body_a.pos - body_b.pos
+	reach := body_a.radius + body_b.radius
+	return r_vec.x * r_vec.x + r_vec.y * r_vec.y < reach * reach
 }
 
 collision_merge :: proc(

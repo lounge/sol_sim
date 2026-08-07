@@ -13,12 +13,13 @@ MEASURE_SPAWN_COUNT :: #config(MEASURE_SPAWN_COUNT, 300)
 
 when MEASURE {
 	Measure :: struct {
-		physics_seconds: f64,
-		trails_seconds:  f64,
-		bodies_seconds:  f64,
-		frames:          int,
-		steps:           int,
-		last_report:     f64,
+		physics_seconds:   f64,
+		collision_seconds: f64,
+		trails_seconds:    f64,
+		bodies_seconds:    f64,
+		frames:            int,
+		steps:             int,
+		last_report:       f64,
 	}
 
 	// Seeded so before/after runs get the identical scene. Bodies go on
@@ -58,8 +59,9 @@ when MEASURE {
 		fill := trails[len(trails) - 1]
 
 		fmt.printfln(
-			"[measure] physics %.3f ms | bodies_draw %.3f ms | trails_draw %.3f ms | %d frames | %d steps | ring fill %d/%d",
+			"[measure] physics %.3f ms (collision %.3f ms) | bodies_draw %.3f ms | trails_draw %.3f ms | %d frames | %d steps | ring fill %d/%d",
 			m.physics_seconds / f64(m.frames) * 1000,
+			m.collision_seconds / f64(m.frames) * 1000,
 			m.bodies_seconds / f64(m.frames) * 1000,
 			m.trails_seconds / f64(m.frames) * 1000,
 			m.frames,
@@ -69,6 +71,7 @@ when MEASURE {
 		)
 
 		m.physics_seconds = 0
+		m.collision_seconds = 0
 		m.bodies_seconds = 0
 		m.trails_seconds = 0
 		m.frames = 0
