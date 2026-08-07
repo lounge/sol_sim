@@ -4,19 +4,20 @@ import "core:math"
 
 BH_THETA :: #config(BH_THETA, 0.5)
 BH_THRESHOLD :: #config(BH_THRESHOLD, 350)
-BH_MAX_DEPTH :: #config (BH_MAX_DEPTH, 32)
+BH_MAX_DEPTH :: #config(BH_MAX_DEPTH, 32)
+BH_DEBUG :: #config(BH_DEBUG, false)
 
 Quad_Node :: struct {
-	center: [2]f64,
+	center:    [2]f64,
 	half_size: f64,
-	children: [4]i32,
-	body: i32,
-	mass: f64,
-	com: [2]f64,
+	children:  [4]i32,
+	body:      i32,
+	mass:      f64,
+	com:       [2]f64,
 }
 
 Quadtree :: struct {
-	node: [dynamic]Quad_Node,
+	node:      [dynamic]Quad_Node,
 	max_depth: int,
 }
 
@@ -51,14 +52,16 @@ quadtree_build :: proc(tree: ^Quadtree, bodies: []Body) {
 	for i in 0 ..< len(bodies) {
 		quadtree_insert(tree, node_idx, i32(i), bodies, 0)
 	}
+
+	quadtree_calc(tree, bodies)
 }
 
 quadtree_create_node :: proc(tree: ^Quadtree, center: [2]f64, half_size: f64) -> int {
 	node := Quad_Node {
-		center = center,
+		center    = center,
 		half_size = half_size,
-		children = {-1, -1, -1, -1},
-		body = -1,
+		children  = {-1, -1, -1, -1},
+		body      = -1,
 	}
 
 	append(&tree.node, node)
@@ -66,7 +69,13 @@ quadtree_create_node :: proc(tree: ^Quadtree, center: [2]f64, half_size: f64) ->
 	return len(tree.node) - 1
 }
 
-quadtree_insert :: proc (tree: ^Quadtree, node_idx: int, body_idx: i32, bodies: []Body, depth: int) {
+quadtree_insert :: proc(
+	tree: ^Quadtree,
+	node_idx: int,
+	body_idx: i32,
+	bodies: []Body,
+	depth: int,
+) {
 	for child in tree.node[node_idx].children {
 		if child != -1 {
 			quadtree_push_down(tree, node_idx, body_idx, bodies, depth)
@@ -89,16 +98,49 @@ quadtree_insert :: proc (tree: ^Quadtree, node_idx: int, body_idx: i32, bodies: 
 	quadtree_push_down(tree, node_idx, body_idx, bodies, depth)
 }
 
-quadtree_push_down :: proc(tree: ^Quadtree, node_idx: int, body_idx: i32, bodies: []Body,  depth: int) {
-	quad := int(bodies[body_idx].pos.x > tree.node[node_idx].center.x) + 2 * int (bodies[body_idx].pos.y > tree.node[node_idx].center.y)
+quadtree_push_down :: proc(
+	tree: ^Quadtree,
+	node_idx: int,
+	body_idx: i32,
+	bodies: []Body,
+	depth: int,
+) {
+	quad :=
+		int(bodies[body_idx].pos.x > tree.node[node_idx].center.x) +
+		2 * int(bodies[body_idx].pos.y > tree.node[node_idx].center.y)
 	if tree.node[node_idx].children[quad] == -1 {
 		offset := tree.node[node_idx].half_size / 2
-		child_center := tree.node[node_idx].center + {quad & 1 == 1 ? +offset : -offset,
-			quad & 2 == 2 ? +offset : -offset}
+		child_center :=
+			tree.node[node_idx].center +
+			{quad & 1 == 1 ? +offset : -offset, quad & 2 == 2 ? +offset : -offset}
 
 		child_idx := quadtree_create_node(tree, child_center, offset)
 		tree.node[node_idx].children[quad] = i32(child_idx)
 	}
 
 	quadtree_insert(tree, int(tree.node[node_idx].children[quad]), body_idx, bodies, depth + 1)
+}
+
+quadtree_calc :: proc(tree: ^Quadtree, bodies: []Body) {
+	#reverse for &node in tree.node {
+		if (node.body >= 0) {
+			node.mass = bodies[node.body].mass
+			node.com = bodies[node.body].pos
+			continue
+		}
+
+		total_mass := 0.0
+		total_com := [2]f64{}
+		for &child in node.children {
+			if child == -1 do continue
+
+			child_node := tree.node[child]
+
+			total_mass += child_node.mass
+			total_com += child_node.com * child_node.mass
+		}
+
+		node.mass = total_mass
+		node.com = total_com / total_mass
+	}
 }

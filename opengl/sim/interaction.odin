@@ -3,7 +3,7 @@ package main
 import "core:fmt"
 import "core:math"
 
-pending_edits_apply :: proc(state: ^State, bodies: []Body) {
+pending_edits_apply :: proc(state: ^State, bodies: []Body, tree: ^Quadtree) {
 	if state.input.pending_vel == 0 && state.input.pending_mass == 0 do return
 
 	if state.camera.tracked_body < 0 {
@@ -26,7 +26,7 @@ pending_edits_apply :: proc(state: ^State, bodies: []Body) {
 
 		fmt.printfln("Body: %s, Factor: %f, Mass: %v", body.name, mass_factor, body.mass)
 
-		accels_compute(bodies)
+		accels_compute(bodies, tree)
 	}
 
 	state.input.pending_vel = 0
@@ -38,6 +38,7 @@ pending_spawn_apply :: proc(
 	bodies: ^[dynamic]Body,
 	trails: ^[dynamic]Trail,
 	width, height: i32,
+	tree: ^Quadtree,
 ) {
 	if spawn, ok := state.input.pending_spawn.?; ok {
 		world_pos_start := world_pos_calc(spawn.start_pos, &state.camera, width, height)
@@ -61,14 +62,19 @@ pending_spawn_apply :: proc(
 		append(bodies, body)
 		append(trails, trail)
 
-		accels_compute(bodies[:])
+		accels_compute(bodies[:], tree)
 
 		state.input.pending_spawn = nil
 		state.spawned_bodies += 1
 	}
 }
 
-pending_delete_apply :: proc(state: ^State, bodies: ^[dynamic]Body, trails: ^[dynamic]Trail) {
+pending_delete_apply :: proc(
+	state: ^State,
+	bodies: ^[dynamic]Body,
+	trails: ^[dynamic]Trail,
+	tree: ^Quadtree,
+) {
 	if state.input.pending_delete == false do return
 
 	if state.camera.tracked_body < 0 {
@@ -78,7 +84,7 @@ pending_delete_apply :: proc(state: ^State, bodies: ^[dynamic]Body, trails: ^[dy
 
 	tracked_id := state.camera.tracked_body
 
-	body_remove(tracked_id, bodies, trails)
+	body_remove(tracked_id, bodies, trails, tree)
 
 	state.camera.tracked_body = -1
 	state.input.pending_delete = false

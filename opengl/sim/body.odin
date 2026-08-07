@@ -72,7 +72,7 @@ body_add :: proc(
 }
 
 
-body_remove :: proc(index: int, bodies: ^[dynamic]Body, trails: ^[dynamic]Trail) {
+body_remove :: proc(index: int, bodies: ^[dynamic]Body, trails: ^[dynamic]Trail, tree: ^Quadtree) {
 	if bodies[index].spawned do delete(bodies[index].name)
 
 	ordered_remove(bodies, index)
@@ -87,5 +87,5 @@ body_remove :: proc(index: int, bodies: ^[dynamic]Body, trails: ^[dynamic]Trail)
 	}
 
 
-	accels_compute(bodies[:])
+	accels_compute(bodies[:], tree)
 }

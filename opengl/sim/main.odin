@@ -20,8 +20,8 @@ GOVERNOR_FRAMES :: #config(GOVERNOR_FRAMES, 30) // COnsecutive overloaded frames
 PALETTE :: REALISTIC.body
 
 main :: proc() {
-	bodies, trails := create_system()
 	quadtree: Quadtree
+	bodies, trails := create_system(&quadtree)
 
 	when MEASURE {
 		measure: Measure
@@ -87,6 +87,9 @@ main :: proc() {
 	accumulator: f64
 	overload_frames: int
 	last_time := glfw.GetTime()
+	when BH_DEBUG {
+		bh_debug_last: f64
+	}
 
 	gl.ClearColor(0.0, 0.0, 0.0, 0.0)
 
@@ -104,16 +107,38 @@ main :: proc() {
 		accumulator += frame_time * f64(state.sim_speed) / T_UNIT_SECONDS
 
 		// Apply interaction
-		pending_delete_apply(&state, &bodies, &trails)
-		pending_edits_apply(&state, bodies[:])
-		pending_spawn_apply(&state, &bodies, &trails, window_width, window_height)
+		pending_delete_apply(&state, &bodies, &trails, &quadtree)
+		pending_edits_apply(&state, bodies[:], &quadtree)
+		pending_spawn_apply(&state, &bodies, &trails, window_width, window_height, &quadtree)
 
 		// Drain loop
 		when MEASURE {
 			measure_t0 := glfw.GetTime()
 		}
 
-		quadtree_build(&quadtree, bodies[:])
+		when BH_DEBUG {
+			if now - bh_debug_last >= 1 && len(quadtree.node) > 0 {
+				bh_debug_last = now
+
+				mass_sum: f64
+				weighted_pos: [2]f64
+				for body in bodies {
+					mass_sum += body.mass
+					weighted_pos += body.pos * body.mass
+				}
+				barycenter := weighted_pos / mass_sum
+
+				root := quadtree.node[0]
+				fmt.printfln(
+					"BH: nodes %d - depth %d - mass diff %e - com diff %e, %e",
+					len(quadtree.node),
+					quadtree.max_depth,
+					root.mass - mass_sum,
+					root.com.x - barycenter.x,
+					root.com.y - barycenter.y,
+				)
+			}
+		}
 
 		deadline := glfw.GetTime() + PHYSICS_BUDGET
 		steps: int
@@ -121,10 +146,10 @@ main :: proc() {
 			for {
 				pair, collision := collision_compute(bodies[:])
 				if !collision do break
-				collision_merge(pair, &bodies, &trails, &state)
+				collision_merge(pair, &bodies, &trails, &state, &quadtree)
 			}
 
-			physics_step(bodies[:], DT)
+			physics_step(bodies[:], DT, &quadtree)
 			trail_record(bodies[:], trails[:])
 			accumulator -= DT
 			steps += 1

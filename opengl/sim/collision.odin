@@ -26,6 +26,7 @@ collision_merge :: proc(
 	bodies: ^[dynamic]Body,
 	trails: ^[dynamic]Trail,
 	state: ^State,
+	tree: ^Quadtree,
 ) {
 	body_a := &bodies[pair.x]
 	body_b := &bodies[pair.y]
@@ -59,6 +60,6 @@ collision_merge :: proc(
 	if state.camera.tracked_body == removed_index do state.camera.tracked_body = survivor_index
 	if state.camera.tracked_body > removed_index do state.camera.tracked_body -= 1
 
-	body_remove(removed_index, bodies, trails)
+	body_remove(removed_index, bodies, trails, tree)
 	state.title_stale = true
 }

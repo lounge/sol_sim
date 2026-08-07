@@ -143,7 +143,7 @@ specs := []Body_Spec {
 }
 
 // TODO: Maybe handle multiple roots
-create_system :: proc() -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
+create_system :: proc(tree: ^Quadtree) -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
 	assert(len(specs) == 1, "trails[0] cap fix-up assumes exactly one root")
 	assert(len(specs[0].satellites) >= 1, "root requires at least 1 satellite")
 
@@ -174,7 +174,7 @@ create_system :: proc() -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
 	}
 
 	// Set priming force
-	accels_compute(bodies[:])
+	accels_compute(bodies[:], tree)
 
 	return bodies, trails
 }

@@ -5,17 +5,18 @@ import "core:math/linalg"
 G :: 1.0
 DT :: #config(DT, 0.0001)
 
-
 // Integrator: Kick–drift–kick velocity Verlet
-physics_step :: proc(bodies: []Body, dt: f64) {
+physics_step :: proc(bodies: []Body, dt: f64, tree: ^Quadtree) {
 	for &body in bodies do body.prev_pos = body.pos
 	for &body in bodies do body.vel += body.accel * (dt / 2) // half-kick
 	for &body in bodies do body.pos += body.vel * dt // drift
-	accels_compute(bodies)
+	accels_compute(bodies, tree)
 	for &body in bodies do body.vel += body.accel * (dt / 2) // half-kick
 }
 
-accels_compute :: proc(bodies: []Body) {
+accels_compute :: proc(bodies: []Body, tree: ^Quadtree) {
+	quadtree_build(tree, bodies[:])
+
 	for &body in bodies do body.accel = 0
 
 	for i in 0 ..< len(bodies) {
