@@ -1,0 +1,104 @@
+package main
+
+import "core:math"
+
+BH_THETA :: #config(BH_THETA, 0.5)
+BH_THRESHOLD :: #config(BH_THRESHOLD, 350)
+BH_MAX_DEPTH :: #config (BH_MAX_DEPTH, 32)
+
+Quad_Node :: struct {
+	center: [2]f64,
+	half_size: f64,
+	children: [4]i32,
+	body: i32,
+	mass: f64,
+	com: [2]f64,
+}
+
+Quadtree :: struct {
+	node: [dynamic]Quad_Node,
+	max_depth: int,
+}
+
+quadtree_build :: proc(tree: ^Quadtree, bodies: []Body) {
+	clear(&tree.node)
+	tree.max_depth = 0
+
+	if len(bodies) == 0 {
+		return
+	}
+
+	min_x := bodies[0].pos.x
+	max_x := bodies[0].pos.x
+	min_y := bodies[0].pos.y
+	max_y := bodies[0].pos.y
+
+	for b in bodies[1:] {
+		min_x = min(min_x, b.pos.x)
+		max_x = max(max_x, b.pos.x)
+		min_y = min(min_y, b.pos.y)
+		max_y = max(max_y, b.pos.y)
+	}
+
+	min: [2]f64 = {min_x, min_y}
+	max: [2]f64 = {max_x, max_y}
+
+	center := (min + max) / 2
+	half_size := math.max(0.001, math.max(max.x - min.x, max.y - min.y) / 2 * 1.01)
+
+	node_idx := quadtree_create_node(tree, center, half_size)
+
+	for i in 0 ..< len(bodies) {
+		quadtree_insert(tree, node_idx, i32(i), bodies, 0)
+	}
+}
+
+quadtree_create_node :: proc(tree: ^Quadtree, center: [2]f64, half_size: f64) -> int {
+	node := Quad_Node {
+		center = center,
+		half_size = half_size,
+		children = {-1, -1, -1, -1},
+		body = -1,
+	}
+
+	append(&tree.node, node)
+
+	return len(tree.node) - 1
+}
+
+quadtree_insert :: proc (tree: ^Quadtree, node_idx: int, body_idx: i32, bodies: []Body, depth: int) {
+	for child in tree.node[node_idx].children {
+		if child != -1 {
+			quadtree_push_down(tree, node_idx, body_idx, bodies, depth)
+			return
+		}
+	}
+
+	if tree.node[node_idx].body == -1 {
+		tree.node[node_idx].body = body_idx
+		tree.max_depth = max(tree.max_depth, depth)
+		return
+	}
+
+	assert(depth < BH_MAX_DEPTH)
+
+	old := tree.node[node_idx].body
+	tree.node[node_idx].body = -1
+
+	quadtree_push_down(tree, node_idx, old, bodies, depth)
+	quadtree_push_down(tree, node_idx, body_idx, bodies, depth)
+}
+
+quadtree_push_down :: proc(tree: ^Quadtree, node_idx: int, body_idx: i32, bodies: []Body,  depth: int) {
+	quad := int(bodies[body_idx].pos.x > tree.node[node_idx].center.x) + 2 * int (bodies[body_idx].pos.y > tree.node[node_idx].center.y)
+	if tree.node[node_idx].children[quad] == -1 {
+		offset := tree.node[node_idx].half_size / 2
+		child_center := tree.node[node_idx].center + {quad & 1 == 1 ? +offset : -offset,
+			quad & 2 == 2 ? +offset : -offset}
+
+		child_idx := quadtree_create_node(tree, child_center, offset)
+		tree.node[node_idx].children[quad] = i32(child_idx)
+	}
+
+	quadtree_insert(tree, int(tree.node[node_idx].children[quad]), body_idx, bodies, depth + 1)
+}

@@ -21,6 +21,7 @@ PALETTE :: REALISTIC.body
 
 main :: proc() {
 	bodies, trails := create_system()
+	quadtree: Quadtree
 
 	when MEASURE {
 		measure: Measure
@@ -111,6 +112,8 @@ main :: proc() {
 		when MEASURE {
 			measure_t0 := glfw.GetTime()
 		}
+
+		quadtree_build(&quadtree, bodies[:])
 
 		deadline := glfw.GetTime() + PHYSICS_BUDGET
 		steps: int
