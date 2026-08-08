@@ -20,12 +20,14 @@ main
 window
 triangle
 shaders
-sim
+2D
+3D
 !main/
 !window/
 !triangle/
 !shaders/
-!sim/
+!2D/
+!3D/
 
 # macOS
 .DS_Store

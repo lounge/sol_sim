@@ -1,4 +1,4 @@
-package main
+package sim_core
 
 Body_Spec :: struct {
 	mass:              f64,

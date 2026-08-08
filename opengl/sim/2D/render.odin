@@ -1,5 +1,6 @@
 package main
 
+import sim "../core"
 import "core:fmt"
 import "core:math"
 import gl "vendor:OpenGL"
@@ -24,7 +25,7 @@ trail_mesh_create :: proc() -> Mesh {
 	gl.GenBuffers(1, &vbo)
 	gl.BindVertexArray(vao)
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, (TRAIL_CAP + 1) * 2 * size_of(f32), nil, gl.STREAM_DRAW)
+	gl.BufferData(gl.ARRAY_BUFFER, (sim.TRAIL_CAP + 1) * 2 * size_of(f32), nil, gl.STREAM_DRAW)
 	gl.VertexAttribPointer(0, 2, gl.FLOAT, gl.FALSE, 2 * size_of(f32), 0)
 	gl.EnableVertexAttribArray(0)
 	gl.BindVertexArray(0)
@@ -35,15 +36,15 @@ trail_mesh_create :: proc() -> Mesh {
 }
 
 trails_draw :: proc(
-	trails: []Trail,
-	bodies: []Body,
+	trails: []sim.Trail,
+	bodies: []sim.Body,
 	mesh: Mesh,
 	program: Trail_Program,
 	camera_state: ^Camera,
 	width, height: i32,
 	alpha: f64,
 ) {
-	scratch_buffer: [TRAIL_CAP + 1][2]f32
+	scratch_buffer: [sim.TRAIL_CAP + 1][2]f32
 
 	gl.UseProgram(program.id)
 
@@ -87,7 +88,7 @@ trails_draw :: proc(
 		shader_set_vec3(program.color, color.x, color.y, color.z)
 		shader_set_int(program.count, i32(trail_count))
 
-		gl.BufferData(gl.ARRAY_BUFFER, (TRAIL_CAP + 1) * 2 * size_of(f32), nil, gl.STREAM_DRAW)
+		gl.BufferData(gl.ARRAY_BUFFER, (sim.TRAIL_CAP + 1) * 2 * size_of(f32), nil, gl.STREAM_DRAW)
 
 		gl.BufferSubData(
 			gl.ARRAY_BUFFER,
@@ -140,7 +141,7 @@ circle_mesh_create :: proc(segments: i32) -> Mesh {
 }
 
 bodies_draw :: proc(
-	bodies: []Body,
+	bodies: []sim.Body,
 	mesh: Mesh,
 	program: Body_Program,
 	camera_state: ^Camera,
@@ -168,7 +169,7 @@ bodies_draw :: proc(
 circle_draw :: proc(
 	world: World_Pos,
 	radius: f64,
-	color: Color,
+	color: sim.Color,
 	mesh: Mesh,
 	program: Body_Program,
 	camera: ^Camera,
@@ -209,7 +210,7 @@ drag_preview_draw :: proc(
 	shader_set_vec3(program.color, 1.0, 1.0, 1.0)
 	shader_set_int(program.count, i32(1))
 
-	gl.BufferData(gl.ARRAY_BUFFER, (TRAIL_CAP + 1) * 2 * size_of(f32), nil, gl.STREAM_DRAW)
+	gl.BufferData(gl.ARRAY_BUFFER, (sim.TRAIL_CAP + 1) * 2 * size_of(f32), nil, gl.STREAM_DRAW)
 
 	gl.BufferSubData(gl.ARRAY_BUFFER, 0, size_of(scratch_buffer), raw_data(&scratch_buffer))
 	gl.DrawArrays(gl.LINE_STRIP, 0, 2)
@@ -218,7 +219,7 @@ drag_preview_draw :: proc(
 mass_preview_draw :: proc(
 	world: World_Pos,
 	radius: f64,
-	color: Color,
+	color: sim.Color,
 	mesh: Mesh,
 	program: Body_Program,
 	camera: ^Camera,
@@ -231,7 +232,7 @@ mass_preview_draw :: proc(
 }
 
 quadtree_cells_draw :: proc(
-	tree: ^Quadtree,
+	tree: ^sim.Quadtree,
 	mesh: Mesh,
 	program: Trail_Program,
 	camera: ^Camera,
@@ -310,7 +311,7 @@ world_pos_calc :: proc(px_pos: Pixel_Pos, camera_state: ^Camera, width, height: 
 	return (World_Pos)(ndc * camera_state.half_extent + camera_state.center)
 }
 
-pos_render :: proc(body: Body, alpha: f64) -> [2]f64 {
+pos_render :: proc(body: sim.Body, alpha: f64) -> [2]f64 {
 	return body.prev_pos + (body.pos - body.prev_pos) * alpha
 }
 

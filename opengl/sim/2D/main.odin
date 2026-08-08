@@ -1,5 +1,7 @@
 package main
 
+import sim "../core"
+
 import "core:fmt"
 import "core:math"
 import "core:math/linalg"
@@ -7,6 +9,7 @@ import "core:os"
 import gl "vendor:OpenGL"
 import "vendor:glfw"
 
+TITLE :: "Sol_Sim 2D"
 SCR_WIDTH :: 800
 SCR_HEIGHT :: 600
 SECONDS_IN_DAY :: 86400
@@ -18,12 +21,12 @@ PHYSICS_BUDGET :: #config(PHYSICS_BUDGET, 0.005) // Seconds of wall clock per fr
 GOVERNOR_FRAMES :: #config(GOVERNOR_FRAMES, 30) // COnsecutive overloaded frames before halving
 
 main :: proc() {
-	quadtree: Quadtree
-	bodies, trails := create_system(&quadtree)
+	quadtree: sim.Quadtree
+	bodies, trails := sim.create_system(&quadtree)
 
-	when MEASURE {
-		measure: Measure
-		measure_spawn(&bodies, &trails, &quadtree)
+	when sim.MEASURE {
+		measure: sim.Measure
+		sim.measure_spawn(&bodies, &trails, &quadtree)
 	}
 
 	glfw.Init()
@@ -33,7 +36,7 @@ main :: proc() {
 	glfw.WindowHint(glfw.CONTEXT_VERSION_MINOR, 3)
 	glfw.WindowHint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
 
-	window := glfw.CreateWindow(SCR_WIDTH, SCR_HEIGHT, "Sol_Sim", nil, nil)
+	window := glfw.CreateWindow(SCR_WIDTH, SCR_HEIGHT, TITLE, nil, nil)
 	if window == nil {
 		fmt.println("Failed to create GLFW window")
 		glfw.Terminate()
@@ -107,45 +110,45 @@ main :: proc() {
 		pending_spawn_apply(&state, &bodies, &trails, window_width, window_height, &quadtree)
 
 		// Drain loop
-		when MEASURE {
+		when sim.MEASURE {
 			measure_t0 := glfw.GetTime()
 		}
 
-		when BH_DEBUG {
-			quadtree_debug(&quadtree, bodies[:], now)
+		when sim.BH_DEBUG {
+			sim.quadtree_debug(&quadtree, bodies[:], now)
 		}
 
 		deadline := glfw.GetTime() + PHYSICS_BUDGET
 		steps: int
-		for accumulator >= DT {
-			when MEASURE {
+		for accumulator >= sim.DT {
+			when sim.MEASURE {
 				measure_c0 := glfw.GetTime()
 			}
 			for {
-				pair, collision := collision_compute(bodies[:], &quadtree)
+				pair, collision := sim.collision_compute(bodies[:], &quadtree)
 				if !collision do break
-				collision_merge(pair, &bodies, &trails, &state.tracked_body, &quadtree)
+				sim.collision_merge(pair, &bodies, &trails, &state.tracked_body, &quadtree)
 				state.title_stale = true
 			}
-			when MEASURE {
+			when sim.MEASURE {
 				measure.collision_seconds += glfw.GetTime() - measure_c0
 			}
 
-			physics_step(bodies[:], DT, &quadtree)
-			trail_record(bodies[:], trails[:])
-			accumulator -= DT
+			sim.physics_step(bodies[:], sim.DT, &quadtree)
+			sim.trail_record(bodies[:], trails[:])
+			accumulator -= sim.DT
 			steps += 1
 			if glfw.GetTime() >= deadline do break
 		}
 
-		when MEASURE {
+		when sim.MEASURE {
 			measure.physics_seconds += glfw.GetTime() - measure_t0
 			measure.steps += steps
 		}
 
-		overloaded := accumulator >= DT
+		overloaded := accumulator >= sim.DT
 		if overloaded {
-			accumulator = math.mod(accumulator, DT)
+			accumulator = math.mod(accumulator, sim.DT)
 			overload_frames += 1
 		} else {
 			overload_frames = 0
@@ -157,11 +160,11 @@ main :: proc() {
 			overload_frames = 0
 		}
 
-		alpha := accumulator / DT
+		alpha := accumulator / sim.DT
 
 		camera_update(&state, bodies[:], window_width, window_height, alpha)
 
-		when BH_DEBUG_DRAW {
+		when sim.BH_DEBUG_DRAW {
 			quadtree_cells_draw(
 				&quadtree,
 				trail_mesh,
@@ -172,7 +175,7 @@ main :: proc() {
 			)
 		}
 
-		when MEASURE {
+		when sim.MEASURE {
 			measure_t0 = glfw.GetTime()
 		}
 		bodies_draw(
@@ -184,11 +187,11 @@ main :: proc() {
 			fb_height,
 			alpha,
 		)
-		when MEASURE {
+		when sim.MEASURE {
 			measure.bodies_seconds += glfw.GetTime() - measure_t0
 		}
 
-		when MEASURE {
+		when sim.MEASURE {
 			measure_t0 = glfw.GetTime()
 		}
 		trails_draw(
@@ -201,9 +204,9 @@ main :: proc() {
 			fb_height,
 			alpha,
 		)
-		when MEASURE {
+		when sim.MEASURE {
 			measure.trails_seconds += glfw.GetTime() - measure_t0
-			measure_frame_report(&measure, trails[:], glfw.GetTime())
+			sim.measure_frame_report(&measure, trails[:], glfw.GetTime())
 		}
 
 		if drag, ok := state.input.drag_start.?; ok {
@@ -232,7 +235,7 @@ main :: proc() {
 			mass_preview_draw(
 				end_world,
 				radius,
-				PALETTE[.Spawn],
+				sim.PALETTE[.Spawn],
 				circle_mesh,
 				body_program,
 				&state.camera,
@@ -266,7 +269,7 @@ window_title_drag_update :: proc(
 
 	title := fmt.ctprintf(
 		"%s - Spawn %e sol (x%.0f Moon) - %.1f km/s",
-		"Sol_Sim",
+		TITLE + " ",
 		mass,
 		math.pow(2, state.input.spawn_mass_exp),
 		speed * 29.78,
@@ -276,7 +279,7 @@ window_title_drag_update :: proc(
 	state.title_stale = true
 }
 
-window_title_update :: proc(window: glfw.WindowHandle, state: ^State, bodies: []Body) {
+window_title_update :: proc(window: glfw.WindowHandle, state: ^State, bodies: []sim.Body) {
 	title: cstring
 
 	if !state.title_stale do return
@@ -284,7 +287,7 @@ window_title_update :: proc(window: glfw.WindowHandle, state: ^State, bodies: []
 		tracked_body_name := bodies[state.tracked_body].name
 		title = fmt.ctprintf(
 			"%s - %s - %d days/sec - %f years/sec - sim_speed %d",
-			"Sol_Sim",
+			TITLE,
 			tracked_body_name,
 			state.sim_speed / SECONDS_IN_DAY,
 			f64(state.sim_speed) / SECONDS_IN_YEAR,
@@ -293,7 +296,7 @@ window_title_update :: proc(window: glfw.WindowHandle, state: ^State, bodies: []
 	} else {
 		title = fmt.ctprintf(
 			"%s - %d days/sec - %f years/sec - sim_speed %d",
-			"Sol_Sim",
+			TITLE,
 			state.sim_speed / SECONDS_IN_DAY,
 			f64(state.sim_speed) / SECONDS_IN_YEAR,
 			state.sim_speed,

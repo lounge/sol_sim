@@ -1,5 +1,6 @@
 package main
 
+import sim "../core"
 import "core:math"
 import "core:math/linalg"
 
@@ -15,7 +16,7 @@ camera_zoom :: proc "contextless" (camera_state: ^Camera, y_offset: f64) {
 	camera_state.half_extent *= math.pow(0.9, y_offset)
 }
 
-camera_update :: proc(state: ^State, bodies: []Body, width, height: i32, alpha: f64) {
+camera_update :: proc(state: ^State, bodies: []sim.Body, width, height: i32, alpha: f64) {
 	if state.tracked_body >= 0 {
 		world := pos_render(bodies[state.tracked_body], alpha)
 		state.camera.center = world
@@ -49,7 +50,7 @@ camera_update :: proc(state: ^State, bodies: []Body, width, height: i32, alpha: 
 	}
 }
 
-camera_track :: proc(state: ^State, index: int, body: Body) {
+camera_track :: proc(state: ^State, index: int, body: sim.Body) {
 	if index == state.tracked_body do return
 	state.tracked_body = index
 	state.camera.half_extent = body.radius * VIEW_SCALE

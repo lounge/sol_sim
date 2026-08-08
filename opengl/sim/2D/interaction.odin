@@ -1,9 +1,10 @@
 package main
 
+import sim "../core"
 import "core:fmt"
 import "core:math"
 
-pending_edits_apply :: proc(state: ^State, bodies: []Body, tree: ^Quadtree) {
+pending_edits_apply :: proc(state: ^State, bodies: []sim.Body, tree: ^sim.Quadtree) {
 	if state.input.pending_vel == 0 && state.input.pending_mass == 0 do return
 
 	if state.tracked_body < 0 {
@@ -26,7 +27,7 @@ pending_edits_apply :: proc(state: ^State, bodies: []Body, tree: ^Quadtree) {
 
 		fmt.printfln("Body: %s, Factor: %f, Mass: %v", body.name, mass_factor, body.mass)
 
-		accels_compute(bodies, tree)
+		sim.accels_compute(bodies, tree)
 	}
 
 	state.input.pending_vel = 0
@@ -35,22 +36,22 @@ pending_edits_apply :: proc(state: ^State, bodies: []Body, tree: ^Quadtree) {
 
 pending_spawn_apply :: proc(
 	state: ^State,
-	bodies: ^[dynamic]Body,
-	trails: ^[dynamic]Trail,
+	bodies: ^[dynamic]sim.Body,
+	trails: ^[dynamic]sim.Trail,
 	width, height: i32,
-	tree: ^Quadtree,
+	tree: ^sim.Quadtree,
 ) {
 	if spawn, ok := state.input.pending_spawn.?; ok {
 		world_pos_start := world_pos_calc(spawn.start_pos, &state.camera, width, height)
 		world_pos_end := world_pos_calc(spawn.end_pos, &state.camera, width, height)
 		world_drag := world_pos_end - world_pos_start
 
-		body_spawn(
+		sim.body_spawn(
 			bodies,
 			trails,
 			tree,
 			fmt.aprintf("Spawnius %d", state.spawned_bodies + 1),
-			PALETTE[.Spawn],
+			sim.PALETTE[.Spawn],
 			([2]f64)(world_pos_end),
 			([2]f64)(world_drag) / DRAG_TIME,
 			spawn.mass,
@@ -64,9 +65,9 @@ pending_spawn_apply :: proc(
 
 pending_delete_apply :: proc(
 	state: ^State,
-	bodies: ^[dynamic]Body,
-	trails: ^[dynamic]Trail,
-	tree: ^Quadtree,
+	bodies: ^[dynamic]sim.Body,
+	trails: ^[dynamic]sim.Trail,
+	tree: ^sim.Quadtree,
 ) {
 	if state.input.pending_delete == false do return
 
@@ -77,7 +78,7 @@ pending_delete_apply :: proc(
 
 	tracked_id := state.tracked_body
 
-	body_remove(tracked_id, bodies, trails, tree)
+	sim.body_remove(tracked_id, bodies, trails, tree)
 
 	state.tracked_body = -1
 	state.input.pending_delete = false

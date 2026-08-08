@@ -1,4 +1,4 @@
-package main
+package sim_core
 
 TRAIL_CAP :: 12800
 TRAIL_FRACTION :: 0.95

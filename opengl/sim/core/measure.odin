@@ -1,4 +1,4 @@
-package main
+package sim_core
 
 import "core:fmt"
 import "core:math"
