@@ -6,13 +6,13 @@ import "core:math"
 pending_edits_apply :: proc(state: ^State, bodies: []Body, tree: ^Quadtree) {
 	if state.input.pending_vel == 0 && state.input.pending_mass == 0 do return
 
-	if state.camera.tracked_body < 0 {
+	if state.tracked_body < 0 {
 		state.input.pending_vel = 0
 		state.input.pending_mass = 0
 		return
 	}
 
-	body := &bodies[state.camera.tracked_body]
+	body := &bodies[state.tracked_body]
 
 	if state.input.pending_vel != 0 {
 		vel_factor := 1.0 + f64(state.input.pending_vel) / 100
@@ -43,26 +43,19 @@ pending_spawn_apply :: proc(
 	if spawn, ok := state.input.pending_spawn.?; ok {
 		world_pos_start := world_pos_calc(spawn.start_pos, &state.camera, width, height)
 		world_pos_end := world_pos_calc(spawn.end_pos, &state.camera, width, height)
-
 		world_drag := world_pos_end - world_pos_start
 
-		body := Body {
-			name     = fmt.aprintf("Spawnius %d", state.spawned_bodies + 1),
-			color    = PALETTE[.Spawn],
-			pos      = ([2]f64)(world_pos_end),
-			prev_pos = ([2]f64)(world_pos_end),
-			vel      = ([2]f64)(world_drag) / DRAG_TIME,
-			mass     = spawn.mass,
-			radius   = spawn.radius,
-			spawned  = true,
-		}
-
-		trail := trail_make_default()
-
-		append(bodies, body)
-		append(trails, trail)
-
-		accels_compute(bodies[:], tree)
+		body_spawn(
+			bodies,
+			trails,
+			tree,
+			fmt.aprintf("Spawnius %d", state.spawned_bodies + 1),
+			PALETTE[.Spawn],
+			([2]f64)(world_pos_end),
+			([2]f64)(world_drag) / DRAG_TIME,
+			spawn.mass,
+			spawn.radius,
+		)
 
 		state.input.pending_spawn = nil
 		state.spawned_bodies += 1
@@ -77,16 +70,16 @@ pending_delete_apply :: proc(
 ) {
 	if state.input.pending_delete == false do return
 
-	if state.camera.tracked_body < 0 {
+	if state.tracked_body < 0 {
 		state.input.pending_delete = false
 		return
 	}
 
-	tracked_id := state.camera.tracked_body
+	tracked_id := state.tracked_body
 
 	body_remove(tracked_id, bodies, trails, tree)
 
-	state.camera.tracked_body = -1
+	state.tracked_body = -1
 	state.input.pending_delete = false
 	state.title_stale = true
 }

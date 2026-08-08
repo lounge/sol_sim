@@ -7,9 +7,8 @@ VIEW_SCALE :: 60
 PICK_RADIUS_PX :: 8
 
 Camera :: struct {
-	center:       [2]f64,
-	half_extent:  f64,
-	tracked_body: int,
+	center:      [2]f64,
+	half_extent: f64,
 }
 
 camera_zoom :: proc "contextless" (camera_state: ^Camera, y_offset: f64) {
@@ -17,8 +16,8 @@ camera_zoom :: proc "contextless" (camera_state: ^Camera, y_offset: f64) {
 }
 
 camera_update :: proc(state: ^State, bodies: []Body, width, height: i32, alpha: f64) {
-	if state.camera.tracked_body >= 0 {
-		world := pos_render(bodies[state.camera.tracked_body], alpha)
+	if state.tracked_body >= 0 {
+		world := pos_render(bodies[state.tracked_body], alpha)
 		state.camera.center = world
 	}
 
@@ -44,15 +43,15 @@ camera_update :: proc(state: ^State, bodies: []Body, width, height: i32, alpha: 
 		if best >= 0 {
 			camera_track(state, best, bodies[best])
 		} else {
-			state.camera.tracked_body = -1 // empty space -> free cam
+			state.tracked_body = -1 // empty space -> free cam
 			state.title_stale = true
 		}
 	}
 }
 
 camera_track :: proc(state: ^State, index: int, body: Body) {
-	if index == state.camera.tracked_body do return
-	state.camera.tracked_body = index
+	if index == state.tracked_body do return
+	state.tracked_body = index
 	state.camera.half_extent = body.radius * VIEW_SCALE
 	state.title_stale = true
 }

@@ -17,8 +17,6 @@ MAX_SIM_SPEED :: #config(MAX_SIM_SPEED, int(50 * SECONDS_IN_YEAR))
 PHYSICS_BUDGET :: #config(PHYSICS_BUDGET, 0.005) // Seconds of wall clock per frame
 GOVERNOR_FRAMES :: #config(GOVERNOR_FRAMES, 30) // COnsecutive overloaded frames before halving
 
-PALETTE :: REALISTIC.body
-
 main :: proc() {
 	quadtree: Quadtree
 	bodies, trails := create_system(&quadtree)
@@ -87,9 +85,6 @@ main :: proc() {
 	accumulator: f64
 	overload_frames: int
 	last_time := glfw.GetTime()
-	when BH_DEBUG {
-		bh_debug_last: f64
-	}
 
 	gl.ClearColor(0.0, 0.0, 0.0, 0.0)
 
@@ -117,30 +112,7 @@ main :: proc() {
 		}
 
 		when BH_DEBUG {
-			if now - bh_debug_last >= 1 && len(quadtree.node) > 0 {
-				bh_debug_last = now
-
-				mass_sum: f64
-				weighted_pos: [2]f64
-				for body in bodies {
-					mass_sum += body.mass
-					weighted_pos += body.pos * body.mass
-				}
-				barycenter := weighted_pos / mass_sum
-
-				root := quadtree.node[0]
-				fmt.printfln(
-					"BH: nodes %d - depth %d - mass diff %e - com diff %e, %e - max err %e",
-					len(quadtree.node),
-					quadtree.max_depth,
-					root.mass - mass_sum,
-					root.com.x - barycenter.x,
-					root.com.y - barycenter.y,
-					quadtree.validate_max_err,
-				)
-				quadtree.validate_max_err = 0
-			}
-
+			quadtree_debug(&quadtree, bodies[:], now)
 		}
 
 		deadline := glfw.GetTime() + PHYSICS_BUDGET
@@ -152,7 +124,8 @@ main :: proc() {
 			for {
 				pair, collision := collision_compute(bodies[:], &quadtree)
 				if !collision do break
-				collision_merge(pair, &bodies, &trails, &state, &quadtree)
+				collision_merge(pair, &bodies, &trails, &state.tracked_body, &quadtree)
+				state.title_stale = true
 			}
 			when MEASURE {
 				measure.collision_seconds += glfw.GetTime() - measure_c0
@@ -307,8 +280,8 @@ window_title_update :: proc(window: glfw.WindowHandle, state: ^State, bodies: []
 	title: cstring
 
 	if !state.title_stale do return
-	if state.camera.tracked_body >= 0 {
-		tracked_body_name := bodies[state.camera.tracked_body].name
+	if state.tracked_body >= 0 {
+		tracked_body_name := bodies[state.tracked_body].name
 		title = fmt.ctprintf(
 			"%s - %s - %d days/sec - %f years/sec - sim_speed %d",
 			"Sol_Sim",

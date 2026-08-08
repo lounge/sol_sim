@@ -1,5 +1,7 @@
 package main
 
+PALETTE :: REALISTIC.body
+
 Color :: [3]f32
 
 Body_Name :: enum {

@@ -3,6 +3,9 @@ package main
 import "core:math"
 import "core:math/linalg"
 
+import "core:fmt"
+_ :: fmt
+
 BH_THETA :: #config(BH_THETA, 0.5)
 BH_THRESHOLD :: #config(BH_THRESHOLD, 300)
 BH_MAX_DEPTH :: #config(BH_MAX_DEPTH, 32)
@@ -23,6 +26,7 @@ Quadtree :: struct {
 	node:             [dynamic]Quad_Node,
 	max_depth:        int,
 	validate_max_err: f64,
+	debug_last:       f64,
 }
 
 quadtree_build :: proc(tree: ^Quadtree, bodies: []Body) {
@@ -224,4 +228,31 @@ box_within_reach :: proc(center: [2]f64, half_size: f64, pos: [2]f64, reach: f64
 	overhang_x := max(0.0, abs(pos.x - center.x) - half_size)
 	overhang_y := max(0.0, abs(pos.y - center.y) - half_size)
 	return overhang_x * overhang_x + overhang_y * overhang_y < reach * reach
+}
+
+when BH_DEBUG {
+	quadtree_debug :: proc(tree: ^Quadtree, bodies: []Body, now: f64) {
+		if now - tree.debug_last < 1 || len(tree.node) == 0 do return
+
+		tree.debug_last = now
+
+		mass_sum: f64
+		weighted_pos: [2]f64
+		for body in bodies {
+			mass_sum += body.mass
+			weighted_pos += body.pos * body.mass
+		}
+		barycenter := weighted_pos / mass_sum
+
+		root := tree.node[0]
+		fmt.printfln(
+			"BH: nodes %d - depth %d - mass diff %e - com diff %v - max err %e",
+			len(tree.node),
+			tree.max_depth,
+			root.mass - mass_sum,
+			root.com - barycenter,
+			tree.validate_max_err,
+		)
+		tree.validate_max_err = 0
+	}
 }
