@@ -10,6 +10,7 @@ _ :: rand
 
 MEASURE :: #config(MEASURE, false)
 MEASURE_SPAWN_COUNT :: #config(MEASURE_SPAWN_COUNT, 300)
+DETERMINISM_STEPS :: #config(DETERMINISM_STEPS, 0)
 
 when MEASURE {
 	Measure :: struct {
@@ -80,5 +81,37 @@ when MEASURE {
 		m.frames = 0
 		m.steps = 0
 		m.last_report = now
+	}
+}
+
+when DETERMINISM_STEPS > 0 {
+	// The cross-build trajectory oracle: step a fixed count, print every
+	// position as raw bit patterns (hex of the f64 bits — no formatting
+	// ambiguity). Two builds are equivalent iff their dumps are identical;
+	// at DIM=3 from a planar start, x/y must match the DIM=2 dump and the
+	// z column must be all zero bits. Mirrors the drain loop's step order
+	// (merge-until-clean, step, record); the wall-clock machinery is
+	// deliberately absent so output depends only on the build.
+	determinism_dump :: proc(bodies: ^[dynamic]Body, trails: ^[dynamic]Trail, tree: ^Gravity_Tree) {
+		tracked := -1
+
+		for _ in 0 ..< DETERMINISM_STEPS {
+			for {
+				pair, collision := collision_compute(bodies[:], tree)
+				if !collision do break
+				collision_merge(pair, bodies, trails, &tracked, tree)
+			}
+
+			physics_step(bodies[:], DT, tree)
+			trail_record(bodies[:], trails[:])
+		}
+
+		for body in bodies {
+			fmt.printf("%s", body.name)
+			for axis in 0 ..< DIM {
+				fmt.printf(" %016x", transmute(u64)body.pos[axis])
+			}
+			fmt.println()
+		}
 	}
 }

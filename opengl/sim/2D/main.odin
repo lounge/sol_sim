@@ -15,14 +15,19 @@ SCR_HEIGHT :: 600
 SECONDS_IN_DAY :: 86400
 SECONDS_IN_YEAR :: 3.156e7
 T_UNIT_SECONDS :: SECONDS_IN_YEAR / (2 * math.PI) // ≈5.023e6, the G=1/AU/solar-mass time unit
-MAX_SIM_SPEED :: #config(MAX_SIM_SPEED, int(50 * SECONDS_IN_YEAR))
 
+MAX_SIM_SPEED :: #config(MAX_SIM_SPEED, int(50 * SECONDS_IN_YEAR))
 PHYSICS_BUDGET :: #config(PHYSICS_BUDGET, 0.005) // Seconds of wall clock per frame
 GOVERNOR_FRAMES :: #config(GOVERNOR_FRAMES, 30) // COnsecutive overloaded frames before halving
 
 main :: proc() {
 	gravity_tree: sim.Gravity_Tree
 	bodies, trails := sim.create_system(&gravity_tree)
+
+	when sim.DETERMINISM_STEPS > 0 {
+		sim.determinism_dump(&bodies, &trails, &gravity_tree)
+		return
+	}
 
 	when sim.MEASURE {
 		measure: sim.Measure
@@ -97,7 +102,6 @@ main :: proc() {
 
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 
-		// Physics step
 		now := glfw.GetTime()
 		frame_time := now - last_time
 		frame_time = min(frame_time, 0.1)
@@ -109,7 +113,6 @@ main :: proc() {
 		pending_edits_apply(&state, bodies[:], &gravity_tree)
 		pending_spawn_apply(&state, &bodies, &trails, window_width, window_height, &gravity_tree)
 
-		// Drain loop
 		when sim.MEASURE {
 			measure_t0 := glfw.GetTime()
 		}
@@ -118,9 +121,11 @@ main :: proc() {
 			sim.gravity_tree_debug(&gravity_tree, bodies[:], now)
 		}
 
+		// Physics step
 		deadline := glfw.GetTime() + PHYSICS_BUDGET
 		steps: int
 		for accumulator >= sim.DT {
+			// Drain loop
 			when sim.MEASURE {
 				measure_c0 := glfw.GetTime()
 			}
@@ -136,6 +141,7 @@ main :: proc() {
 
 			sim.physics_step(bodies[:], sim.DT, &gravity_tree)
 			sim.trail_record(bodies[:], trails[:])
+
 			accumulator -= sim.DT
 			steps += 1
 			if glfw.GetTime() >= deadline do break
