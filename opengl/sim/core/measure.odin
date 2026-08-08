@@ -10,6 +10,7 @@ _ :: rand
 
 MEASURE :: #config(MEASURE, false)
 MEASURE_SPAWN_COUNT :: #config(MEASURE_SPAWN_COUNT, 300)
+MEASURE_Z_THICKNESS :: #config(MEASURE_Z_THICKNESS, 0.1)
 DETERMINISM_STEPS :: #config(DETERMINISM_STEPS, 0)
 
 when MEASURE {
@@ -40,6 +41,13 @@ when MEASURE {
 			vel: Vec
 			vel[0] = -math.sin(theta) * speed
 			vel[1] = math.cos(theta) * speed
+
+			// A cold thin disk: z-jitter makes the tree exercise its z-split,
+			// vel[2] = 0 keeps bodies oscillating through the plane instead of
+			// escaping. Gated so the 2D measurement baselines stay untouched.
+			when DIM == 3 {
+				pos[2] = rand.float64_range(-MEASURE_Z_THICKNESS / 2, MEASURE_Z_THICKNESS / 2)
+			}
 
 			body_spawn(
 				bodies,
