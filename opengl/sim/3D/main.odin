@@ -2,8 +2,8 @@ package main
 
 import sim "../core"
 
-import "core:math"
 import "core:fmt"
+import "core:math"
 import "core:os"
 import gl "vendor:OpenGL"
 import "vendor:glfw"
@@ -80,19 +80,21 @@ main :: proc() {
 		os.exit(-1)
 	}
 
-	trail_prg, trail_loaded_ok := gl.load_shaders_file(
-		#directory + "res/trail.vert.glsl",
-		#directory + "res/trail.frag.glsl",
-	)
-	if !trail_loaded_ok {
-		fmt.println("Failed to load and build trail shaders")
-		os.exit(-1)
-	}
+	// trail_prg, trail_loaded_ok := gl.load_shaders_file(
+	// 	#directory + "res/trail.vert.glsl",
+	// 	#directory + "res/trail.frag.glsl",
+	// )
+	// if !trail_loaded_ok {
+	// 	fmt.println("Failed to load and build trail shaders")
+	// 	os.exit(-1)
+	// }
 
 	body_program := body_program_load(body_prg)
-	trail_program := trail_program_load(trail_prg)
+	// trail_program := trail_program_load(trail_prg)
 
 	// TODO: Create meshs?
+	circle_mesh := circle_mesh_create(32)
+
 
 	accumulator: f64
 	overload_frames: int
@@ -100,9 +102,10 @@ main :: proc() {
 
 	gl.ClearColor(0.0, 0.0, 0.0, 0.0)
 
+
 	for !glfw.WindowShouldClose(window) {
 		fb_width, fb_height = glfw.GetFramebufferSize(window)
-		window_width, window_height := glfw.GetWindowSize(window)
+		// window_width, window_height := glfw.GetWindowSize(window)
 
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
@@ -177,7 +180,15 @@ main :: proc() {
 			measure_t0 = glfw.GetTime()
 		}
 
-		// TODO: bodies_draw()
+		bodies_draw(
+			bodies[:],
+			circle_mesh,
+			body_program,
+			&state.camera,
+			fb_width,
+			fb_height,
+			alpha,
+		)
 
 		when sim.MEASURE {
 			measure.bodies_seconds += glfw.GetTime() - measure_t0

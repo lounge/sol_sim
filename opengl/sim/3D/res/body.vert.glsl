@@ -1,11 +1,8 @@
 #version 330 core
-layout (location = 0) in vec2 aPos;
-uniform vec2 offset;
-uniform float scale;
-uniform float aspect;
+layout (location = 0) in vec2 a_pos;
+uniform mat4 mvp;
 
 void main()
 {
-    vec2 p = aPos * scale + offset;
-    gl_Position = vec4(p.x * aspect, p.y, 0.0, 1.0);
+    gl_Position = mvp * vec4(a_pos, 0.0, 1.0);
 }

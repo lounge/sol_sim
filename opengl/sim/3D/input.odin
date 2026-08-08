@@ -27,7 +27,7 @@ Spawn_Request :: struct {
 }
 
 callback_click :: proc "c" (window: glfw.WindowHandle, button, action, mods: i32) {
-	state := state_get(window)
+	// state := state_get(window)
 
 	if button == glfw.MOUSE_BUTTON_LEFT && action == glfw.RELEASE {
 		// TODO: Pan camera on left click hold / drag

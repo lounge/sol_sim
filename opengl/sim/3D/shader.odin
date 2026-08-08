@@ -4,11 +4,9 @@ import "core:fmt"
 import gl "vendor:OpenGL"
 
 Body_Program :: struct {
-	id:     u32,
-	offset: i32,
-	scale:  i32,
-	aspect: i32,
-	color:  i32,
+	id:    u32,
+	mvp:   i32,
+	color: i32,
 }
 
 Trail_Program :: struct {
@@ -21,19 +19,11 @@ Trail_Program :: struct {
 }
 
 body_program_load :: proc(program: u32) -> Body_Program {
-	offset := gl.GetUniformLocation(program, "offset")
-	if offset == -1 {
-		fmt.println("body_program offset uniform could not load")
-	}
 
-	scale := gl.GetUniformLocation(program, "scale")
-	if scale == -1 {
-		fmt.println("body_program scale uniform could not load")
-	}
 
-	aspect := gl.GetUniformLocation(program, "aspect")
-	if aspect == -1 {
-		fmt.println("body_program aspect uniform could not load")
+	mvp := gl.GetUniformLocation(program, "mvp")
+	if mvp == -1 {
+		fmt.println("body_program mvp uniform could not load")
 	}
 
 	color := gl.GetUniformLocation(program, "color")
@@ -42,11 +32,9 @@ body_program_load :: proc(program: u32) -> Body_Program {
 	}
 
 	program := Body_Program {
-		id     = program,
-		offset = offset,
-		scale  = scale,
-		aspect = aspect,
-		color  = color,
+		id    = program,
+		mvp   = mvp,
+		color = color,
 	}
 
 	return program
@@ -105,4 +93,8 @@ shader_set_vec2 :: proc(location: i32, x: f32, y: f32) {
 
 shader_set_vec3 :: proc(location: i32, x: f32, y: f32, z: f32) {
 	gl.Uniform3f(location, x, y, z)
+}
+
+shader_set_mat4 :: proc(location: i32, value: ^matrix[4, 4]f32) {
+	gl.UniformMatrix4fv(location, 1, false, &value[0, 0])
 }
