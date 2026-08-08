@@ -238,6 +238,7 @@ gravity_tree_cells_draw :: proc(
 	camera: ^Camera,
 	width, height: i32,
 ) {
+	gl.Disable(gl.BLEND)
 	gl.UseProgram(program.id)
 	gl.BindVertexArray(mesh.vao)
 
@@ -269,6 +270,7 @@ gravity_tree_cells_draw :: proc(
 		gl.BufferSubData(gl.ARRAY_BUFFER, 0, size_of(scratch), &scratch)
 		gl.DrawArrays(gl.LINE_STRIP, 0, 5)
 	}
+	gl.Enable(gl.BLEND)
 }
 
 
