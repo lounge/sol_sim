@@ -58,8 +58,10 @@ main :: proc() {
 	state := state_init()
 	glfw.SetWindowUserPointer(window, &state)
 
-	// TODO: Set other callbacks
+	glfw.SetFramebufferSizeCallback(window, callback_framebuffer_size)
+	glfw.SetScrollCallback(window, callback_scroll)
 	glfw.SetMouseButtonCallback(window, callback_click)
+	glfw.SetKeyCallback(window, callback_key)
 
 	glfw.MakeContextCurrent(window)
 	glfw.SwapInterval(1)
@@ -98,6 +100,7 @@ main :: proc() {
 
 	accumulator: f64
 	overload_frames: int
+	prev_cursor: [2]f64
 	last_time := glfw.GetTime()
 
 	gl.ClearColor(0.0, 0.0, 0.0, 0.0)
@@ -116,6 +119,7 @@ main :: proc() {
 		accumulator += frame_time * f64(state.sim_speed) / T_UNIT_SECONDS
 
 		// TODO: Apply interactions
+		pending_edits_apply(&state, bodies[:], &gravity_tree)
 
 		when sim.MEASURE {
 			measure_t0 := glfw.GetTime()
@@ -172,7 +176,8 @@ main :: proc() {
 
 		alpha := accumulator / sim.DT
 
-		// TODO: Camera update
+		cx, cy := glfw.GetCursorPos(window)
+		camera_update(&state, {cx, cy}, &prev_cursor)
 
 		// TODO: Draw tree cells
 
