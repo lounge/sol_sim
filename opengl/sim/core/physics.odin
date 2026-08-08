@@ -21,6 +21,7 @@ physics_step :: proc(bodies: []Body, dt: f64, tree: ^Gravity_Tree) {
 
 accels_compute :: proc(bodies: []Body, tree: ^Gravity_Tree) {
 	if len(bodies) < BH_THRESHOLD {
+		clear(&tree.node)
 		for &body in bodies do body.accel = 0
 
 		for i in 0 ..< len(bodies) {
