@@ -70,7 +70,7 @@ when MEASURE {
 			m.frames,
 			m.steps,
 			fill.count,
-			fill.cap,
+			len(fill.points),
 		)
 
 		m.physics_seconds = 0

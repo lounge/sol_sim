@@ -157,7 +157,9 @@ create_system :: proc(tree: ^Gravity_Tree) -> (bodies: [dynamic]Body, trails: [d
 	}
 
 	// Copy the most massive body cap / stride to the Sun
-	trails[0].cap = trails[largest_mass_index].cap
+	delete(trails[0].points)
+
+	trails[0].points = make([]Vec, len(trails[largest_mass_index].points))
 	trails[0].stride = trails[largest_mass_index].stride
 
 	total_mass: f64

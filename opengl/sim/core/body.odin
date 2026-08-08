@@ -63,7 +63,7 @@ body_add :: proc(
 
 	trail := trail_make_orbital(parent_index, steps_per_orbit, stride)
 
-	assert(trail.cap <= TRAIL_CAP, spec.name)
+	assert(len(trail.points) <= TRAIL_CAP, spec.name)
 
 	append(bodies, body)
 	append(trails, trail)
@@ -78,11 +78,13 @@ body_add :: proc(
 body_remove :: proc(index: int, bodies: ^[dynamic]Body, trails: ^[dynamic]Trail, tree: ^Gravity_Tree) {
 	if bodies[index].spawned do delete(bodies[index].name)
 
+	delete(trails[index].points)
 	ordered_remove(bodies, index)
 	ordered_remove(trails, index)
 
 	for &trail in trails {
 		if trail.parent == index {
+			delete(trail.points)
 			trail = trail_make_default()
 		} else if trail.parent > index {
 			trail.parent -= 1

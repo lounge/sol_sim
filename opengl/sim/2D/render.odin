@@ -61,12 +61,12 @@ trails_draw :: proc(
 		oldest_point := 0
 		body := bodies[i]
 
-		if trail.count == trail.cap {
+		if trail.count == len(trail.points) {
 			oldest_point = trail.head
 		}
 
 		for j := 0; j < trail.count; j += 1 {
-			point := trail.points[(oldest_point + j) % trail.cap]
+			point := trail.points[(oldest_point + j) % len(trail.points)]
 
 			point_pos := point
 			if trail.parent >= 0 {
