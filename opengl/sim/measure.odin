@@ -33,22 +33,18 @@ when MEASURE {
 			speed := math.sqrt(bodies[0].mass / r)
 			pos := [2]f64{r * math.cos(theta), r * math.sin(theta)}
 
-			body := Body {
-				name     = fmt.aprintf("Measure %d", i),
-				color    = PALETTE[.Spawn],
-				pos      = pos,
-				prev_pos = pos,
-				vel      = [2]f64{-math.sin(theta), math.cos(theta)} * speed,
-				mass     = 1e-9,
-				radius   = 1e-5,
-				spawned  = true,
-			}
-
-			append(bodies, body)
-			append(trails, trail_make_default())
+			body_spawn(
+				bodies,
+				trails,
+				tree,
+				fmt.aprintf("Measure %d", i),
+				PALETTE[.Spawn],
+				pos,
+				[2]f64{-math.sin(theta), math.cos(theta)} * speed,
+				1e-9,
+				1e-5,
+			)
 		}
-
-		accels_compute(bodies[:], tree)
 	}
 
 	measure_frame_report :: proc(m: ^Measure, trails: []Trail, now: f64) {
