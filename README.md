@@ -30,3 +30,4 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 24. Collision detection served by the quadtree. - DONE
 25. Make 3D — plan in [PLAN_3D.md](PLAN_3D.md).
 26. Lighting (Sun).
+27. Thread accels_compute across cores, runtime-scaled to the user's machine.
