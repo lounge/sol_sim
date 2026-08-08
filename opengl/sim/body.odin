@@ -89,3 +89,31 @@ body_remove :: proc(index: int, bodies: ^[dynamic]Body, trails: ^[dynamic]Trail,
 
 	accels_compute(bodies[:], tree)
 }
+
+body_spawn :: proc(
+	bodies: ^[dynamic]Body,
+	trails: ^[dynamic]Trail,
+	tree: ^Quadtree,
+	name: string,
+	color: Color,
+	pos: [2]f64,
+	vel: [2]f64,
+	mass: f64,
+	radius: f64,
+) {
+	body := Body {
+		name     = name,
+		color    = color,
+		pos      = pos,
+		prev_pos = pos,
+		vel      = vel,
+		mass     = mass,
+		radius   = radius,
+		spawned  = true,
+	}
+
+	append(bodies, body)
+	append(trails, trail_make_default())
+
+	accels_compute(bodies[:], tree)
+}
