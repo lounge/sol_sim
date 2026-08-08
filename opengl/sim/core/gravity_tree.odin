@@ -7,7 +7,8 @@ import "core:fmt"
 _ :: fmt
 
 BH_THETA :: #config(BH_THETA, 0.5)
-BH_THRESHOLD :: #config(BH_THRESHOLD, 300)
+BH_THRESHOLD :: #config(BH_THRESHOLD, BH_THRESHOLD_DEFAULT)
+BH_THRESHOLD_DEFAULT :: 300 when DIM == 2 else 600
 BH_MAX_DEPTH :: #config(BH_MAX_DEPTH, 32)
 BH_VALIDATE :: #config(BH_VALIDATE, false)
 BH_DEBUG :: #config(BH_DEBUG, false)
