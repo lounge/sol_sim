@@ -28,5 +28,5 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 22. Handle close encounters: merge two bodies on contact. - DONE
 23. Barnes–Hut: O(n log n) gravity via quadtree. - DONE
 24. Collision detection served by the quadtree. - DONE
-25. Make 3D.
+25. Make 3D — plan in [PLAN_3D.md](PLAN_3D.md).
 26. Lighting (Sun).
