@@ -4,7 +4,7 @@ import sim "../core"
 import "core:fmt"
 import "core:math"
 
-pending_edits_apply :: proc(state: ^State, bodies: []sim.Body, tree: ^sim.Quadtree) {
+pending_edits_apply :: proc(state: ^State, bodies: []sim.Body, tree: ^sim.Gravity_Tree) {
 	if state.input.pending_vel == 0 && state.input.pending_mass == 0 do return
 
 	if state.tracked_body < 0 {
@@ -39,7 +39,7 @@ pending_spawn_apply :: proc(
 	bodies: ^[dynamic]sim.Body,
 	trails: ^[dynamic]sim.Trail,
 	width, height: i32,
-	tree: ^sim.Quadtree,
+	tree: ^sim.Gravity_Tree,
 ) {
 	if spawn, ok := state.input.pending_spawn.?; ok {
 		world_pos_start := world_pos_calc(spawn.start_pos, &state.camera, width, height)
@@ -67,7 +67,7 @@ pending_delete_apply :: proc(
 	state: ^State,
 	bodies: ^[dynamic]sim.Body,
 	trails: ^[dynamic]sim.Trail,
-	tree: ^sim.Quadtree,
+	tree: ^sim.Gravity_Tree,
 ) {
 	if state.input.pending_delete == false do return
 

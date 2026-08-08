@@ -10,7 +10,7 @@ SPAWN_TRAIL_STRIDE :: #config(SPAWN_TRAIL_STRIDE, 25)
 #assert(SPAWN_TRAIL_STRIDE > 0)
 
 Trail :: struct {
-	points:      [TRAIL_CAP][2]f64,
+	points:      [TRAIL_CAP]Vec,
 	head:        int,
 	count:       int,
 	parent:      int,

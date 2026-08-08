@@ -1,8 +1,9 @@
 package sim_core
 
 import "core:math"
+import "core:math/linalg"
 
-collision_compute :: proc(bodies: []Body, tree: ^Quadtree) -> (pair: [2]int, collision: bool) {
+collision_compute :: proc(bodies: []Body, tree: ^Gravity_Tree) -> (pair: [2]int, collision: bool) {
 	if len(bodies) < BH_THRESHOLD {
 		return collision_scan(bodies)
 	}
@@ -11,7 +12,7 @@ collision_compute :: proc(bodies: []Body, tree: ^Quadtree) -> (pair: [2]int, col
 	for body in bodies do r_max = max(r_max, body.radius)
 
 	for i in 0 ..< len(bodies) {
-		partner, found := quadtree_contact(tree, 0, i32(i), bodies, r_max)
+		partner, found := gravity_tree_contact(tree, 0, i32(i), bodies, r_max)
 		if found do return {i, partner}, true
 	}
 
@@ -38,7 +39,7 @@ collision_scan :: proc(bodies: []Body) -> (pair: [2]int, collision: bool) {
 bodies_overlap :: proc(body_a, body_b: ^Body) -> bool {
 	r_vec := body_a.pos - body_b.pos
 	reach := body_a.radius + body_b.radius
-	return r_vec.x * r_vec.x + r_vec.y * r_vec.y < reach * reach
+	return linalg.length2(r_vec) < reach * reach
 }
 
 collision_merge :: proc(
@@ -46,7 +47,7 @@ collision_merge :: proc(
 	bodies: ^[dynamic]Body,
 	trails: ^[dynamic]Trail,
 	tracked_body: ^int,
-	tree: ^Quadtree,
+	tree: ^Gravity_Tree,
 ) {
 	body_a := &bodies[pair.x]
 	body_b := &bodies[pair.y]

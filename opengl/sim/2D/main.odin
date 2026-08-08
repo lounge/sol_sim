@@ -21,12 +21,12 @@ PHYSICS_BUDGET :: #config(PHYSICS_BUDGET, 0.005) // Seconds of wall clock per fr
 GOVERNOR_FRAMES :: #config(GOVERNOR_FRAMES, 30) // COnsecutive overloaded frames before halving
 
 main :: proc() {
-	quadtree: sim.Quadtree
-	bodies, trails := sim.create_system(&quadtree)
+	gravity_tree: sim.Gravity_Tree
+	bodies, trails := sim.create_system(&gravity_tree)
 
 	when sim.MEASURE {
 		measure: sim.Measure
-		sim.measure_spawn(&bodies, &trails, &quadtree)
+		sim.measure_spawn(&bodies, &trails, &gravity_tree)
 	}
 
 	glfw.Init()
@@ -105,9 +105,9 @@ main :: proc() {
 		accumulator += frame_time * f64(state.sim_speed) / T_UNIT_SECONDS
 
 		// Apply interaction
-		pending_delete_apply(&state, &bodies, &trails, &quadtree)
-		pending_edits_apply(&state, bodies[:], &quadtree)
-		pending_spawn_apply(&state, &bodies, &trails, window_width, window_height, &quadtree)
+		pending_delete_apply(&state, &bodies, &trails, &gravity_tree)
+		pending_edits_apply(&state, bodies[:], &gravity_tree)
+		pending_spawn_apply(&state, &bodies, &trails, window_width, window_height, &gravity_tree)
 
 		// Drain loop
 		when sim.MEASURE {
@@ -115,7 +115,7 @@ main :: proc() {
 		}
 
 		when sim.BH_DEBUG {
-			sim.quadtree_debug(&quadtree, bodies[:], now)
+			sim.gravity_tree_debug(&gravity_tree, bodies[:], now)
 		}
 
 		deadline := glfw.GetTime() + PHYSICS_BUDGET
@@ -125,16 +125,16 @@ main :: proc() {
 				measure_c0 := glfw.GetTime()
 			}
 			for {
-				pair, collision := sim.collision_compute(bodies[:], &quadtree)
+				pair, collision := sim.collision_compute(bodies[:], &gravity_tree)
 				if !collision do break
-				sim.collision_merge(pair, &bodies, &trails, &state.tracked_body, &quadtree)
+				sim.collision_merge(pair, &bodies, &trails, &state.tracked_body, &gravity_tree)
 				state.title_stale = true
 			}
 			when sim.MEASURE {
 				measure.collision_seconds += glfw.GetTime() - measure_c0
 			}
 
-			sim.physics_step(bodies[:], sim.DT, &quadtree)
+			sim.physics_step(bodies[:], sim.DT, &gravity_tree)
 			sim.trail_record(bodies[:], trails[:])
 			accumulator -= sim.DT
 			steps += 1
@@ -165,8 +165,8 @@ main :: proc() {
 		camera_update(&state, bodies[:], window_width, window_height, alpha)
 
 		when sim.BH_DEBUG_DRAW {
-			quadtree_cells_draw(
-				&quadtree,
+			gravity_tree_cells_draw(
+				&gravity_tree,
 				trail_mesh,
 				trail_program,
 				&state.camera,

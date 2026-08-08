@@ -24,14 +24,21 @@ when MEASURE {
 
 	// Seeded so before/after runs get the identical scene. Bodies go on
 	// circular orbits around the root so rings fill without escapes.
-	measure_spawn :: proc(bodies: ^[dynamic]Body, trails: ^[dynamic]Trail, tree: ^Quadtree) {
+	measure_spawn :: proc(bodies: ^[dynamic]Body, trails: ^[dynamic]Trail, tree: ^Gravity_Tree) {
 		rand.reset(1)
 
 		for i in 0 ..< MEASURE_SPAWN_COUNT {
 			r := rand.float64_range(0.5, 5.0)
 			theta := rand.float64_range(0, 2 * math.PI)
 			speed := math.sqrt(bodies[0].mass / r)
-			pos := [2]f64{r * math.cos(theta), r * math.sin(theta)}
+
+			pos: Vec
+			pos[0] = r * math.cos(theta)
+			pos[1] = r * math.sin(theta)
+
+			vel: Vec
+			vel[0] = -math.sin(theta) * speed
+			vel[1] = math.cos(theta) * speed
 
 			body_spawn(
 				bodies,
@@ -40,7 +47,7 @@ when MEASURE {
 				fmt.aprintf("Measure %d", i),
 				PALETTE[.Spawn],
 				pos,
-				[2]f64{-math.sin(theta), math.cos(theta)} * speed,
+				vel,
 				1e-9,
 				1e-5,
 			)

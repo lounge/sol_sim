@@ -5,12 +5,12 @@ import "core:math"
 Body :: struct {
 	name:     string,
 	color:    Color,
-	pos:      [2]f64,
-	prev_pos: [2]f64,
-	vel:      [2]f64,
+	pos:      Vec,
+	prev_pos: Vec,
+	vel:      Vec,
 	mass:     f64,
 	radius:   f64,
-	accel:    [2]f64,
+	accel:    Vec,
 	spawned:  bool, // if dynamically spawned
 }
 
@@ -20,8 +20,8 @@ body_add :: proc(
 	bodies: ^[dynamic]Body,
 	trails: ^[dynamic]Trail,
 ) {
-	pos: [2]f64 = {0.0, 0.0}
-	vel: [2]f64 = {0.0, 0.0}
+	pos: Vec = {}
+	vel: Vec = {}
 	steps_per_orbit: f64 = 0.0
 	stride: int = 1
 
@@ -35,8 +35,11 @@ body_add :: proc(
 		start_dist := spec.semi_major_axis * ecc_factor
 		start_speed := math.sqrt(G * parent.mass * (2 / start_dist - 1 / spec.semi_major_axis))
 
-		pos = parent.pos + {start_dist, 0}
-		vel = parent.vel + {0, start_speed}
+		pos = parent.pos
+		pos[0] += start_dist
+
+		vel = parent.vel
+		vel[1] += start_speed
 
 		T :=
 			2 *
@@ -55,7 +58,7 @@ body_add :: proc(
 		vel      = vel,
 		mass     = spec.mass,
 		radius   = spec.radius,
-		accel    = {0.0, 0.0},
+		accel    = {},
 	}
 
 	trail := trail_make_orbital(parent_index, steps_per_orbit, stride)
@@ -72,7 +75,7 @@ body_add :: proc(
 }
 
 
-body_remove :: proc(index: int, bodies: ^[dynamic]Body, trails: ^[dynamic]Trail, tree: ^Quadtree) {
+body_remove :: proc(index: int, bodies: ^[dynamic]Body, trails: ^[dynamic]Trail, tree: ^Gravity_Tree) {
 	if bodies[index].spawned do delete(bodies[index].name)
 
 	ordered_remove(bodies, index)
@@ -93,11 +96,11 @@ body_remove :: proc(index: int, bodies: ^[dynamic]Body, trails: ^[dynamic]Trail,
 body_spawn :: proc(
 	bodies: ^[dynamic]Body,
 	trails: ^[dynamic]Trail,
-	tree: ^Quadtree,
+	tree: ^Gravity_Tree,
 	name: string,
 	color: Color,
-	pos: [2]f64,
-	vel: [2]f64,
+	pos: Vec,
+	vel: Vec,
 	mass: f64,
 	radius: f64,
 ) {

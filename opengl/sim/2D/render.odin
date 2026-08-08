@@ -231,8 +231,8 @@ mass_preview_draw :: proc(
 	circle_draw(world, radius, color, mesh, program, camera, width, height)
 }
 
-quadtree_cells_draw :: proc(
-	tree: ^sim.Quadtree,
+gravity_tree_cells_draw :: proc(
+	tree: ^sim.Gravity_Tree,
 	mesh: Mesh,
 	program: Trail_Program,
 	camera: ^Camera,

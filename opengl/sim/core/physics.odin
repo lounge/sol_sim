@@ -7,9 +7,11 @@ _ :: math
 
 G :: 1.0
 DT :: #config(DT, 0.0001)
+DIM :: #config(DIM, 2)
+Vec :: [DIM]f64
 
 // Integrator: Kick–drift–kick velocity Verlet
-physics_step :: proc(bodies: []Body, dt: f64, tree: ^Quadtree) {
+physics_step :: proc(bodies: []Body, dt: f64, tree: ^Gravity_Tree) {
 	for &body in bodies do body.prev_pos = body.pos
 	for &body in bodies do body.vel += body.accel * (dt / 2) // half-kick
 	for &body in bodies do body.pos += body.vel * dt // drift
@@ -17,7 +19,7 @@ physics_step :: proc(bodies: []Body, dt: f64, tree: ^Quadtree) {
 	for &body in bodies do body.vel += body.accel * (dt / 2) // half-kick
 }
 
-accels_compute :: proc(bodies: []Body, tree: ^Quadtree) {
+accels_compute :: proc(bodies: []Body, tree: ^Gravity_Tree) {
 	if len(bodies) < BH_THRESHOLD {
 		for &body in bodies do body.accel = 0
 
@@ -35,18 +37,18 @@ accels_compute :: proc(bodies: []Body, tree: ^Quadtree) {
 			}
 		}
 	} else {
-		quadtree_build(tree, bodies[:])
+		gravity_tree_build(tree, bodies[:])
 		for i in 0 ..< len(bodies) {
-			bodies[i].accel = quadtree_accel(tree, 0, i32(i), bodies)
+			bodies[i].accel = gravity_tree_accel(tree, 0, i32(i), bodies)
 		}
 	}
 
 	when BH_VALIDATE {
 		for i in 0 ..< len(bodies) {
-			brute: [2]f64 = {0, 0}
+			brute: Vec
 			for j in 0 ..< len(bodies) {
 				if j != i {
-					brute += quadtree_accel_toward(bodies[i].pos, bodies[j].pos, bodies[j].mass)
+					brute += gravity_tree_accel_toward(bodies[i].pos, bodies[j].pos, bodies[j].mass)
 				}
 			}
 			err := linalg.length(bodies[i].accel - brute) / linalg.length(brute)

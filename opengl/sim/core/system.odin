@@ -143,7 +143,7 @@ specs := []Body_Spec {
 }
 
 // TODO: Maybe handle multiple roots
-create_system :: proc(tree: ^Quadtree) -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
+create_system :: proc(tree: ^Gravity_Tree) -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
 	assert(len(specs) == 1, "trails[0] cap fix-up assumes exactly one root")
 	assert(len(specs[0].satellites) >= 1, "root requires at least 1 satellite")
 
@@ -161,7 +161,7 @@ create_system :: proc(tree: ^Quadtree) -> (bodies: [dynamic]Body, trails: [dynam
 	trails[0].stride = trails[largest_mass_index].stride
 
 	total_mass: f64
-	momentum_sum := [2]f64{0, 0}
+	momentum_sum := Vec{}
 	for &body in bodies {
 		total_mass += body.mass
 		momentum_sum += body.mass * body.vel
