@@ -60,7 +60,19 @@ Validation held: behavior-identical run; define-matrix lint clean (default, MEAS
 BH_DEBUG+BH_VALIDATE, BH_DEBUG_DRAW); BH report verified at runtime under
 MEASURE+BH_DEBUG+BH_VALIDATE (com diff ~1e-16, max err ~1e-4 at θ=0.5).
 
-## Phase 2 — Package split, still 2D-only
+## Phase 2 — Package split, still 2D-only — DONE
+
+What actually landed:
+
+- As planned, with one naming deviation: the app dirs are uppercase `2D`/`3D`
+  (fine on macOS's case-insensitive FS, but doc snippets below say `2d`/`3d`).
+- Correction to "Known traps" below: core *can* be checked standalone —
+  `odin check opengl/sim/core -no-entry-point -vet -strict-style` — and is the
+  fast row of the check matrix.
+- Gitignore gotcha: unanchored binary-name patterns (`2D`, `3D`) swallow the
+  same-named source directories; the `!2D/`/`!3D/` negation lines (the file's
+  existing convention) are load-bearing.
+- The optional drain-loop extraction was deferred, per the note above.
 
 Move the core files, change their `package` clause, add `sim.` qualifiers in the app.
 No logic changes. Constants move with their concept per the existing convention:
@@ -80,7 +92,27 @@ duplication is real.
 Validation: identical behavior; determinism diff — print body positions after N
 steps from a fixed start, before vs after the move; must match exactly.
 
-## Phase 3 — Genericize core over DIM (default still 2)
+## Phase 3 — Genericize core over DIM (default still 2) — DONE
+
+What actually landed:
+
+- The `.x/.y` and `[2]f64` audits played out as listed; collision's `pair.x`
+  index pairs were the one false-positive cluster, left alone. As predicted,
+  the DIM=3 *type-check* was the completeness oracle — at DIM=2 `Vec` is an
+  alias and misses nothing.
+- The rename option was taken, wider than planned: `Quadtree` →
+  `Gravity_Tree` (type, procs, and quadtree.odin → gravity_tree.odin).
+- Unplanned addition: `Trail.points` went from inline `[TRAIL_CAP]Vec` to a
+  heap slice sized to the *logical* cap — the 3D struct (~307 KB) tripped
+  Odin's large-stack-object warning. New rules that came with ownership:
+  trails own their ring (`delete` in `body_remove` *before* `ordered_remove`,
+  and before the orphan overwrite); a Trail value is a handle, one owner —
+  slice assignment shares storage, only `make` mints independence (the
+  root-trail cap fix-up shipped exactly that aliasing bug); `Trail{}`'s nil
+  ring upgrades "never hand-build a Trail" from convention to memory safety.
+  Spawn-trail memory dropped ~10× as a side effect.
+- Validation held: DIM=2 determinism diff bitwise-identical, DIM=3 core check
+  clean across the define combos.
 
 The audit tool is `grep -n '\.x\|\.y' core/*.odin` — every hit is either spatial
 (must become per-axis) or an index pair like collision's `pair.x` (`[2]int` of body
@@ -116,7 +148,32 @@ Validation: at DIM=2 this must be a **no-op** — same determinism diff as Phase
 Then a first `-define:DIM=3` *type-check* (`odin check`) of core via a scratch entry
 point or the measure build; expect only arity errors already fixed above.
 
-## Phase 4 — DIM=3 headless, before any pixel
+## Phase 4 — DIM=3 headless, before any pixel — DONE
+
+What actually landed:
+
+- `determinism_dump` (measure.odin, behind `DETERMINISM_STEPS`): steps the sim
+  mirroring the drain-loop order, prints positions as raw f64 bit patterns —
+  the cross-build oracle both apps call before window init.
+- The planar-embedding oracle passed at full strength: 3D x/y bitwise-equal to
+  the 2D binary's dump and z exactly zero on both the brute path and the
+  forced-tree path (`BH_THRESHOLD=0`, 20k steps) — octant selection and MAC
+  decisions reproduce the 2D run exactly. 200k-step soak with a per-step
+  `planar_assert` stayed clean; thick disk under `BH_VALIDATE` too.
+- The headless runner lives on in the 3D app (headless.odin, whole file behind
+  `when TOTAL_STEPS > 0` — moving code *out* of a `when` re-exposes it to
+  every build; the gate plus `_ :: sim`/`_ :: time` anchors keep windowed
+  builds clean).
+- `BH_THRESHOLD` re-measured via sweep.sh with `MEASURE_Z_THICKNESS` z-jitter
+  (planar spawns would have measured the 4-octant degeneracy): crossover
+  **~600 in 3D vs 300 in 2D**, insensitive to disk thickness (0.1 → 0.4 AU).
+  Wired as the DIM-aware default. Sweep (brute/tree ms/step, -o:speed):
+  115: 0.020/0.060 · 315: 0.164/0.253 · 600: 0.615/0.640 ·
+  1015: 1.77/1.33 · 3015: 18.5/6.0.
+- The matrix script exists (`check.sh`, 19 cells incl. the new
+  `DETERMINISM_STEPS` and `TOTAL_STEPS` cells); `ols.json` profiles (`2d`/`3d`
+  with per-profile defines) teach the editor the define matrix — the
+  `#assert` guards stay for terminal builds.
 
 The measure-build habit is the vehicle: run the 3D core with no window.
 
@@ -137,7 +194,13 @@ The measure-build habit is the vehicle: run the 3D core with no window.
   never exercises the z-split). Thickness is now a one-line change: only the
   `pos`/`vel` expressions feeding `body_spawn` in `measure_spawn`.
 
-## Phase 5 — 3D app: minimal render
+## Phase 5 — 3D app: minimal render — IN PROGRESS
+
+Landed so far: the app skeleton with three entry modes (determinism dump /
+headless runner / windowed), drain loop + budget + governor carried over from
+2D, depth test + depth clear in place, measurement plumbing verified in both
+loops. Open: orbit camera, the MVP uniform contract (shader.odin still speaks
+2D's offset/scale/aspect), the draw procs, and the pixel-marker clamp rethink.
 
 New app package; core is already trusted. The genuinely new ground, roughly in order:
 
@@ -195,8 +258,10 @@ odin check opengl/sim/3d -vet -strict-style -define:DIM=3
 
 ## Known traps, restated for this work
 
-- Checking core alone isn't possible as a main package — the two app checks cover it;
-  that's another reason the matrix script must exist.
+- ~~Checking core alone isn't possible as a main package~~ Disproven in Phase 2:
+  `odin check opengl/sim/core -no-entry-point` checks core directly; the app
+  checks still cover the app-side `when` branches, so the matrix script exists
+  anyway (check.sh).
 - `::` constants referencing `DIM` are fine (compile-time), but any table sized by it
   (`[1 << DIM]i32`) changes layout between builds — never serialize/share such data
   across binaries.
