@@ -1,0 +1,16 @@
+{
+	"$schema": "https://raw.githubusercontent.com/DanielGavin/ols/master/misc/ols.schema.json",
+	"profile": "3d",
+	"profiles": [
+		{
+			"name": "2d",
+			"checker_path": ["opengl/sim/2D"],
+			"defines": {}
+		},
+		{
+			"name": "3d",
+			"checker_path": ["opengl/sim/3D"],
+			"defines": { "DIM": "3" }
+		}
+	]
+}
