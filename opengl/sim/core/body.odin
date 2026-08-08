@@ -75,7 +75,12 @@ body_add :: proc(
 }
 
 
-body_remove :: proc(index: int, bodies: ^[dynamic]Body, trails: ^[dynamic]Trail, tree: ^Gravity_Tree) {
+body_remove :: proc(
+	index: int,
+	bodies: ^[dynamic]Body,
+	trails: ^[dynamic]Trail,
+	tree: ^Gravity_Tree,
+) {
 	if bodies[index].spawned do delete(bodies[index].name)
 
 	delete(trails[index].points)

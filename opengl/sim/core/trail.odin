@@ -36,7 +36,7 @@ trail_make_orbital :: proc(parent: int, steps_per_orbit: f64, stride: int) -> Tr
 
 	trail := Trail {
 		parent = parent,
-		points    = make([]Vec, cap),
+		points = make([]Vec, cap),
 		stride = stride,
 	}
 

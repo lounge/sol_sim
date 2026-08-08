@@ -65,7 +65,7 @@ main :: proc() {
 	success: i32
 	info_log: [512]c.char
 
-	vertex_shader :=  compile_shader(vertex_shader_source, gl.VERTEX_SHADER)
+	vertex_shader := compile_shader(vertex_shader_source, gl.VERTEX_SHADER)
 	orange_fragment_shader := compile_shader(orange_fragment_shader_source, gl.FRAGMENT_SHADER)
 	yellow_fragment_shader := compile_shader(yellow_fragment_shader_source, gl.FRAGMENT_SHADER)
 
@@ -76,17 +76,9 @@ main :: proc() {
 	gl.DeleteShader(orange_fragment_shader)
 	gl.DeleteShader(yellow_fragment_shader)
 
-	vertices1 := [?]f32 {
-		-1, -0.5, 0.0,
-		-0.5, 0.5, 0.0,
-		0.0, -0.5, 0.0
-	}
+	vertices1 := [?]f32{-1, -0.5, 0.0, -0.5, 0.5, 0.0, 0.0, -0.5, 0.0}
 
-	vertices2 := [?]f32 {
-		0.0, -0.5, 0.0,
-		0.5, 0.5, 0.0,
-		1.0, -0.5, 0.0
-	}
+	vertices2 := [?]f32{0.0, -0.5, 0.0, 0.5, 0.5, 0.0, 1.0, -0.5, 0.0}
 
 	// indices := [?]u32{0, 1, 3, 1, 2, 3}
 

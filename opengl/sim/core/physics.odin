@@ -48,7 +48,11 @@ accels_compute :: proc(bodies: []Body, tree: ^Gravity_Tree) {
 			brute: Vec
 			for j in 0 ..< len(bodies) {
 				if j != i {
-					brute += gravity_tree_accel_toward(bodies[i].pos, bodies[j].pos, bodies[j].mass)
+					brute += gravity_tree_accel_toward(
+						bodies[i].pos,
+						bodies[j].pos,
+						bodies[j].mass,
+					)
 				}
 			}
 			err := linalg.length(bodies[i].accel - brute) / linalg.length(brute)

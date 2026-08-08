@@ -11,7 +11,11 @@ when TOTAL_STEPS > 0 {
 	// Headless runner: steps the sim with no window. Plain build = the
 	// planar-embedding soak (planar_assert every step); MEASURE build =
 	// sweep.sh's timing vehicle. Mirrors the drain loop's step order.
-	run_headless_sim :: proc(bodies: ^[dynamic]sim.Body, trails: ^[dynamic]sim.Trail, gravity_tree: ^sim.Gravity_Tree) {
+	run_headless_sim :: proc(
+		bodies: ^[dynamic]sim.Body,
+		trails: ^[dynamic]sim.Trail,
+		gravity_tree: ^sim.Gravity_Tree,
+	) {
 		when sim.MEASURE {
 			measure: sim.Measure
 			start := time.tick_now()
@@ -44,7 +48,11 @@ when TOTAL_STEPS > 0 {
 				// per-frame ms reads as ms/step
 				measure.physics_seconds += time.duration_seconds(time.tick_since(step_t0))
 				measure.steps += 1
-				sim.measure_frame_report(&measure, trails[:], time.duration_seconds(time.tick_since(start)))
+				sim.measure_frame_report(
+					&measure,
+					trails[:],
+					time.duration_seconds(time.tick_since(start)),
+				)
 			}
 		}
 

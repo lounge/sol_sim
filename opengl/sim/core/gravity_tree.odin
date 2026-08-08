@@ -60,10 +60,10 @@ gravity_tree_build :: proc(tree: ^Gravity_Tree, bodies: []Body) {
 
 gravity_tree_create_node :: proc(tree: ^Gravity_Tree, center: Vec, half_size: f64) -> int {
 	node := Tree_Node {
-		center    = center,
+		center = center,
 		half_size = half_size,
-		children  = {0 ..< 1 << DIM = -1},
-		body      = -1,
+		children = {0 ..< 1 << DIM = -1},
+		body = -1,
 	}
 
 	append(&tree.node, node)
@@ -109,7 +109,7 @@ gravity_tree_push_down :: proc(
 ) {
 	quad := 0
 	pos := bodies[body_idx].pos
-  	center := tree.node[node_idx].center
+	center := tree.node[node_idx].center
 	for i in 0 ..< DIM do quad |= int(pos[i] > center[i]) << uint(i)
 
 	if tree.node[node_idx].children[quad] == -1 {
@@ -150,7 +150,12 @@ gravity_tree_calc :: proc(tree: ^Gravity_Tree, bodies: []Body) {
 	}
 }
 
-gravity_tree_accel :: proc(tree: ^Gravity_Tree, node_idx: int, body_idx: i32, bodies: []Body) -> Vec {
+gravity_tree_accel :: proc(
+	tree: ^Gravity_Tree,
+	node_idx: int,
+	body_idx: i32,
+	bodies: []Body,
+) -> Vec {
 	node := tree.node[node_idx]
 	body_pos := bodies[body_idx].pos
 

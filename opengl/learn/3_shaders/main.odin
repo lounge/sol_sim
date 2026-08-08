@@ -1,9 +1,9 @@
 package main
 
-import gl "vendor:OpenGL"
 import "core:fmt"
-import "core:os"
 import "core:math"
+import "core:os"
+import gl "vendor:OpenGL"
 import "vendor:glfw"
 
 framebuffer_size_callback :: proc "c" (window: glfw.WindowHandle, width: i32, height: i32) {
@@ -54,9 +54,24 @@ main :: proc() {
 	glfw.SetFramebufferSizeCallback(window, framebuffer_size_callback)
 
 	vertices := [?]f32 {
-		0.5, -0.5, 0.0,		1.0, 0.0, 0.0,
-		-0.5, -0.5, 0.0,	0.0, 1.0, 0.0,
-		0.0, 0.5, 0.0,		0.0, 0.0, 1.0
+		0.5,
+		-0.5,
+		0.0,
+		1.0,
+		0.0,
+		0.0,
+		-0.5,
+		-0.5,
+		0.0,
+		0.0,
+		1.0,
+		0.0,
+		0.0,
+		0.5,
+		0.0,
+		0.0,
+		0.0,
+		1.0,
 	}
 
 	// vertices := [?]f32 {
@@ -65,7 +80,10 @@ main :: proc() {
 	// 	1.0, -0.5, 0.0
 	// }
 
-	shader_program, loaded_ok := gl.load_shaders_file(#directory + "res/vertex.vert.glsl", #directory + "res/fragment.frag.glsl")
+	shader_program, loaded_ok := gl.load_shaders_file(
+		#directory + "res/vertex.vert.glsl",
+		#directory + "res/fragment.frag.glsl",
+	)
 	if !loaded_ok {
 		os.exit(-1)
 	}
@@ -87,7 +105,6 @@ main :: proc() {
 	gl.EnableVertexAttribArray(1)
 
 
-
 	for !glfw.WindowShouldClose(window) {
 		process_input(window)
 
@@ -98,8 +115,8 @@ main :: proc() {
 
 		// time_value := glfw.GetTime()
 		// green_value := f32(math.sin(time_value) / 2.0 + 0.5)
-	 //    vertex_color_location := gl.GetUniformLocation(shader_program, "ourColor")
-	 //    gl.Uniform4f(vertex_color_location, 0.0, green_value, 0.0, 1.0)
+		//    vertex_color_location := gl.GetUniformLocation(shader_program, "ourColor")
+		//    gl.Uniform4f(vertex_color_location, 0.0, green_value, 0.0, 1.0)
 
 		gl.BindVertexArray(VAO)
 

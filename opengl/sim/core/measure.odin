@@ -100,7 +100,11 @@ when DETERMINISM_STEPS > 0 {
 	// z column must be all zero bits. Mirrors the drain loop's step order
 	// (merge-until-clean, step, record); the wall-clock machinery is
 	// deliberately absent so output depends only on the build.
-	determinism_dump :: proc(bodies: ^[dynamic]Body, trails: ^[dynamic]Trail, tree: ^Gravity_Tree) {
+	determinism_dump :: proc(
+		bodies: ^[dynamic]Body,
+		trails: ^[dynamic]Trail,
+		tree: ^Gravity_Tree,
+	) {
 		tracked := -1
 
 		for _ in 0 ..< DETERMINISM_STEPS {
