@@ -194,13 +194,31 @@ The measure-build habit is the vehicle: run the 3D core with no window.
   never exercises the z-split). Thickness is now a one-line change: only the
   `pos`/`vel` expressions feeding `body_spawn` in `measure_spawn`.
 
-## Phase 5 — 3D app: minimal render — IN PROGRESS
+## Phase 5 — 3D app: minimal render — DONE
 
-Landed so far: the app skeleton with three entry modes (determinism dump /
-headless runner / windowed), drain loop + budget + governor carried over from
-2D, depth test + depth clear in place, measurement plumbing verified in both
-loops. Open: orbit camera, the MVP uniform contract (shader.odin still speaks
-2D's offset/scale/aspect), the draw procs, and the pixel-marker clamp rethink.
+What actually landed (well past "minimal" — picking/tracking/edits came too,
+pulling most of Phase 6 forward; only spawn and inclinations remain there):
+
+- Built in verified checkpoints: camera math proven numerically before any
+  pixel (every spec body starts on +x, so an in-plane eye must see them all at
+  view-space x=y=0 — a three-assert oracle); then billboarded bodies, camera
+  input, trails, picking/tracking/title. The edge-on collapse to a line was
+  the standing visual oracle throughout.
+- Camera-relative rendering everywhere: eye-at-origin view matrix, `pos − eye`
+  in f64 before the one f64→f32 narrowing. Billboards are free: model-view =
+  view-space translate·scale, no rotation, so the 2D circle mesh faces the
+  camera by construction. Near/far scale with `distance` (constant depth
+  ratio at any zoom). Marker clamp generalized with per-body depth.
+- Picking stayed screen-space (project + pixel hit-test against the clamped
+  marker, `clip.w` = view depth) — the ray planned here is only needed when a
+  click must produce a world *position*, i.e. spawn. Click vs orbit-drag
+  disambiguated by release displacement.
+- The measured perf story: 3D physics costs 1.42×/step (207→295 ns), which
+  pushed the 50 yr/sec drain across the 5 ms budget; 3D's `PHYSICS_BUDGET`
+  default is now 0.010 — a deliberate divergence from 2D, vsync headroom
+  traded for the higher governor rung.
+
+The original plan for this phase, kept for the record:
 
 New app package; core is already trusted. The genuinely new ground, roughly in order:
 
@@ -222,7 +240,13 @@ New app package; core is already trusted. The genuinely new ground, roughly in o
 Validation: it *looks* planar — the solar system edge-on is a line. That is the
 visible proof the physics embedding is right, before any inclination exists.
 
-## Phase 6 — 3D interaction + real inclinations
+## Phase 6 — 3D interaction + real inclinations — remainder → milestone 28
+
+Picking and edit/delete activation landed early, with Phase 5 — screen-space
+(project + pixel hit-test), not the ray sketched below; the ray is only needed
+where a click must produce a world *position*. What stays: spawn (ray ×
+ecliptic) with its drag preview, and the `Body_Spec` orbital-plane fields.
+Tracked as milestone 28 on the roadmap.
 
 - **Picking**: the 2D inverse transform stops existing (a pixel is a ray). Unproject
   click → ray, ray–sphere test per body (against marker radius), nearest hit wins.
