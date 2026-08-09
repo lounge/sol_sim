@@ -4,13 +4,13 @@ import "core:fmt"
 import gl "vendor:OpenGL"
 
 Body_Program :: struct {
-	id:    u32,
-	mv:   i32,
-	proj: i32,
+	id:           u32,
+	mv:           i32,
+	proj:         i32,
 	sun_pos_view: i32,
-	emissive: i32,
-	lit: i32,
-	color: i32,
+	emissive:     i32,
+	lit:          i32,
+	color:        i32,
 }
 
 Trail_Program :: struct {
@@ -52,13 +52,13 @@ body_program_load :: proc(program: u32) -> Body_Program {
 	}
 
 	program := Body_Program {
-		id    = program,
-		mv   = mv,
-		proj = proj,
-		emissive = emissive,
-		lit = lit,
+		id           = program,
+		mv           = mv,
+		proj         = proj,
+		emissive     = emissive,
+		lit          = lit,
 		sun_pos_view = sun_pos_view,
-		color = color,
+		color        = color,
 	}
 
 	return program
