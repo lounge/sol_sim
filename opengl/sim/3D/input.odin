@@ -1,6 +1,7 @@
 package main
 
 import "core:math"
+import "core:math/linalg"
 import "vendor:glfw"
 
 MASS_FACTOR :: 2
@@ -13,6 +14,8 @@ ORBIT_SENS :: 0.005
 
 Input :: struct {
 	orbiting:       bool,
+	press_anchor:   Pixel_Pos,
+	pending_click:  Maybe(Pixel_Pos),
 	pending_vel:    int,
 	pending_mass:   int,
 	pending_delete: bool,
@@ -25,9 +28,20 @@ callback_scroll :: proc "c" (window: glfw.WindowHandle, x_offset, y_offset: f64)
 
 callback_click :: proc "c" (window: glfw.WindowHandle, button, action, mods: i32) {
 	state := state_get(window)
+	cursor_x, cursor_y := glfw.GetCursorPos(window)
+	cursor: Pixel_Pos = {cursor_x, cursor_y}
 
 	if button == glfw.MOUSE_BUTTON_LEFT {
 		state.input.orbiting = action == glfw.PRESS
+		state.input.press_anchor = Pixel_Pos(cursor)
+
+		delta := ([2]f64)(cursor) - ([2]f64)(state.input.press_anchor)
+
+		if action == glfw.RELEASE {
+			if linalg.length2(delta) < MIN_MARKER_PX {
+				state.input.pending_click = cursor
+			}
+		}
 	}
 }
 

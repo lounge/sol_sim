@@ -109,7 +109,7 @@ main :: proc() {
 
 	for !glfw.WindowShouldClose(window) {
 		fb_width, fb_height = glfw.GetFramebufferSize(window)
-		// window_width, window_height := glfw.GetWindowSize(window)
+		window_width, window_height := glfw.GetWindowSize(window)
 
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
@@ -118,9 +118,6 @@ main :: proc() {
 		frame_time = min(frame_time, 0.1)
 		last_time = now
 		accumulator += frame_time * f64(state.sim_speed) / T_UNIT_SECONDS
-
-		// TODO: Apply interactions
-		pending_edits_apply(&state, bodies[:], &gravity_tree)
 
 		when sim.MEASURE {
 			measure_t0 := glfw.GetTime()
@@ -176,9 +173,16 @@ main :: proc() {
 		}
 
 		alpha := accumulator / sim.DT
-
 		cx, cy := glfw.GetCursorPos(window)
-		camera_update(&state, {cx, cy}, &prev_cursor)
+
+		// TODO: Apply interactions
+		pending_delete_apply(&state, &bodies, &trails, &gravity_tree)
+		pending_edits_apply(&state, bodies[:], &gravity_tree)
+		pending_click_apply(&state, bodies[:], alpha, window_width, window_height)
+
+		camera_update(&state, {cx, cy}, &prev_cursor, bodies[:], alpha)
+
+		window_title_update(window, &state, bodies[:])
 
 		// TODO: Draw tree cells
 
@@ -232,6 +236,35 @@ main :: proc() {
 
 	return
 }
+
+window_title_update :: proc(window: glfw.WindowHandle, state: ^State, bodies: []sim.Body) {
+	title: cstring
+
+	if !state.title_stale do return
+	if state.tracked_body >= 0 {
+		tracked_body_name := bodies[state.tracked_body].name
+		title = fmt.ctprintf(
+			"%s - %s - %d days/sec - %f years/sec - sim_speed %d",
+			TITLE,
+			tracked_body_name,
+			state.sim_speed / SECONDS_IN_DAY,
+			f64(state.sim_speed) / SECONDS_IN_YEAR,
+			state.sim_speed,
+		)
+	} else {
+		title = fmt.ctprintf(
+			"%s - %d days/sec - %f years/sec - sim_speed %d",
+			TITLE,
+			state.sim_speed / SECONDS_IN_DAY,
+			f64(state.sim_speed) / SECONDS_IN_YEAR,
+			state.sim_speed,
+		)
+	}
+
+	glfw.SetWindowTitle(window, title)
+	state.title_stale = false
+}
+
 
 
 callback_framebuffer_size :: proc "c" (window: glfw.WindowHandle, width, height: i32) {

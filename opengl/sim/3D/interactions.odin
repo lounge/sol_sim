@@ -3,6 +3,49 @@ package main
 import sim "../core"
 import "core:fmt"
 import "core:math"
+import "core:math/linalg"
+
+
+PICK_RADIUS_PX :: 8
+
+pending_click_apply :: proc(state: ^State, bodies: []sim.Body, alpha: f64, width, height: i32) {
+	click, ok := state.input.pending_click.?
+	if !ok do return
+	state.input.pending_click = nil
+
+	eye := camera_eye(state.camera)
+	projection :=
+		camera_projection(state.camera, f64(width) / f64(height)) * camera_view(state.camera)
+
+	best_index := -1
+	best_dist := math.INF_F64
+	for body, i in bodies {
+		rel := pos_render(body, alpha) - eye
+		clip := projection * [4]f64{rel.x, rel.y, rel.z, 1}
+		if clip.w <= 0 do continue
+
+		ndc := clip.xyz / clip.w
+		px := (ndc.x + 1) / 2 * f64(width) // NDC -> WINDOW pixels
+		py := (-ndc.y + 1) / 2 * f64(height) // y-flip
+
+		radius_px := body.radius / (clip.w * math.tan_f64(CAMERA_FOV / 2)) * f64(height) / 2
+		pick_px := math.max(math.max(radius_px, MIN_MARKER_PX), PICK_RADIUS_PX)
+
+		dist := linalg.length([2]f64{px, py} - ([2]f64)(click))
+		if dist < pick_px && dist < best_dist {
+			best_dist = dist
+			best_index = i
+		}
+	}
+
+	state.tracked_body = best_index
+	state.title_stale = true
+
+	if best_index >= 0 {
+		state.camera.distance = bodies[best_index].radius * CAMERA_VIEW_SCALE
+	}
+}
+
 
 pending_edits_apply :: proc(state: ^State, bodies: []sim.Body, tree: ^sim.Gravity_Tree) {
 	if state.input.pending_vel == 0 && state.input.pending_mass == 0 do return
@@ -32,4 +75,26 @@ pending_edits_apply :: proc(state: ^State, bodies: []sim.Body, tree: ^sim.Gravit
 
 	state.input.pending_vel = 0
 	state.input.pending_mass = 0
+}
+
+pending_delete_apply :: proc(
+	state: ^State,
+	bodies: ^[dynamic]sim.Body,
+	trails: ^[dynamic]sim.Trail,
+	tree: ^sim.Gravity_Tree,
+) {
+	if state.input.pending_delete == false do return
+
+	if state.tracked_body < 0 {
+		state.input.pending_delete = false
+		return
+	}
+
+	tracked_id := state.tracked_body
+
+	sim.body_remove(tracked_id, bodies, trails, tree)
+
+	state.tracked_body = -1
+	state.input.pending_delete = false
+	state.title_stale = true
 }

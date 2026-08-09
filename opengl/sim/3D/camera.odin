@@ -10,6 +10,8 @@ CAMERA_FOV :: math.PI / 4
 CAMERA_NEAR_FACTOR :: 1e-3
 CAMERA_FAR_FACTOR :: 1e3
 CAMERA_ELEVATION_MAX :: math.PI / 2 - 0.01
+CAMERA_VIEW_SCALE :: 75
+
 
 Camera :: struct {
 	target:    sim.Vec,
@@ -50,7 +52,13 @@ camera_dolly :: proc "contextless" (camera: ^Camera, y_offset: f64) {
 	camera.distance *= math.pow(0.9, y_offset)
 }
 
-camera_update :: proc(state: ^State, cursor: [2]f64, prev_cursor: ^[2]f64) {
+camera_update :: proc(
+	state: ^State,
+	cursor: [2]f64,
+	prev_cursor: ^[2]f64,
+	bodies: []sim.Body,
+	alpha: f64,
+) {
 	if state.input.orbiting {
 		state.camera.azimuth -= (cursor.x - prev_cursor.x) * ORBIT_SENS
 		state.camera.elevation += (cursor.y - prev_cursor.y) * ORBIT_SENS
@@ -59,6 +67,10 @@ camera_update :: proc(state: ^State, cursor: [2]f64, prev_cursor: ^[2]f64) {
 			-CAMERA_ELEVATION_MAX,
 			CAMERA_ELEVATION_MAX,
 		)
+	}
+
+	if state.tracked_body >= 0 {
+		state.camera.target = pos_render(bodies[state.tracked_body], alpha)
 	}
 
 	prev_cursor^ = cursor
