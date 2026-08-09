@@ -30,7 +30,9 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 24. Collision detection served by the quadtree. - DONE
 25. Make 3D — plan in [PLAN_3D.md](PLAN_3D.md). - DONE
 27. Lighting (Sun). - DONE
-28. Make bodies spheres.
-29. Simple textures? Glowing sun?
-30. Thread accels_compute across cores, runtime-scaled to the user's machine.
-31. 3D spawn (ecliptic-plane ray + drag preview) and real inclinations — PLAN_3D.md phase 6 remainder.
+28. 3D spawn: ecliptic-plane ray + drag preview — PLAN_3D.md phase 6 remainder. - DONE
+29. Real inclinations: orbital-plane Body_Spec fields; keep the planar determinism oracle runnable.
+30. z-spawning
+31. Make bodies spheres.
+32. Simple textures? Glowing sun?
+33. Thread accels_compute across cores, runtime-scaled to the user's machine.

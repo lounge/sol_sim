@@ -240,13 +240,13 @@ New app package; core is already trusted. The genuinely new ground, roughly in o
 Validation: it *looks* planar — the solar system edge-on is a line. That is the
 visible proof the physics embedding is right, before any inclination exists.
 
-## Phase 6 — 3D interaction + real inclinations — remainder → milestone 28
+## Phase 6 — 3D interaction + real inclinations — remainder → milestones 28/29
 
 Picking and edit/delete activation landed early, with Phase 5 — screen-space
 (project + pixel hit-test), not the ray sketched below; the ray is only needed
 where a click must produce a world *position*. What stays: spawn (ray ×
 ecliptic) with its drag preview, and the `Body_Spec` orbital-plane fields.
-Tracked as milestone 28 on the roadmap.
+Tracked as milestones 28 (spawn) and 29 (inclinations) on the roadmap.
 
 - **Picking**: the 2D inverse transform stops existing (a pixel is a ray). Unproject
   click → ray, ray–sphere test per body (against marker radius), nearest hit wins.
