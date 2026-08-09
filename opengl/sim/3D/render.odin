@@ -6,6 +6,7 @@ import "core:math/linalg"
 import gl "vendor:OpenGL"
 
 MIN_MARKER_PX :: 4
+MIN_STAR_MASS :: 0.08
 
 Mesh :: struct {
 	vao:          u32,
@@ -152,15 +153,36 @@ bodies_draw :: proc(
 	gl.UseProgram(program.id)
 	gl.BindVertexArray(mesh.vao)
 
+
 	eye := camera_eye(camera_state^)
 	view := camera_view(camera_state^)
 	projection := camera_projection(camera_state^, f64(width) / f64(height))
 
-	for &body in bodies {
+	projection32 := (matrix[4, 4]f32)(projection)
+	shader_set_mat4(program.proj, &projection32)
+
+	light_index, lit := light_scan(bodies)
+	shader_set_int(program.lit, i32(lit))
+
+	sun_rel := pos_render(bodies[light_index], alpha) - eye
+	sun_pos_view := view * [4]f64{sun_rel.x, sun_rel.y, sun_rel.z, 1}
+
+	if lit {
+		shader_set_vec3(program.sun_pos_view, f32(sun_pos_view.x), f32(sun_pos_view.y), f32(sun_pos_view.z))
+	}
+
+
+	for body, i in bodies {
 		rel := pos_render(body, alpha) - eye
 		center_view := view * [4]f64{rel.x, rel.y, rel.z, 1}
 		depth := -center_view.z
+
+		emissive := (lit && i == light_index) ? 1 : 0
+		shader_set_int(program.emissive, i32(emissive))
+
 		circle_draw(body, mesh, program, camera_state, center_view, depth, projection, height)
+
+
 	}
 }
 
@@ -178,15 +200,12 @@ circle_draw :: proc(
 		body.radius,
 		MIN_MARKER_PX * depth * math.tan_f64(CAMERA_FOV / 2) / (f64(height) / 2),
 	)
-	mvp :=
-		projection *
-		linalg.matrix4_translate_f64(center_view.xyz) *
-		linalg.matrix4_scale_f64({radius, radius, radius})
 
-	mvp32 := (matrix[4, 4]f32)(mvp)
+	mv := linalg.matrix4_translate(center_view.xyz) * linalg.matrix4_scale_f64({radius, radius, radius})
+	mv32 := (matrix[4, 4]f32)(mv)
 
 	shader_set_vec3(program.color, body.color.x, body.color.y, body.color.z)
-	shader_set_mat4(program.mvp, &mvp32)
+	shader_set_mat4(program.mv, &mv32)
 
 	gl.DrawArrays(mesh.primitive, 0, mesh.vertex_count)
 }
@@ -194,6 +213,21 @@ circle_draw :: proc(
 
 pos_render :: proc(body: sim.Body, alpha: f64) -> [3]f64 {
 	return body.prev_pos + (body.pos - body.prev_pos) * alpha
+}
+
+light_scan :: proc(bodies: []sim.Body) -> (index: int, lit: bool) {
+	if len(bodies) == 0 {
+		return -1, false
+	}
+
+	index = 0
+	for i in 1..<len(bodies) {
+		if bodies[i].mass > bodies[index].mass {
+			index = i
+		}
+	}
+
+	return index, bodies[index].mass >= MIN_STAR_MASS
 }
 
 

@@ -5,7 +5,11 @@ import gl "vendor:OpenGL"
 
 Body_Program :: struct {
 	id:    u32,
-	mvp:   i32,
+	mv:   i32,
+	proj: i32,
+	sun_pos_view: i32,
+	emissive: i32,
+	lit: i32,
 	color: i32,
 }
 
@@ -17,9 +21,29 @@ Trail_Program :: struct {
 }
 
 body_program_load :: proc(program: u32) -> Body_Program {
-	mvp := gl.GetUniformLocation(program, "mvp")
-	if mvp == -1 {
-		fmt.println("body_program mvp uniform could not load")
+	mv := gl.GetUniformLocation(program, "mv")
+	if mv == -1 {
+		fmt.println("body_program mv uniform could not load")
+	}
+
+	proj := gl.GetUniformLocation(program, "proj")
+	if mv == -1 {
+		fmt.println("body_program proj uniform could not load")
+	}
+
+	sun_pos_view := gl.GetUniformLocation(program, "sun_pos_view")
+	if mv == -1 {
+		fmt.println("body_program sun_pos_view uniform could not load")
+	}
+
+	emissive := gl.GetUniformLocation(program, "emissive")
+	if mv == -1 {
+		fmt.println("body_program emissive uniform could not load")
+	}
+
+	lit := gl.GetUniformLocation(program, "lit")
+	if mv == -1 {
+		fmt.println("body_program lit uniform could not load")
 	}
 
 	color := gl.GetUniformLocation(program, "color")
@@ -29,7 +53,11 @@ body_program_load :: proc(program: u32) -> Body_Program {
 
 	program := Body_Program {
 		id    = program,
-		mvp   = mvp,
+		mv   = mv,
+		proj = proj,
+		emissive = emissive,
+		lit = lit,
+		sun_pos_view = sun_pos_view,
 		color = color,
 	}
 
