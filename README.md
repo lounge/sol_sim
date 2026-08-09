@@ -32,4 +32,4 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 27. Lighting (Sun). - DONE
 28. Make bodies spheres.
 29. Thread accels_compute across cores, runtime-scaled to the user's machine.
-20. 3D spawn (ecliptic-plane ray + drag preview) and real inclinations — PLAN_3D.md phase 6 remainder.
+30. 3D spawn (ecliptic-plane ray + drag preview) and real inclinations — PLAN_3D.md phase 6 remainder.
