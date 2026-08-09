@@ -28,9 +28,9 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 22. Handle close encounters: merge two bodies on contact. - DONE
 23. Barnes–Hut: O(n log n) gravity via quadtree. - DONE
 24. Collision detection served by the quadtree. - DONE
-25. Make 3D — plan in [PLAN_3D.md](PLAN_3D.md). - DONE
+25. Make 3D. - DONE
 27. Lighting (Sun). - DONE
-28. 3D spawn: ecliptic-plane ray + drag preview — PLAN_3D.md phase 6 remainder. - DONE
+28. 3D spawn: ecliptic-plane ray + drag preview. - DONE
 29. Real inclinations: orbital-plane Body_Spec fields
 30. Start at a real date (mean anomaly, Kepler's equation)
 31. z-spawning
