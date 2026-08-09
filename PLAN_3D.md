@@ -5,7 +5,7 @@ package; two thin app packages that build to separate binaries. The core declare
 
 ```odin
 DIM :: #config(DIM, 2)
-Vec :: [DIM]f64
+Vec :: [3]f64
 ```
 
 and Odin's array programming does the rest: `a + b`, scalar broadcast (`accel = 0`),

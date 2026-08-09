@@ -32,7 +32,8 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 27. Lighting (Sun). - DONE
 28. 3D spawn: ecliptic-plane ray + drag preview — PLAN_3D.md phase 6 remainder. - DONE
 29. Real inclinations: orbital-plane Body_Spec fields; keep the planar determinism oracle runnable.
-30. z-spawning
-31. Make bodies spheres.
-32. Simple textures? Glowing sun?
-33. Thread accels_compute across cores, runtime-scaled to the user's machine.
+30. Start at a real date (mean anomaly, Kepler's equation)
+31. z-spawning
+32. Make bodies spheres.
+33. Simple textures? Glowing sun?
+34. Thread accels_compute across cores, runtime-scaled to the user's machine.
