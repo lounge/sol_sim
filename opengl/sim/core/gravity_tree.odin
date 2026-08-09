@@ -8,7 +8,7 @@ _ :: fmt
 
 BH_THETA :: #config(BH_THETA, 0.5)
 BH_THRESHOLD :: #config(BH_THRESHOLD, BH_THRESHOLD_DEFAULT)
-BH_THRESHOLD_DEFAULT :: 300 when DIM == 2 else 600
+BH_THRESHOLD_DEFAULT :: 600
 BH_MAX_DEPTH :: #config(BH_MAX_DEPTH, 32)
 BH_VALIDATE :: #config(BH_VALIDATE, false)
 BH_DEBUG :: #config(BH_DEBUG, false)
@@ -17,7 +17,7 @@ BH_DEBUG_DRAW :: #config(BH_DEBUG_DRAW, false)
 Tree_Node :: struct {
 	center:    Vec,
 	half_size: f64,
-	children:  [1 << DIM]i32,
+	children:  [8]i32,
 	body:      i32,
 	mass:      f64,
 	com:       Vec,
@@ -62,7 +62,7 @@ gravity_tree_create_node :: proc(tree: ^Gravity_Tree, center: Vec, half_size: f6
 	node := Tree_Node {
 		center = center,
 		half_size = half_size,
-		children = {0 ..< 1 << DIM = -1},
+		children = {0 ..< 8 = -1},
 		body = -1,
 	}
 
@@ -110,12 +110,12 @@ gravity_tree_push_down :: proc(
 	quad := 0
 	pos := bodies[body_idx].pos
 	center := tree.node[node_idx].center
-	for i in 0 ..< DIM do quad |= int(pos[i] > center[i]) << uint(i)
+	for i in 0 ..< 3 do quad |= int(pos[i] > center[i]) << uint(i)
 
 	if tree.node[node_idx].children[quad] == -1 {
 		offset := tree.node[node_idx].half_size / 2
 		child_center := center
-		for i in 0 ..< DIM {
+		for i in 0 ..< 3 {
 			child_center[i] += (quad >> uint(i)) & 1 == 1 ? +offset : -offset
 		}
 

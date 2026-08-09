@@ -9,8 +9,6 @@ import "core:os"
 import gl "vendor:OpenGL"
 import "vendor:glfw"
 
-#assert(sim.DIM == 3)
-
 TITLE :: "Sol_Sim 3D"
 SCR_WIDTH :: 800
 SCR_HEIGHT :: 600

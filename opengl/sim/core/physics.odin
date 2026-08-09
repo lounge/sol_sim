@@ -7,8 +7,7 @@ _ :: math
 
 G :: 1.0
 DT :: #config(DT, 0.0001)
-DIM :: #config(DIM, 2)
-Vec :: [DIM]f64
+Vec :: [3]f64
 
 // Integrator: Kick–drift–kick velocity Verlet
 physics_step :: proc(bodies: []Body, dt: f64, tree: ^Gravity_Tree) {

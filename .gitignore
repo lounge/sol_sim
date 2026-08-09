@@ -20,13 +20,11 @@ main
 window
 triangle
 shaders
-2D
 3D
 !main/
 !window/
 !triangle/
 !shaders/
-!2D/
 !3D/
 
 # macOS

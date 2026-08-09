@@ -3,7 +3,7 @@
 # For each spawn count, times the forced-brute path (threshold above any n)
 # against the forced-tree path (threshold 0) and prints ms/step from each
 # run's last measure report. The crossover is where the tree column drops
-# below the brute column; wire the result as the DIM=3 default.
+# below the brute column; wire the result as the shipped default.
 #
 # A blank cell means the run finished under the report's 1-second throttle —
 # raise that row's step count.
@@ -12,7 +12,7 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
 measure_case() { # spawn_count total_steps bh_threshold -> physics ms/step
-	odin build opengl/sim/3D -o:speed -define:DIM=3 -define:MEASURE=true \
+	odin build opengl/sim/3D -o:speed -define:MEASURE=true \
 		-define:MEASURE_SPAWN_COUNT="$1" -define:TOTAL_STEPS="$2" \
 		-define:BH_THRESHOLD="$3" -out:"$tmp/sweep"
 	"$tmp/sweep" | grep '^\[measure\]' | tail -1 | awk '{print $3}'

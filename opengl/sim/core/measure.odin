@@ -44,10 +44,8 @@ when MEASURE {
 
 			// A cold thin disk: z-jitter makes the tree exercise its z-split,
 			// vel[2] = 0 keeps bodies oscillating through the plane instead of
-			// escaping. Gated so the 2D measurement baselines stay untouched.
-			when DIM == 3 {
-				pos[2] = rand.float64_range(-MEASURE_Z_THICKNESS / 2, MEASURE_Z_THICKNESS / 2)
-			}
+			// escaping.
+			pos[2] = rand.float64_range(-MEASURE_Z_THICKNESS / 2, MEASURE_Z_THICKNESS / 2)
 
 			body_spawn(
 				bodies,
@@ -93,13 +91,14 @@ when MEASURE {
 }
 
 when DETERMINISM_STEPS > 0 {
-	// The cross-build trajectory oracle: step a fixed count, print every
+	// The trajectory-equivalence oracle: step a fixed count, print every
 	// position as raw bit patterns (hex of the f64 bits — no formatting
-	// ambiguity). Two builds are equivalent iff their dumps are identical;
-	// at DIM=3 from a planar start, x/y must match the DIM=2 dump and the
-	// z column must be all zero bits. Mirrors the drain loop's step order
-	// (merge-until-clean, step, record); the wall-clock machinery is
-	// deliberately absent so output depends only on the build.
+	// ambiguity). Two builds are equivalent iff their dumps are identical —
+	// the regression oracle for refactors that must not change physics
+	// (it retired the 2D app by proving the 3D build bit-identical first).
+	// Mirrors the drain loop's step order (merge-until-clean, step, record);
+	// the wall-clock machinery is deliberately absent so output depends only
+	// on the build.
 	determinism_dump :: proc(
 		bodies: ^[dynamic]Body,
 		trails: ^[dynamic]Trail,
@@ -120,7 +119,7 @@ when DETERMINISM_STEPS > 0 {
 
 		for body in bodies {
 			fmt.printf("%s", body.name)
-			for axis in 0 ..< DIM {
+			for axis in 0 ..< 3 {
 				fmt.printf(" %016x", transmute(u64)body.pos[axis])
 			}
 			fmt.println()
