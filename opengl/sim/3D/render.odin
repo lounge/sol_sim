@@ -168,7 +168,12 @@ bodies_draw :: proc(
 	sun_pos_view := view * [4]f64{sun_rel.x, sun_rel.y, sun_rel.z, 1}
 
 	if lit {
-		shader_set_vec3(program.sun_pos_view, f32(sun_pos_view.x), f32(sun_pos_view.y), f32(sun_pos_view.z))
+		shader_set_vec3(
+			program.sun_pos_view,
+			f32(sun_pos_view.x),
+			f32(sun_pos_view.y),
+			f32(sun_pos_view.z),
+		)
 	}
 
 
@@ -180,14 +185,25 @@ bodies_draw :: proc(
 		emissive := (lit && i == light_index) ? 1 : 0
 		shader_set_int(program.emissive, i32(emissive))
 
-		circle_draw(body, mesh, program, camera_state, center_view, depth, projection, height)
+		circle_draw(
+			body.radius,
+			body.color,
+			mesh,
+			program,
+			camera_state,
+			center_view,
+			depth,
+			projection,
+			height,
+		)
 
 
 	}
 }
 
 circle_draw :: proc(
-	body: sim.Body,
+	radius: f64,
+	color: sim.Color,
 	mesh: Mesh,
 	program: Body_Program,
 	camera: ^Camera,
@@ -196,18 +212,89 @@ circle_draw :: proc(
 	projection: matrix[4, 4]f64,
 	height: i32,
 ) {
-	radius := math.max(
-		body.radius,
+	draw_radius := math.max(
+		radius,
 		MIN_MARKER_PX * depth * math.tan_f64(CAMERA_FOV / 2) / (f64(height) / 2),
 	)
 
-	mv := linalg.matrix4_translate(center_view.xyz) * linalg.matrix4_scale_f64({radius, radius, radius})
+	mv :=
+		linalg.matrix4_translate(center_view.xyz) *
+		linalg.matrix4_scale_f64({draw_radius, draw_radius, draw_radius})
 	mv32 := (matrix[4, 4]f32)(mv)
 
-	shader_set_vec3(program.color, body.color.x, body.color.y, body.color.z)
+	shader_set_vec3(program.color, color.x, color.y, color.z)
 	shader_set_mat4(program.mv, &mv32)
 
 	gl.DrawArrays(mesh.primitive, 0, mesh.vertex_count)
+}
+
+drag_preview_draw :: proc(
+	start_world, end_world: World_Pos,
+	mesh: Mesh,
+	program: Trail_Program,
+	camera: ^Camera,
+	width, height: i32,
+) {
+	scratch_buffer: [2][3]f32
+
+	eye := camera_eye(camera^)
+	view := camera_view(camera^)
+	projection := camera_projection(camera^, f64(width) / f64(height)) * view
+	projection32 := (matrix[4, 4]f32)(projection)
+
+	a := [3]f64{start_world.x, start_world.y, 0} - eye
+	b := [3]f64{end_world.x, end_world.y, 0} - eye
+
+	scratch_buffer[0] = {f32(a.x), f32(a.y), f32(a.z)}
+	scratch_buffer[1] = {f32(b.x), f32(b.y), f32(b.z)}
+
+	gl.DepthMask(gl.FALSE)
+	gl.UseProgram(program.id)
+	gl.BindVertexArray(mesh.vao)
+	gl.BindBuffer(gl.ARRAY_BUFFER, mesh.vbo)
+
+	shader_set_mat4(program.mvp, &projection32)
+	shader_set_vec3(program.color, 1, 1, 1)
+	shader_set_int(program.count, 1)
+
+	gl.BufferData(gl.ARRAY_BUFFER, (sim.TRAIL_CAP + 1) * 3 * size_of(f32), nil, gl.STREAM_DRAW)
+	gl.BufferSubData(gl.ARRAY_BUFFER, 0, size_of(scratch_buffer), raw_data(&scratch_buffer))
+
+	gl.DrawArrays(gl.LINE_STRIP, 0, 2)
+	gl.DepthMask(gl.TRUE)
+}
+
+mass_preview_draw :: proc(
+	world: World_Pos,
+	radius: f64,
+	mesh: Mesh,
+	program: Body_Program,
+	camera: ^Camera,
+	width, height: i32,
+) {
+	gl.UseProgram(program.id)
+	gl.BindVertexArray(mesh.vao)
+
+	eye := camera_eye(camera^)
+	view := camera_view(camera^)
+	projection := camera_projection(camera^, f64(width) / f64(height))
+
+	rel := [3]f64{world.x, world.y, 0} - eye
+	center_view := view * [4]f64{rel.x, rel.y, rel.z, 1}
+	depth := -center_view.zx
+
+	shader_set_int(program.emissive, 1)
+	circle_draw(
+		radius,
+		sim.PALETTE[.Spawn],
+		mesh,
+		program,
+		camera,
+		center_view,
+		depth[0],
+		projection,
+		height,
+	)
 }
 
 
@@ -221,7 +308,7 @@ light_scan :: proc(bodies: []sim.Body) -> (index: int, lit: bool) {
 	}
 
 	index = 0
-	for i in 1..<len(bodies) {
+	for i in 1 ..< len(bodies) {
 		if bodies[i].mass > bodies[index].mass {
 			index = i
 		}

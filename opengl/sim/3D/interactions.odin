@@ -46,7 +46,6 @@ pending_click_apply :: proc(state: ^State, bodies: []sim.Body, alpha: f64, width
 	}
 }
 
-
 pending_edits_apply :: proc(state: ^State, bodies: []sim.Body, tree: ^sim.Gravity_Tree) {
 	if state.input.pending_vel == 0 && state.input.pending_mass == 0 do return
 
@@ -75,6 +74,42 @@ pending_edits_apply :: proc(state: ^State, bodies: []sim.Body, tree: ^sim.Gravit
 
 	state.input.pending_vel = 0
 	state.input.pending_mass = 0
+}
+
+pending_spawn_apply :: proc(
+	state: ^State,
+	bodies: ^[dynamic]sim.Body,
+	trails: ^[dynamic]sim.Trail,
+	width, height: i32,
+	tree: ^sim.Gravity_Tree,
+) {
+	if spawn, ok := state.input.pending_spawn.?; ok {
+		defer state.input.pending_spawn = nil
+
+		origin, s_dir := camera_ray(&state.camera, spawn.start_pos, f64(width), f64(height))
+		s_hit, s_ok := ray_plane_hit(origin, s_dir).?
+
+		_, e_dir := camera_ray(&state.camera, spawn.end_pos, f64(width), f64(height))
+		e_hit, e_ok := ray_plane_hit(origin, e_dir).?
+
+		if !s_ok || !e_ok do return
+
+		vel := (([2]f64)(e_hit) - ([2]f64)(s_hit)) / DRAG_TIME
+
+		sim.body_spawn(
+			bodies,
+			trails,
+			tree,
+			fmt.aprintf("Spawnius %d", state.spawned_bodies + 1),
+			sim.PALETTE[.Spawn],
+			{e_hit.x, e_hit.y, 0},
+			{vel.x, vel.y, 0},
+			spawn.mass,
+			spawn.radius,
+		)
+
+		state.spawned_bodies += 1
+	}
 }
 
 pending_delete_apply :: proc(

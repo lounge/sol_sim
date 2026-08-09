@@ -12,6 +12,8 @@ CAMERA_FAR_FACTOR :: 1e3
 CAMERA_ELEVATION_MAX :: math.PI / 2 - 0.01
 CAMERA_VIEW_SCALE :: 75
 
+RAY_EPSILON :: 1e-9
+
 
 Camera :: struct {
 	target:    sim.Vec,
@@ -52,6 +54,25 @@ camera_dolly :: proc "contextless" (camera: ^Camera, y_offset: f64) {
 	camera.distance *= math.pow(0.9, y_offset)
 }
 
+camera_ray :: proc(
+	camera: ^Camera,
+	cursor: Pixel_Pos,
+	width, height: f64,
+) -> (
+	origin, dir: [3]f64,
+) {
+	ndc_x := 2 * cursor.x / width - 1
+	ndc_y := 1 - 2 * cursor.y / height
+	tan_half := math.tan_f64(CAMERA_FOV / 2)
+	aspect := width / height
+	dir_view := [4]f64{ndc_x * tan_half * aspect, ndc_y * tan_half, -1, 0}
+
+	view := camera_view(camera^)
+	dir_world := (linalg.transpose(view) * dir_view).xyz
+
+	return camera_eye(camera^), linalg.normalize(dir_world)
+}
+
 camera_update :: proc(
 	state: ^State,
 	cursor: [2]f64,
@@ -74,4 +95,14 @@ camera_update :: proc(
 	}
 
 	prev_cursor^ = cursor
+}
+
+ray_plane_hit :: proc(origin: [3]f64, dir: [3]f64, plan_z: f64 = 0) -> Maybe(World_Pos) {
+	if math.abs(dir.z) < RAY_EPSILON do return nil
+
+	t := (plan_z - origin.z) / dir.z
+	if t <= 0 do return nil
+
+	hit := origin + t * dir
+	return World_Pos{hit.x, hit.y}
 }

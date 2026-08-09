@@ -19,11 +19,26 @@ Input :: struct {
 	pending_vel:    int,
 	pending_mass:   int,
 	pending_delete: bool,
+	pending_spawn:  Maybe(Spawn_Request),
+	drag_start:     Maybe(Pixel_Pos),
+	spawn_mass_exp: f64,
+}
+
+Spawn_Request :: struct {
+	start_pos: Pixel_Pos,
+	end_pos:   Pixel_Pos,
+	mass:      f64,
+	radius:    f64,
 }
 
 callback_scroll :: proc "c" (window: glfw.WindowHandle, x_offset, y_offset: f64) {
 	state := state_get(window)
-	camera_dolly(&state.camera, y_offset)
+
+	if _, ok := state.input.drag_start.?; ok {
+		state.input.spawn_mass_exp += y_offset * SPAWN_MASS_SENS
+	} else {
+		camera_dolly(&state.camera, y_offset)
+	}
 }
 
 callback_click :: proc "c" (window: glfw.WindowHandle, button, action, mods: i32) {
@@ -42,6 +57,26 @@ callback_click :: proc "c" (window: glfw.WindowHandle, button, action, mods: i32
 				state.input.pending_click = cursor
 			}
 		}
+	}
+
+	if button == glfw.MOUSE_BUTTON_RIGHT && action == glfw.PRESS {
+		state.input.drag_start = cursor
+	}
+
+	if button == glfw.MOUSE_BUTTON_RIGHT && action == glfw.RELEASE {
+		if drag, ok := state.input.drag_start.?; ok {
+			pos_x, pos_y := glfw.GetCursorPos(window)
+			mass, radius := mass_radius_get(state.input.spawn_mass_exp)
+
+			state.input.pending_spawn = Spawn_Request {
+				start_pos = drag.xy,
+				end_pos   = {pos_x, pos_y},
+				mass      = mass,
+				radius    = radius,
+			}
+		}
+
+		state.input.drag_start = nil
 	}
 }
 
@@ -84,4 +119,11 @@ callback_key :: proc "c" (window: glfw.WindowHandle, key, scancode, action, mods
 			state.input.pending_delete = true
 		}
 	}
+}
+
+mass_radius_get :: proc "contextless" (mass_exp: f64) -> (mass: f64, radius: f64) {
+	mass = SPAWN_BASE_MASS * math.pow(2, mass_exp)
+	radius = SPAWN_BASE_RADIUS * math.pow(mass / SPAWN_BASE_MASS, 1.0 / 3.0)
+
+	return mass, radius
 }

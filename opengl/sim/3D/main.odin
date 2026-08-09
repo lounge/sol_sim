@@ -4,6 +4,7 @@ import sim "../core"
 
 import "core:fmt"
 import "core:math"
+import "core:math/linalg"
 import "core:os"
 import gl "vendor:OpenGL"
 import "vendor:glfw"
@@ -175,14 +176,13 @@ main :: proc() {
 		alpha := accumulator / sim.DT
 		cx, cy := glfw.GetCursorPos(window)
 
-		// TODO: Apply interactions
 		pending_delete_apply(&state, &bodies, &trails, &gravity_tree)
+		pending_spawn_apply(&state, &bodies, &trails, window_width, window_height, &gravity_tree)
 		pending_edits_apply(&state, bodies[:], &gravity_tree)
 		pending_click_apply(&state, bodies[:], alpha, window_width, window_height)
 
 		camera_update(&state, {cx, cy}, &prev_cursor, bodies[:], alpha)
 
-		window_title_update(window, &state, bodies[:])
 
 		// TODO: Draw tree cells
 
@@ -225,6 +225,43 @@ main :: proc() {
 		}
 
 		// TODO: Drag preview draw
+		if drag, ok := state.input.drag_start.?; ok {
+			cursor_x, cursor_y := glfw.GetCursorPos(window)
+			cursor: Pixel_Pos = {cursor_x, cursor_y}
+			a, a_ok := ray_plane_hit(
+				camera_ray(&state.camera, drag, f64(window_width), f64(window_height)),
+			).?
+			b, b_ok := ray_plane_hit(
+				camera_ray(&state.camera, cursor, f64(window_width), f64(window_height)),
+			).?
+
+			if a_ok && b_ok {
+				drag_preview_draw(
+					a,
+					b,
+					trail_mesh,
+					trail_program,
+					&state.camera,
+					fb_width,
+					fb_height,
+				)
+
+				_, radius := mass_radius_get(state.input.spawn_mass_exp)
+				mass_preview_draw(
+					b,
+					radius,
+					circle_mesh,
+					body_program,
+					&state.camera,
+					fb_width,
+					fb_height,
+				)
+
+				window_title_drag_update(window, &state, a, b)
+			}
+		} else {
+			window_title_update(window, &state, bodies[:])
+		}
 
 		glfw.SwapBuffers(window)
 		glfw.PollEvents()
@@ -235,6 +272,26 @@ main :: proc() {
 	}
 
 	return
+}
+
+window_title_drag_update :: proc(
+	window: glfw.WindowHandle,
+	state: ^State,
+	start_world, end_world: World_Pos,
+) {
+	speed := linalg.length(end_world - start_world) / DRAG_TIME
+	mass, _ := mass_radius_get(state.input.spawn_mass_exp)
+
+	title := fmt.ctprintf(
+		"%s - Spawn %e sol (x%.0f Moon) - %.1f km/s",
+		TITLE + " ",
+		mass,
+		math.pow(2, state.input.spawn_mass_exp),
+		speed * 29.78,
+	)
+	glfw.SetWindowTitle(window, title)
+
+	state.title_stale = true
 }
 
 window_title_update :: proc(window: glfw.WindowHandle, state: ^State, bodies: []sim.Body) {
@@ -264,7 +321,6 @@ window_title_update :: proc(window: glfw.WindowHandle, state: ^State, bodies: []
 	glfw.SetWindowTitle(window, title)
 	state.title_stale = false
 }
-
 
 
 callback_framebuffer_size :: proc "c" (window: glfw.WindowHandle, width, height: i32) {
