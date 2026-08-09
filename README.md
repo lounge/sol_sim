@@ -31,7 +31,7 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 25. Make 3D — plan in [PLAN_3D.md](PLAN_3D.md). - DONE
 27. Lighting (Sun). - DONE
 28. 3D spawn: ecliptic-plane ray + drag preview — PLAN_3D.md phase 6 remainder. - DONE
-29. Real inclinations: orbital-plane Body_Spec fields; keep the planar determinism oracle runnable.
+29. Real inclinations: orbital-plane Body_Spec fields
 30. Start at a real date (mean anomaly, Kepler's equation)
 31. z-spawning
 32. Make bodies spheres.
