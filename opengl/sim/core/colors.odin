@@ -1,6 +1,6 @@
 package sim_core
 
-PALETTE :: REALISTIC.body
+PALETTE :: ALBEDO.body
 
 Color :: [3]f32
 
