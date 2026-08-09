@@ -17,6 +17,89 @@ Mesh :: struct {
 Pixel_Pos :: distinct [2]f64
 World_Pos :: distinct [2]f64
 
+trail_mesh_create :: proc() -> Mesh {
+	vbo, vao: u32
+
+	gl.GenVertexArrays(1, &vao)
+	gl.GenBuffers(1, &vbo)
+	gl.BindVertexArray(vao)
+	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
+	gl.BufferData(gl.ARRAY_BUFFER, (sim.TRAIL_CAP + 1) * 3 * size_of(f32), nil, gl.STREAM_DRAW)
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, 3 * size_of(f32), 0)
+	gl.EnableVertexAttribArray(0)
+	gl.BindVertexArray(0)
+
+	mesh := Mesh{vao, vbo, 0, gl.LINE_STRIP}
+
+	return mesh
+}
+
+trails_draw :: proc(
+	trails: []sim.Trail,
+	bodies: []sim.Body,
+	mesh: Mesh,
+	program: Trail_Program,
+	camera_state: ^Camera,
+	width, height: i32,
+	alpha: f64,
+) {
+	scratch_buffer: [sim.TRAIL_CAP + 1][3]f32
+
+	gl.DepthMask(gl.FALSE)
+
+	gl.UseProgram(program.id)
+	gl.BindVertexArray(mesh.vao)
+
+	eye := camera_eye(camera_state^)
+	view := camera_view(camera_state^)
+	projection := camera_projection(camera_state^, f64(width) / f64(height)) * view
+
+	mvp := (matrix[4, 4]f32)(projection)
+	shader_set_mat4(program.mvp, &mvp)
+
+	for trail, i in trails {
+		if trail.count == 0 do continue
+
+		oldest_point := 0
+		body := bodies[i]
+
+		if trail.count == len(trail.points) {
+			oldest_point = trail.head
+		}
+
+		anchor: sim.Vec
+		if trail.parent >= 0 {
+			anchor = pos_render(bodies[trail.parent], alpha)
+		}
+
+		for j := 0; j < trail.count; j += 1 {
+			point := trail.points[(oldest_point + j) % len(trail.points)]
+			rel := anchor + point - eye
+			scratch_buffer[j] = {f32(rel.x), f32(rel.y), f32(rel.z)}
+		}
+
+		tip := pos_render(bodies[i], alpha) - eye
+		scratch_buffer[trail.count] = {f32(tip.x), f32(tip.y), f32(tip.z)}
+
+		color := body.color
+		trail_count := trail.count + 1
+
+		shader_set_vec3(program.color, color.x, color.y, color.z)
+		shader_set_int(program.count, i32(trail_count))
+
+		gl.BufferData(gl.ARRAY_BUFFER, (sim.TRAIL_CAP + 1) * 3 * size_of(f32), nil, gl.STREAM_DRAW)
+
+		gl.BufferSubData(
+			gl.ARRAY_BUFFER,
+			0,
+			trail_count * 3 * size_of(f32),
+			raw_data(&scratch_buffer),
+		)
+		gl.DrawArrays(mesh.primitive, 0, i32(trail_count))
+	}
+
+	gl.DepthMask(gl.TRUE)
+}
 
 circle_mesh_create :: proc(segments: i32) -> Mesh {
 	vbo, vao: u32

@@ -10,17 +10,13 @@ Body_Program :: struct {
 }
 
 Trail_Program :: struct {
-	id:     u32,
-	offset: i32,
-	scale:  i32,
-	aspect: i32,
-	color:  i32,
-	count:  i32,
+	id:    u32,
+	mvp:   i32,
+	color: i32,
+	count: i32,
 }
 
 body_program_load :: proc(program: u32) -> Body_Program {
-
-
 	mvp := gl.GetUniformLocation(program, "mvp")
 	if mvp == -1 {
 		fmt.println("body_program mvp uniform could not load")
@@ -41,19 +37,9 @@ body_program_load :: proc(program: u32) -> Body_Program {
 }
 
 trail_program_load :: proc(program: u32) -> Trail_Program {
-	offset := gl.GetUniformLocation(program, "offset")
-	if offset == -1 {
-		fmt.println("trail_program offset uniform could not load")
-	}
-
-	scale := gl.GetUniformLocation(program, "scale")
-	if scale == -1 {
-		fmt.println("trail_program scale uniform could not load")
-	}
-
-	aspect := gl.GetUniformLocation(program, "aspect")
-	if aspect == -1 {
-		fmt.println("trail_program aspect uniform could not load")
+	mvp := gl.GetUniformLocation(program, "mvp")
+	if mvp == -1 {
+		fmt.println("trail_program mvp uniform could not load")
 	}
 
 	color := gl.GetUniformLocation(program, "color")
@@ -67,12 +53,10 @@ trail_program_load :: proc(program: u32) -> Trail_Program {
 	}
 
 	program := Trail_Program {
-		id     = program,
-		offset = offset,
-		scale  = scale,
-		aspect = aspect,
-		color  = color,
-		count  = count,
+		id    = program,
+		mvp   = mvp,
+		color = color,
+		count = count,
 	}
 
 	return program

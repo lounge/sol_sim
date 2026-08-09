@@ -68,6 +68,7 @@ main :: proc() {
 
 	gl.load_up_to(3, 3, glfw.gl_set_proc_address)
 	gl.Enable(gl.DEPTH_TEST)
+	gl.Enable(gl.BLEND)
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
 	fb_width, fb_height := glfw.GetFramebufferSize(window)
@@ -82,21 +83,21 @@ main :: proc() {
 		os.exit(-1)
 	}
 
-	// trail_prg, trail_loaded_ok := gl.load_shaders_file(
-	// 	#directory + "res/trail.vert.glsl",
-	// 	#directory + "res/trail.frag.glsl",
-	// )
-	// if !trail_loaded_ok {
-	// 	fmt.println("Failed to load and build trail shaders")
-	// 	os.exit(-1)
-	// }
+	trail_prg, trail_loaded_ok := gl.load_shaders_file(
+		#directory + "res/trail.vert.glsl",
+		#directory + "res/trail.frag.glsl",
+	)
+	if !trail_loaded_ok {
+		fmt.println("Failed to load and build trail shaders")
+		os.exit(-1)
+	}
 
 	body_program := body_program_load(body_prg)
-	// trail_program := trail_program_load(trail_prg)
+	trail_program := trail_program_load(trail_prg)
 
 	// TODO: Create meshs?
 	circle_mesh := circle_mesh_create(32)
-
+	trail_mesh := trail_mesh_create()
 
 	accumulator: f64
 	overload_frames: int
@@ -203,7 +204,16 @@ main :: proc() {
 			measure_t0 = glfw.GetTime()
 		}
 
-		// TODO:  trails_draw()
+		trails_draw(
+			trails[:],
+			bodies[:],
+			trail_mesh,
+			trail_program,
+			&state.camera,
+			fb_width,
+			fb_height,
+			alpha,
+		)
 
 		when sim.MEASURE {
 			measure.trails_seconds += glfw.GetTime() - measure_t0
