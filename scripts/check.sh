@@ -36,6 +36,7 @@ if [ -f opengl/sim/3D/main.odin ]; then
 	check opengl/sim/3D -vet -strict-style -define:DIM=3
 	check opengl/sim/3D -vet -strict-style -define:DIM=3 -define:MEASURE=true
 	check opengl/sim/3D -vet -strict-style -define:DIM=3 -define:BH_DEBUG=true -define:BH_VALIDATE=true
+	check opengl/sim/3D -vet -strict-style -define:DIM=3 -define:BH_DEBUG_DRAW=true
 	check opengl/sim/3D -vet -strict-style -define:DIM=3 -define:DETERMINISM_STEPS=10
 	check opengl/sim/3D -vet -strict-style -define:DIM=3 -define:TOTAL_STEPS=10
 	check opengl/sim/3D -vet -strict-style -define:DIM=3 -define:TOTAL_STEPS=10 -define:MEASURE=true

@@ -224,6 +224,10 @@ main :: proc() {
 			sim.measure_frame_report(&measure, trails[:], glfw.GetTime())
 		}
 
+		when sim.BH_DEBUG_DRAW {
+    		gravity_tree_cells_draw(&gravity_tree, trail_mesh, trail_program, &state.camera, fb_width, fb_height)
+		}
+
 		// TODO: Drag preview draw
 		if drag, ok := state.input.drag_start.?; ok {
 			cursor_x, cursor_y := glfw.GetCursorPos(window)

@@ -242,11 +242,11 @@ drag_preview_draw :: proc(
 	projection := camera_projection(camera^, f64(width) / f64(height)) * view
 	projection32 := (matrix[4, 4]f32)(projection)
 
-	a := [3]f64{start_world.x, start_world.y, 0} - eye
-	b := [3]f64{end_world.x, end_world.y, 0} - eye
+	start := [3]f64{start_world.x, start_world.y, 0} - eye
+	end := [3]f64{end_world.x, end_world.y, 0} - eye
 
-	scratch_buffer[0] = {f32(a.x), f32(a.y), f32(a.z)}
-	scratch_buffer[1] = {f32(b.x), f32(b.y), f32(b.z)}
+	scratch_buffer[0] = {f32(start.x), f32(start.y), f32(start.z)}
+	scratch_buffer[1] = {f32(end.x), f32(end.y), f32(end.z)}
 
 	gl.DepthMask(gl.FALSE)
 	gl.UseProgram(program.id)
@@ -295,6 +295,75 @@ mass_preview_draw :: proc(
 		projection,
 		height,
 	)
+}
+
+gravity_tree_cells_draw :: proc(
+	tree: ^sim.Gravity_Tree,
+	mesh: Mesh,
+	program: Trail_Program,
+	camera: ^Camera,
+	width, height: i32,
+) {
+
+	scratch_buffer: [sim.TRAIL_CAP + 1][3]f32
+	filled := 0
+
+	eye := camera_eye(camera^)
+	mvp := camera_projection(camera^, f64(width) / f64(height)) * camera_view(camera^)
+	mvp32 := (matrix[4, 4]f32)(mvp)
+
+	gl.Disable(gl.BLEND)
+	gl.DepthMask(gl.FALSE)
+	gl.UseProgram(program.id)
+	gl.BindVertexArray(mesh.vao)
+	gl.BindBuffer(gl.ARRAY_BUFFER, mesh.vbo)
+
+
+	shader_set_mat4(program.mvp, &mvp32)
+	shader_set_vec3(program.color, 1.0, 0.0, 0.0)
+	shader_set_int(program.count, 1) // meaningless with blend off
+
+	for node in tree.node {
+		if filled + 24 > len(scratch_buffer) {
+			// flush
+			tree_cells_flush(&scratch_buffer, &filled)
+		}
+
+		for c in 0 ..< 8 {
+			for axis in 0 ..< 3 {
+				if c & (1 << uint(axis)) == 0 {
+					a := tree_cell_corner(node, c) - eye
+					b := tree_cell_corner(node, c | (1 << uint(axis))) - eye
+					scratch_buffer[filled] = {f32(a.x), f32(a.y), f32(a.z)}
+					scratch_buffer[filled + 1] = {f32(b.x), f32(b.y), f32(b.z)}
+					filled += 2
+				}
+			}
+		}
+	}
+
+	// flush
+	tree_cells_flush(&scratch_buffer, &filled)
+
+	gl.DepthMask(gl.TRUE)
+	gl.Enable(gl.BLEND)
+}
+
+tree_cell_corner :: proc(node: sim.Tree_Node, bits: int) -> [3]f64 {
+	offset: [3]f64
+	for axis in 0 ..< 3 {
+		offset[axis] = (bits >> uint(axis)) & 1 == 1 ? +node.half_size : -node.half_size
+	}
+	return ([3]f64)(node.center) + offset
+}
+
+tree_cells_flush :: proc(scratch: ^[sim.TRAIL_CAP + 1][3]f32, filled: ^int) {
+	if filled^ == 0 do return
+
+	gl.BufferData(gl.ARRAY_BUFFER, (sim.TRAIL_CAP + 1) * 3 * size_of(f32), nil, gl.STREAM_DRAW)
+	gl.BufferSubData(gl.ARRAY_BUFFER, 0, filled^ * 3 * size_of(f32), raw_data(scratch))
+	gl.DrawArrays(gl.LINES, 0, i32(filled^))
+	filled^ = 0
 }
 
 
