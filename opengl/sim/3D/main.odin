@@ -19,7 +19,7 @@ T_UNIT_SECONDS :: SECONDS_IN_YEAR / (2 * math.PI) // ≈5.023e6, the G=1/AU/sola
 
 TOTAL_STEPS :: #config(TOTAL_STEPS, 0) // > 0 = headless runner, no window
 MAX_SIM_SPEED :: #config(MAX_SIM_SPEED, int(50 * SECONDS_IN_YEAR))
-PHYSICS_BUDGET :: #config(PHYSICS_BUDGET, 0.005) // Seconds of wall clock per frame
+PHYSICS_BUDGET :: #config(PHYSICS_BUDGET, 0.010) // Seconds of wall clock per frame
 GOVERNOR_FRAMES :: #config(GOVERNOR_FRAMES, 30) // COnsecutive overloaded frames before halving
 
 main :: proc() {
