@@ -16,12 +16,14 @@ check() {
 
 # --- core, standalone (fast signal; -no-entry-point because it is a library)
 check opengl/sim/core -no-entry-point -vet -strict-style
+check opengl/sim/core -no-entry-point -vet -strict-style -debug
 check opengl/sim/core -no-entry-point -vet -strict-style -define:MEASURE=true
 check opengl/sim/core -no-entry-point -vet -strict-style -define:BH_DEBUG=true -define:BH_VALIDATE=true
 check opengl/sim/core -no-entry-point -vet -strict-style -define:DETERMINISM_STEPS=10
 
 # --- the app
 check opengl/sim/3D -vet -strict-style
+check opengl/sim/3D -vet -strict-style -debug
 check opengl/sim/3D -vet -strict-style -define:MEASURE=true
 check opengl/sim/3D -vet -strict-style -define:BH_DEBUG=true -define:BH_VALIDATE=true
 check opengl/sim/3D -vet -strict-style -define:BH_DEBUG_DRAW=true
