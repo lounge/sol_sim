@@ -105,10 +105,12 @@ main :: proc() {
 	circle_mesh := circle_mesh_create(32)
 	trail_mesh := trail_mesh_create()
 
+	sim_time: f64
 	accumulator: f64
 	overload_frames: int
 	prev_cursor: [2]f64
 	last_time := glfw.GetTime()
+	last_shown_date: int
 
 	gl.ClearColor(0.0, 0.0, 0.0, 0.0)
 
@@ -124,6 +126,7 @@ main :: proc() {
 		frame_time = min(frame_time, 0.1)
 		last_time = now
 		accumulator += frame_time * f64(state.sim_speed) / sim.T_UNIT_SECONDS
+
 
 		when sim.MEASURE {
 			measure_t0 := glfw.GetTime()
@@ -150,11 +153,14 @@ main :: proc() {
 
 			sim.physics_step(bodies[:], sim.DT, &gravity_tree)
 			sim.trail_record(bodies[:], trails[:])
-
+			sim_time += sim.DT
 			accumulator -= sim.DT
 			steps += 1
+
 			if glfw.GetTime() >= deadline do break
 		}
+
+		current_jd := start_jd + sim_time * sim.T_UNIT_SECONDS / sim.SECONDS_IN_DAY
 
 		when sim.MEASURE {
 			measure.physics_seconds += glfw.GetTime() - measure_t0
@@ -217,6 +223,12 @@ main :: proc() {
 			gravity_tree_cells_draw(&gravity_tree, trail_mesh, trail_program, camera_frame)
 		}
 
+		shown_day := int(math.floor(current_jd + 0.5))
+		if shown_day != last_shown_date {
+			last_shown_date = shown_day
+			state.title_stale = true
+		}
+
 		if drag, ok := state.input.drag_start.?; ok {
 			cursor_x, cursor_y := glfw.GetCursorPos(window)
 			cursor: Pixel_Pos = {cursor_x, cursor_y}
@@ -238,9 +250,8 @@ main :: proc() {
 			if (preview_ok) {
 				window_title_drag_update(window, &state, a, b)
 			}
-
 		} else {
-			window_title_update(window, &state, bodies[:])
+			window_title_update(window, &state, bodies[:], sim.date_jd_to_civil(current_jd))
 		}
 
 		glfw.SwapBuffers(window)
@@ -274,27 +285,38 @@ window_title_drag_update :: proc(
 	state.title_stale = true
 }
 
-window_title_update :: proc(window: glfw.WindowHandle, state: ^State, bodies: []sim.Body) {
+window_title_update :: proc(
+	window: glfw.WindowHandle,
+	state: ^State,
+	bodies: []sim.Body,
+	date: sim.Civil_Date,
+) {
 	title: cstring
 
 	if !state.title_stale do return
 	if state.tracked_body >= 0 {
 		tracked_body_name := bodies[state.tracked_body].name
 		title = fmt.ctprintf(
-			"%s - %s - %f days/sec - %f years/sec - sim_speed %d",
+			"%s - %s - %f days/sec - %f years/sec - sim_speed %d - %04d-%02d-%02d",
 			TITLE,
 			tracked_body_name,
 			f64(state.sim_speed) / sim.SECONDS_IN_DAY,
 			f64(state.sim_speed) / sim.SECONDS_IN_YEAR,
 			state.sim_speed,
+			date.year,
+			date.month,
+			date.day,
 		)
 	} else {
 		title = fmt.ctprintf(
-			"%s - %f days/sec - %f years/sec - sim_speed %d",
+			"%s - %f days/sec - %f years/sec - sim_speed %d - %04d-%02d-%02d",
 			TITLE,
 			f64(state.sim_speed) / sim.SECONDS_IN_DAY,
 			f64(state.sim_speed) / sim.SECONDS_IN_YEAR,
 			state.sim_speed,
+			date.year,
+			date.month,
+			date.day,
 		)
 	}
 
