@@ -33,7 +33,10 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 28. 3D spawn: ecliptic-plane ray + drag preview. - DONE
 29. Real inclinations: orbital-plane Body_Spec fields - DONE
 30. Start at a real date (mean anomaly, Kepler's equation)
-31. z-spawning
-32. Make bodies spheres.
-33. Simple textures? Glowing sun?
-34. Thread accels_compute across cores, runtime-scaled to the user's machine.
+31. Binary-correct setup: vis-viva with G(M+m), place pairs about their barycenter (Charon).
+32. z-spawning
+33. Make bodies spheres.
+34. Simple textures? Glowing sun?
+35. Cast shadows: eclipses as an occlusion term on the lighting.
+36. Thread accels_compute across cores, runtime-scaled to the user's machine.
+37. Per-body substepping for fast moons (Phobos-class orbits).
