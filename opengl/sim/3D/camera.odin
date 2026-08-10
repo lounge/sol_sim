@@ -14,12 +14,20 @@ CAMERA_VIEW_SCALE :: 75
 
 RAY_EPSILON :: 1e-9
 
+Pixel_Pos :: distinct [2]f64
+World_Pos :: distinct [2]f64
 
 Camera :: struct {
 	target:    sim.Vec,
 	azimuth:   f64,
 	elevation: f64,
 	distance:  f64,
+}
+
+Camera_Frame :: struct {
+	eye:  [3]f64,
+	view: matrix[4, 4]f64,
+	proj: matrix[4, 4]f64,
 }
 
 camera_eye :: proc "contextless" (camera: Camera) -> sim.Vec {
@@ -55,7 +63,7 @@ camera_dolly :: proc "contextless" (camera: ^Camera, y_offset: f64) {
 }
 
 camera_ray :: proc(
-	camera: ^Camera,
+	camera: Camera,
 	cursor: Pixel_Pos,
 	width, height: f64,
 ) -> (
@@ -67,10 +75,10 @@ camera_ray :: proc(
 	aspect := width / height
 	dir_view := [4]f64{ndc_x * tan_half * aspect, ndc_y * tan_half, -1, 0}
 
-	view := camera_view(camera^)
+	view := camera_view(camera)
 	dir_world := (linalg.transpose(view) * dir_view).xyz
 
-	return camera_eye(camera^), linalg.normalize(dir_world)
+	return camera_eye(camera), linalg.normalize(dir_world)
 }
 
 camera_update :: proc(
@@ -97,10 +105,10 @@ camera_update :: proc(
 	prev_cursor^ = cursor
 }
 
-ray_plane_hit :: proc(origin: [3]f64, dir: [3]f64, plan_z: f64 = 0) -> Maybe(World_Pos) {
+ray_plane_hit :: proc(origin: [3]f64, dir: [3]f64, plane_z: f64 = 0) -> Maybe(World_Pos) {
 	if math.abs(dir.z) < RAY_EPSILON do return nil
 
-	t := (plan_z - origin.z) / dir.z
+	t := (plane_z - origin.z) / dir.z
 	if t <= 0 do return nil
 
 	hit := origin + t * dir

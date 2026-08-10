@@ -12,12 +12,9 @@ import "vendor:glfw"
 TITLE :: "Sol_Sim 3D"
 SCR_WIDTH :: 800
 SCR_HEIGHT :: 600
-SECONDS_IN_DAY :: 86400
-SECONDS_IN_YEAR :: 3.156e7
-T_UNIT_SECONDS :: SECONDS_IN_YEAR / (2 * math.PI) // ≈5.023e6, the G=1/AU/solar-mass time unit
 
 TOTAL_STEPS :: #config(TOTAL_STEPS, 0) // > 0 = headless runner, no window
-MAX_SIM_SPEED :: #config(MAX_SIM_SPEED, int(50 * SECONDS_IN_YEAR))
+MAX_SIM_SPEED :: #config(MAX_SIM_SPEED, int(50 * sim.SECONDS_IN_YEAR))
 PHYSICS_BUDGET :: #config(PHYSICS_BUDGET, 0.010) // Seconds of wall clock per frame
 GOVERNOR_FRAMES :: #config(GOVERNOR_FRAMES, 30) // COnsecutive overloaded frames before halving
 
@@ -25,14 +22,14 @@ main :: proc() {
 	gravity_tree: sim.Gravity_Tree
 	bodies, trails := sim.create_system(&gravity_tree)
 
-	when sim.DETERMINISM_STEPS > 0 {
-		sim.determinism_dump(&bodies, &trails, &gravity_tree)
-		return
-	}
-
 	when sim.MEASURE {
 		measure: sim.Measure
 		sim.measure_spawn(&bodies, &trails, &gravity_tree)
+	}
+
+	when sim.DETERMINISM_STEPS > 0 {
+		sim.determinism_dump(&bodies, &trails, &gravity_tree)
+		return
 	}
 
 	when TOTAL_STEPS > 0 {
@@ -94,7 +91,6 @@ main :: proc() {
 	body_program := body_program_load(body_prg)
 	trail_program := trail_program_load(trail_prg)
 
-	// TODO: Create meshs?
 	circle_mesh := circle_mesh_create(32)
 	trail_mesh := trail_mesh_create()
 
@@ -116,7 +112,7 @@ main :: proc() {
 		frame_time := now - last_time
 		frame_time = min(frame_time, 0.1)
 		last_time = now
-		accumulator += frame_time * f64(state.sim_speed) / T_UNIT_SECONDS
+		accumulator += frame_time * f64(state.sim_speed) / sim.T_UNIT_SECONDS
 
 		when sim.MEASURE {
 			measure_t0 := glfw.GetTime()
@@ -134,12 +130,9 @@ main :: proc() {
 			when sim.MEASURE {
 				measure_c0 := glfw.GetTime()
 			}
-			for {
-				pair, collision := sim.collision_compute(bodies[:], &gravity_tree)
-				if !collision do break
-				sim.collision_merge(pair, &bodies, &trails, &state.tracked_body, &gravity_tree)
-				state.title_stale = true
-			}
+
+			if sim.collisions_drain(&bodies, &trails, &state.tracked_body, &gravity_tree) do state.title_stale = true
+
 			when sim.MEASURE {
 				measure.collision_seconds += glfw.GetTime() - measure_c0
 			}
@@ -174,29 +167,25 @@ main :: proc() {
 		alpha := accumulator / sim.DT
 		cx, cy := glfw.GetCursorPos(window)
 
+		camera_update(&state, {cx, cy}, &prev_cursor, bodies[:], alpha)
+
+		camera_frame := Camera_Frame {
+			eye  = camera_eye(state.camera),
+			view = camera_view(state.camera),
+			proj = camera_projection(state.camera, f64(fb_width) / f64(fb_height)),
+		}
+
 		pending_delete_apply(&state, &bodies, &trails, &gravity_tree)
 		pending_spawn_apply(&state, &bodies, &trails, window_width, window_height, &gravity_tree)
 		pending_edits_apply(&state, bodies[:], &gravity_tree)
-		pending_click_apply(&state, bodies[:], alpha, window_width, window_height)
+		pending_click_apply(&state, bodies[:], alpha, camera_frame, window_width, window_height)
 
-		camera_update(&state, {cx, cy}, &prev_cursor, bodies[:], alpha)
-
-
-		// TODO: Draw tree cells
 
 		when sim.MEASURE {
 			measure_t0 = glfw.GetTime()
 		}
 
-		bodies_draw(
-			bodies[:],
-			circle_mesh,
-			body_program,
-			&state.camera,
-			fb_width,
-			fb_height,
-			alpha,
-		)
+		bodies_draw(bodies[:], circle_mesh, body_program, camera_frame, fb_height, alpha)
 
 		when sim.MEASURE {
 			measure.bodies_seconds += glfw.GetTime() - measure_t0
@@ -206,16 +195,7 @@ main :: proc() {
 			measure_t0 = glfw.GetTime()
 		}
 
-		trails_draw(
-			trails[:],
-			bodies[:],
-			trail_mesh,
-			trail_program,
-			&state.camera,
-			fb_width,
-			fb_height,
-			alpha,
-		)
+		trails_draw(trails[:], bodies[:], trail_mesh, trail_program, camera_frame, alpha)
 
 		when sim.MEASURE {
 			measure.trails_seconds += glfw.GetTime() - measure_t0
@@ -223,51 +203,31 @@ main :: proc() {
 		}
 
 		when sim.BH_DEBUG_DRAW {
-			gravity_tree_cells_draw(
-				&gravity_tree,
-				trail_mesh,
-				trail_program,
-				&state.camera,
-				fb_width,
-				fb_height,
-			)
+			gravity_tree_cells_draw(&gravity_tree, trail_mesh, trail_program, camera_frame)
 		}
 
-		// TODO: Drag preview draw
 		if drag, ok := state.input.drag_start.?; ok {
 			cursor_x, cursor_y := glfw.GetCursorPos(window)
 			cursor: Pixel_Pos = {cursor_x, cursor_y}
-			a, a_ok := ray_plane_hit(
-				camera_ray(&state.camera, drag, f64(window_width), f64(window_height)),
-			).?
-			b, b_ok := ray_plane_hit(
-				camera_ray(&state.camera, cursor, f64(window_width), f64(window_height)),
-			).?
 
-			if a_ok && b_ok {
-				drag_preview_draw(
-					a,
-					b,
-					trail_mesh,
-					trail_program,
-					&state.camera,
-					fb_width,
-					fb_height,
-				)
+			a, b, ok := drag_preview_pass(
+				&state,
+				cursor,
+				drag,
+				trail_mesh,
+				circle_mesh,
+				trail_program,
+				body_program,
+				camera_frame,
+				window_width,
+				window_height,
+				fb_height,
+			)
 
-				_, radius := mass_radius_get(state.input.spawn_mass_exp)
-				mass_preview_draw(
-					b,
-					radius,
-					circle_mesh,
-					body_program,
-					&state.camera,
-					fb_width,
-					fb_height,
-				)
-
+			if (ok) {
 				window_title_drag_update(window, &state, a, b)
 			}
+
 		} else {
 			window_title_update(window, &state, bodies[:])
 		}
@@ -296,7 +256,7 @@ window_title_drag_update :: proc(
 		TITLE + " ",
 		mass,
 		math.pow(2, state.input.spawn_mass_exp),
-		speed * 29.78,
+		speed * sim.KM_PER_VEL_UNIT,
 	)
 	glfw.SetWindowTitle(window, title)
 
@@ -310,19 +270,19 @@ window_title_update :: proc(window: glfw.WindowHandle, state: ^State, bodies: []
 	if state.tracked_body >= 0 {
 		tracked_body_name := bodies[state.tracked_body].name
 		title = fmt.ctprintf(
-			"%s - %s - %d days/sec - %f years/sec - sim_speed %d",
+			"%s - %s - %f days/sec - %f years/sec - sim_speed %d",
 			TITLE,
 			tracked_body_name,
-			state.sim_speed / SECONDS_IN_DAY,
-			f64(state.sim_speed) / SECONDS_IN_YEAR,
+			f64(state.sim_speed) / sim.SECONDS_IN_DAY,
+			f64(state.sim_speed) / sim.SECONDS_IN_YEAR,
 			state.sim_speed,
 		)
 	} else {
 		title = fmt.ctprintf(
-			"%s - %d days/sec - %f years/sec - sim_speed %d",
+			"%s - %f days/sec - %f years/sec - sim_speed %d",
 			TITLE,
-			state.sim_speed / SECONDS_IN_DAY,
-			f64(state.sim_speed) / SECONDS_IN_YEAR,
+			f64(state.sim_speed) / sim.SECONDS_IN_DAY,
+			f64(state.sim_speed) / sim.SECONDS_IN_YEAR,
 			state.sim_speed,
 		)
 	}

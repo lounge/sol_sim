@@ -8,19 +8,23 @@ import "core:math/linalg"
 
 PICK_RADIUS_PX :: 8
 
-pending_click_apply :: proc(state: ^State, bodies: []sim.Body, alpha: f64, width, height: i32) {
+pending_click_apply :: proc(
+	state: ^State,
+	bodies: []sim.Body,
+	alpha: f64,
+	camera_frame: Camera_Frame,
+	width, height: i32,
+) {
 	click, ok := state.input.pending_click.?
 	if !ok do return
 	state.input.pending_click = nil
 
-	eye := camera_eye(state.camera)
-	projection :=
-		camera_projection(state.camera, f64(width) / f64(height)) * camera_view(state.camera)
+	projection := camera_frame.proj * camera_frame.view
 
 	best_index := -1
 	best_dist := math.INF_F64
 	for body, i in bodies {
-		rel := pos_render(body, alpha) - eye
+		rel := pos_render(body, alpha) - camera_frame.eye
 		clip := projection * [4]f64{rel.x, rel.y, rel.z, 1}
 		if clip.w <= 0 do continue
 
@@ -86,11 +90,11 @@ pending_spawn_apply :: proc(
 	if spawn, ok := state.input.pending_spawn.?; ok {
 		defer state.input.pending_spawn = nil
 
-		origin, s_dir := camera_ray(&state.camera, spawn.start_pos, f64(width), f64(height))
-		s_hit, s_ok := ray_plane_hit(origin, s_dir).?
+		origin_a, s_dir := camera_ray(state.camera, spawn.start_pos, f64(width), f64(height))
+		s_hit, s_ok := ray_plane_hit(origin_a, s_dir).?
 
-		_, e_dir := camera_ray(&state.camera, spawn.end_pos, f64(width), f64(height))
-		e_hit, e_ok := ray_plane_hit(origin, e_dir).?
+		origin_b, e_dir := camera_ray(state.camera, spawn.end_pos, f64(width), f64(height))
+		e_hit, e_ok := ray_plane_hit(origin_b, e_dir).?
 
 		if !s_ok || !e_ok do return
 
