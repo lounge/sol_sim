@@ -135,6 +135,41 @@ specs := []Body_Spec {
 				arg_perihelion = 338.9,
 				color = PALETTE[.Saturn],
 				name = "Saturn",
+				// Titan/Rhea ride Saturn's equatorial plane (28.05/169.53 in
+				// ecliptic terms, from the IAU pole); Iapetus rides its own
+				// Laplace plane between equator and orbit.
+				satellites = {
+					{
+						mass = 6.763e-8,
+						radius = 1.721e-5,
+						eccentricity = 0.0288,
+						semi_major_axis = 8.168e-3,
+						inclination = 28.05,
+						lon_asc_node = 169.53,
+						color = PALETTE[.Moon],
+						name = "Titan",
+					},
+					{
+						mass = 1.160e-9,
+						radius = 5.106e-6,
+						eccentricity = 0.001,
+						semi_major_axis = 3.523e-3,
+						inclination = 28.05,
+						lon_asc_node = 169.53,
+						color = PALETTE[.Moon],
+						name = "Rhea",
+					},
+					{
+						mass = 9.08e-10,
+						radius = 4.910e-6,
+						eccentricity = 0.0277,
+						semi_major_axis = 2.380e-2,
+						inclination = 17.28,
+						lon_asc_node = 225.0,
+						color = PALETTE[.Moon],
+						name = "Iapetus",
+					},
+				},
 			},
 			{
 				mass = 4.366e-5,
@@ -146,6 +181,43 @@ specs := []Body_Spec {
 				arg_perihelion = 96.9,
 				color = PALETTE[.Uranus],
 				name = "Uranus",
+				// All three ride Uranus's equatorial plane — tipped 97.72 to
+				// the ecliptic (the sideways system). The IAU pole gives the
+				// invariable-plane north; Uranus spins retrograde, so the
+				// moons' orbit normal is the flipped pole: 180 - 82.28, node
+				// + 180.
+				satellites = {
+					{
+						mass = 3.31e-11,
+						radius = 1.576e-6,
+						eccentricity = 0.0013,
+						semi_major_axis = 8.649e-4,
+						inclination = 97.72,
+						lon_asc_node = 167.65,
+						color = PALETTE[.Moon],
+						name = "Miranda",
+					},
+					{
+						mass = 1.71e-9,
+						radius = 5.273e-6,
+						eccentricity = 0.0011,
+						semi_major_axis = 2.914e-3,
+						inclination = 97.72,
+						lon_asc_node = 167.65,
+						color = PALETTE[.Moon],
+						name = "Titania",
+					},
+					{
+						mass = 1.55e-9,
+						radius = 5.090e-6,
+						eccentricity = 0.0014,
+						semi_major_axis = 3.901e-3,
+						inclination = 97.72,
+						lon_asc_node = 167.65,
+						color = PALETTE[.Moon],
+						name = "Oberon",
+					},
+				},
 			},
 			{
 				mass = 5.150e-5,
@@ -157,6 +229,21 @@ specs := []Body_Spec {
 				arg_perihelion = 273.2,
 				color = PALETTE[.Neptune],
 				name = "Neptune",
+				satellites = {
+					{
+						// Retrograde (i > 90): Horizons osculating elements,
+						// 2026-01-01 epoch — the node precesses on a ~688 yr
+						// cycle, so this is a snapshot.
+						mass = 1.075e-8,
+						radius = 9.047e-6,
+						eccentricity = 0,
+						semi_major_axis = 2.371e-3,
+						inclination = 129.15,
+						lon_asc_node = 222.66,
+						color = PALETTE[.Moon],
+						name = "Triton",
+					},
+				},
 			},
 			{
 				mass = 6.55e-9,
@@ -168,6 +255,21 @@ specs := []Body_Spec {
 				arg_perihelion = 113.8,
 				color = PALETTE[.Pluto],
 				name = "Pluto",
+				satellites = {
+					{
+						// 1/8 of Pluto's mass — a binary, not a moon: the
+						// barycenter sits outside Pluto. Rides Pluto's
+						// equatorial plane (112.82: Pluto spins retrograde).
+						mass = 7.97e-10,
+						radius = 4.051e-6,
+						eccentricity = 0.0002,
+						semi_major_axis = 1.310e-4,
+						inclination = 112.82,
+						lon_asc_node = 227.35,
+						color = PALETTE[.Moon],
+						name = "Charon",
+					},
+				},
 			},
 		},
 	},
