@@ -1,5 +1,7 @@
 package sim_core
 
+import "core:math"
+
 TRAIL_CAP :: 12800
 TRAIL_FRACTION :: 0.95
 
@@ -32,7 +34,7 @@ trail_make_default :: proc() -> Trail {
 }
 
 trail_make_orbital :: proc(parent: int, steps_per_orbit: f64, stride: int) -> Trail {
-	cap := int(TRAIL_FRACTION * steps_per_orbit / f64(stride))
+	cap := math.max(1, int(TRAIL_FRACTION * steps_per_orbit / f64(stride)))
 
 	trail := Trail {
 		parent = parent,
