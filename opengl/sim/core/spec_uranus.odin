@@ -1,0 +1,45 @@
+package sim_core
+
+URANUS :: Body_Spec {
+	mass            = 4.366e-5,
+	radius          = 1.695e-4,
+	eccentricity    = 0.0457,
+	semi_major_axis = 19.19,
+	inclination     = 0.773,
+	lon_asc_node    = 74.01,
+	arg_perihelion  = 96.9,
+	color           = PALETTE[.Uranus],
+	name            = "Uranus",
+	satellites      = {
+		{
+			mass = 3.31e-11,
+			radius = 1.576e-6,
+			eccentricity = 0.0013,
+			semi_major_axis = 8.649e-4,
+			inclination = 97.72,
+			lon_asc_node = 167.65,
+			color = PALETTE[.Moon],
+			name = "Miranda",
+		},
+		{
+			mass = 1.71e-9,
+			radius = 5.273e-6,
+			eccentricity = 0.0011,
+			semi_major_axis = 2.914e-3,
+			inclination = 97.72,
+			lon_asc_node = 167.65,
+			color = PALETTE[.Moon],
+			name = "Titania",
+		},
+		{
+			mass = 1.55e-9,
+			radius = 5.090e-6,
+			eccentricity = 0.0014,
+			semi_major_axis = 3.901e-3,
+			inclination = 97.72,
+			lon_asc_node = 167.65,
+			color = PALETTE[.Moon],
+			name = "Oberon",
+		},
+	},
+}

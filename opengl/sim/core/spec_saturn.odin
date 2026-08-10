@@ -1,0 +1,45 @@
+package sim_core
+
+SATURN :: Body_Spec {
+	mass            = 2.858e-4,
+	radius          = 3.893e-4,
+	eccentricity    = 0.0565,
+	semi_major_axis = 9.537,
+	inclination     = 2.485,
+	lon_asc_node    = 113.67,
+	arg_perihelion  = 338.9,
+	color           = PALETTE[.Saturn],
+	name            = "Saturn",
+	satellites      = {
+		{
+			mass = 6.763e-8,
+			radius = 1.721e-5,
+			eccentricity = 0.0288,
+			semi_major_axis = 8.168e-3,
+			inclination = 28.05,
+			lon_asc_node = 169.53,
+			color = PALETTE[.Moon],
+			name = "Titan",
+		},
+		{
+			mass = 1.160e-9,
+			radius = 5.106e-6,
+			eccentricity = 0.001,
+			semi_major_axis = 3.523e-3,
+			inclination = 28.05,
+			lon_asc_node = 169.53,
+			color = PALETTE[.Moon],
+			name = "Rhea",
+		},
+		{
+			mass = 9.08e-10,
+			radius = 4.910e-6,
+			eccentricity = 0.0277,
+			semi_major_axis = 2.380e-2,
+			inclination = 17.28,
+			lon_asc_node = 225.0,
+			color = PALETTE[.Moon],
+			name = "Iapetus",
+		},
+	},
+}
