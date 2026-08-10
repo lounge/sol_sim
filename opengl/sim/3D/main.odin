@@ -6,6 +6,7 @@ import "core:fmt"
 import "core:math"
 import "core:math/linalg"
 import "core:os"
+import "core:time"
 import gl "vendor:OpenGL"
 import "vendor:glfw"
 
@@ -17,10 +18,20 @@ TOTAL_STEPS :: #config(TOTAL_STEPS, 0) // > 0 = headless runner, no window
 MAX_SIM_SPEED :: #config(MAX_SIM_SPEED, int(50 * sim.SECONDS_IN_YEAR))
 PHYSICS_BUDGET :: #config(PHYSICS_BUDGET, 0.010) // Seconds of wall clock per frame
 GOVERNOR_FRAMES :: #config(GOVERNOR_FRAMES, 30) // COnsecutive overloaded frames before halving
+START_JD :: #config(START_JD, 0.0) // Start datetime for sim
 
 main :: proc() {
+	start_jd := START_JD
+	if (start_jd == 0.0) {
+		start_jd =
+			f64(time.to_unix_nanoseconds(time.now())) / sim.NANO_IN_SECONDS / sim.SECONDS_IN_DAY +
+			sim.JD_UNIX_EPOCH
+	}
+
+	delta_t := (start_jd - sim.JD_EPOCH) * sim.SECONDS_IN_DAY / sim.T_UNIT_SECONDS
+
 	gravity_tree: sim.Gravity_Tree
-	bodies, trails := sim.create_system(&gravity_tree)
+	bodies, trails := sim.create_system(&gravity_tree, delta_t)
 
 	when sim.MEASURE {
 		measure: sim.Measure

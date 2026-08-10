@@ -1,5 +1,6 @@
 package sim_core
 
+
 Body_Spec :: struct {
 	mass:            f64,
 	radius:          f64,
@@ -28,12 +29,18 @@ specs := []Body_Spec {
 }
 
 // TODO: Maybe handle multiple roots
-create_system :: proc(tree: ^Gravity_Tree) -> (bodies: [dynamic]Body, trails: [dynamic]Trail) {
+create_system :: proc(
+	tree: ^Gravity_Tree,
+	delta_t: f64,
+) -> (
+	bodies: [dynamic]Body,
+	trails: [dynamic]Trail,
+) {
 	assert(len(specs) == 1, "trails[0] cap fix-up assumes exactly one root")
 	assert(len(specs[0].satellites) >= 1, "root requires at least 1 satellite")
 
 	for spec in specs {
-		body_add(spec, -1, &bodies, &trails)
+		body_add(spec, -1, &bodies, &trails, delta_t)
 	}
 
 	largest_mass_index := most_massive_body_index(bodies[:], 1)

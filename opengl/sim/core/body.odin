@@ -21,6 +21,7 @@ body_add :: proc(
 	parent_index: int,
 	bodies: ^[dynamic]Body,
 	trails: ^[dynamic]Trail,
+	delta_t: f64,
 ) {
 	pos: Vec = {}
 	vel: Vec = {}
@@ -87,7 +88,7 @@ body_add :: proc(
 
 	body_index := len(bodies) - 1
 	for sat in spec.satellites {
-		body_add(sat, body_index, bodies, trails)
+		body_add(sat, body_index, bodies, trails, delta_t)
 	}
 }
 
