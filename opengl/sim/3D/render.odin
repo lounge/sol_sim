@@ -190,7 +190,10 @@ circle_draw :: proc(
 	depth: f64,
 	height: i32,
 ) {
-	draw_radius := math.max(radius, MIN_MARKER_PX * depth * math.tan_f64(CAMERA_FOV / 2) / (f64(height) / 2))
+	draw_radius := math.max(
+		radius,
+		MIN_MARKER_PX * depth * math.tan_f64(CAMERA_FOV / 2) / (f64(height) / 2),
+	)
 
 	mv :=
 		linalg.matrix4_translate(center_view.xyz) *

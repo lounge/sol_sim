@@ -9,7 +9,7 @@ import "core:os"
 import gl "vendor:OpenGL"
 import "vendor:glfw"
 
-TITLE :: "Sol_Sim 3D"
+TITLE :: "sol_sim 3D"
 SCR_WIDTH :: 800
 SCR_HEIGHT :: 600
 
