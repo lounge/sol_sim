@@ -2,6 +2,8 @@ package sim_core
 
 import "core:math"
 
+INCL_SCALE :: #config(INCL_SCALE, 1.0)
+
 Body :: struct {
 	name:     string,
 	color:    Color,
@@ -27,19 +29,34 @@ body_add :: proc(
 
 	if parent_index >= 0 {
 		parent := bodies[parent_index]
-		ecc_factor := 1 - spec.ecc
-		if spec.start_at_aphelion {
-			ecc_factor = 1 + spec.ecc
-		}
+		ecc_factor := 1 - spec.eccentricity
 
 		start_dist := spec.semi_major_axis * ecc_factor
 		start_speed := math.sqrt(G * parent.mass * (2 / start_dist - 1 / spec.semi_major_axis))
 
-		pos = parent.pos
-		pos[0] += start_dist
+		cos_i := math.cos(math.to_radians(spec.inclination * INCL_SCALE))
+		sin_i := math.sin(math.to_radians(spec.inclination * INCL_SCALE))
 
-		vel = parent.vel
-		vel[1] += start_speed
+		cos_O := math.cos(math.to_radians(spec.lon_asc_node * INCL_SCALE))
+		sin_O := math.sin(math.to_radians(spec.lon_asc_node * INCL_SCALE))
+
+		cos_w := math.cos(math.to_radians(spec.arg_perihelion * INCL_SCALE))
+		sin_w := math.sin(math.to_radians(spec.arg_perihelion * INCL_SCALE))
+
+		p_hat := [3]f64 {
+			cos_O * cos_w - sin_O * sin_w * cos_i,
+			sin_O * cos_w + cos_O * sin_w * cos_i,
+			sin_w * sin_i,
+		}
+
+		q_hat := [3]f64 {
+			-cos_O * sin_w - sin_O * cos_w * cos_i,
+			-sin_O * sin_w + cos_O * cos_w * cos_i,
+			cos_w * sin_i,
+		}
+
+		pos = parent.pos + start_dist * p_hat
+		vel = parent.vel + start_speed * q_hat
 
 		T :=
 			2 *
