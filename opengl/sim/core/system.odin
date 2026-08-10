@@ -4,6 +4,7 @@ Body_Spec :: struct {
 	mass:            f64,
 	radius:          f64,
 	eccentricity:    f64,
+	mean_anomaly:    f64,
 	semi_major_axis: f64,
 	inclination:     f64,
 	lon_asc_node:    f64,
