@@ -32,7 +32,7 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 27. Lighting (Sun). - DONE
 28. 3D spawn: ecliptic-plane ray + drag preview. - DONE
 29. Real inclinations: orbital-plane Body_Spec fields - DONE
-30. Start at a real date (mean anomaly, Kepler's equation)
+30. Start at a real date (now, current datetime) (mean anomaly, Kepler's equation)
 31. Binary-correct setup: vis-viva with G(M+m), place pairs about their barycenter (Charon).
 32. z-spawning
 33. Make bodies spheres.
