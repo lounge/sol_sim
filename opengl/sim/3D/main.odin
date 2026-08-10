@@ -210,7 +210,7 @@ main :: proc() {
 			cursor_x, cursor_y := glfw.GetCursorPos(window)
 			cursor: Pixel_Pos = {cursor_x, cursor_y}
 
-			a, b, ok := drag_preview_pass(
+			a, b, preview_ok := drag_preview_pass(
 				&state,
 				cursor,
 				drag,
@@ -224,7 +224,7 @@ main :: proc() {
 				fb_height,
 			)
 
-			if (ok) {
+			if (preview_ok) {
 				window_title_drag_update(window, &state, a, b)
 			}
 
