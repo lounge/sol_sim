@@ -1,6 +1,13 @@
 package sim_core
 
-PALETTE :: ALBEDO.body
+PALETTE_SET :: #config(PALETTE_SET, "albedo")
+
+#assert(PALETTE_SET == "albedo" || PALETTE_SET == "realistic" || PALETTE_SET == "vibrant")
+
+PALETTE ::
+	REALISTIC.body when PALETTE_SET ==
+	"realistic" else VIBRANT.body when PALETTE_SET ==
+	"vibrant" else ALBEDO.body
 
 Color :: [3]f32
 
