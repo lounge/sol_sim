@@ -35,10 +35,7 @@ create_system :: proc(tree: ^Gravity_Tree) -> (bodies: [dynamic]Body, trails: [d
 		body_add(spec, -1, &bodies, &trails)
 	}
 
-	largest_mass_index := 1
-	for i in 2 ..< len(bodies) {
-		if bodies[i].mass > bodies[largest_mass_index].mass do largest_mass_index = i
-	}
+	largest_mass_index := most_massive_body_index(bodies[:], 1)
 
 	// Copy the most massive body cap / stride to the Sun
 	delete(trails[0].points)

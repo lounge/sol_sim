@@ -7,6 +7,11 @@ _ :: math
 
 G :: 1.0
 DT :: #config(DT, 0.0001)
+AU_KM :: 1.495978707e8
+SECONDS_IN_DAY :: 86400
+SECONDS_IN_YEAR :: 3.156e7
+T_UNIT_SECONDS :: SECONDS_IN_YEAR / (2 * math.PI) // ≈5.023e6, the G=1/AU/solar-mass time unit
+KM_PER_VEL_UNIT :: AU_KM / T_UNIT_SECONDS
 Vec :: [3]f64
 
 // Integrator: Kick–drift–kick velocity Verlet
@@ -41,22 +46,31 @@ accels_compute :: proc(bodies: []Body, tree: ^Gravity_Tree) {
 		for i in 0 ..< len(bodies) {
 			bodies[i].accel = gravity_tree_accel(tree, 0, i32(i), bodies)
 		}
-	}
 
-	when BH_VALIDATE {
-		for i in 0 ..< len(bodies) {
-			brute: Vec
-			for j in 0 ..< len(bodies) {
-				if j != i {
-					brute += gravity_tree_accel_toward(
-						bodies[i].pos,
-						bodies[j].pos,
-						bodies[j].mass,
-					)
+		when BH_VALIDATE {
+			for i in 0 ..< len(bodies) {
+				brute: Vec
+				for j in 0 ..< len(bodies) {
+					if j != i {
+						brute += gravity_tree_accel_toward(
+							bodies[i].pos,
+							bodies[j].pos,
+							bodies[j].mass,
+						)
+					}
 				}
+				err := linalg.length(bodies[i].accel - brute) / linalg.length(brute)
+				tree.validate_max_err = math.max(tree.validate_max_err, err)
 			}
-			err := linalg.length(bodies[i].accel - brute) / linalg.length(brute)
-			tree.validate_max_err = math.max(tree.validate_max_err, err)
 		}
 	}
+}
+
+most_massive_body_index :: proc(bodies: []Body, start_index: int) -> int {
+	largest_mass_index := start_index
+	for i in start_index + 1 ..< len(bodies) {
+		if bodies[i].mass > bodies[largest_mass_index].mass do largest_mass_index = i
+	}
+
+	return largest_mass_index
 }
