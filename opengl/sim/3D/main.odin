@@ -223,7 +223,14 @@ main :: proc() {
 		}
 
 		when sim.BH_DEBUG_DRAW {
-    		gravity_tree_cells_draw(&gravity_tree, trail_mesh, trail_program, &state.camera, fb_width, fb_height)
+			gravity_tree_cells_draw(
+				&gravity_tree,
+				trail_mesh,
+				trail_program,
+				&state.camera,
+				fb_width,
+				fb_height,
+			)
 		}
 
 		// TODO: Drag preview draw
