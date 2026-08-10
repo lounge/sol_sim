@@ -21,16 +21,15 @@ when TOTAL_STEPS > 0 {
 			start := time.tick_now()
 		}
 
+		tracked := -1
+
 		for _ in 0 ..< TOTAL_STEPS {
 			when sim.MEASURE {
 				step_t0 := time.tick_now()
 			}
-			for {
-				pair, collision := sim.collision_compute(bodies[:], gravity_tree)
-				if !collision do break
-				tracked_body := -1
-				sim.collision_merge(pair, bodies, trails, &tracked_body, gravity_tree)
-			}
+
+			_ = sim.collisions_drain(bodies, trails, &tracked, gravity_tree)
+
 			when sim.MEASURE {
 				measure.collision_seconds += time.duration_seconds(time.tick_since(step_t0))
 			}

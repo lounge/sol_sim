@@ -107,11 +107,7 @@ when DETERMINISM_STEPS > 0 {
 		tracked := -1
 
 		for _ in 0 ..< DETERMINISM_STEPS {
-			for {
-				pair, collision := collision_compute(bodies[:], tree)
-				if !collision do break
-				collision_merge(pair, bodies, trails, &tracked, tree)
-			}
+			_ = collisions_drain(bodies, trails, &tracked, tree)
 
 			physics_step(bodies[:], DT, tree)
 			trail_record(bodies[:], trails[:])

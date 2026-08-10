@@ -83,3 +83,19 @@ collision_merge :: proc(
 
 	body_remove(removed_index, bodies, trails, tree)
 }
+
+collisions_drain :: proc(
+	bodies: ^[dynamic]Body,
+	trails: ^[dynamic]Trail,
+	tracked_body: ^int,
+	tree: ^Gravity_Tree,
+) -> bool {
+	merged := false
+	for {
+		pair, collision := collision_compute(bodies[:], tree)
+		if !collision do break
+		collision_merge(pair, bodies, trails, tracked_body, tree)
+		merged = true
+	}
+	return merged
+}
