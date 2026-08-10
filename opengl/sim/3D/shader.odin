@@ -27,22 +27,22 @@ body_program_load :: proc(program: u32) -> Body_Program {
 	}
 
 	proj := gl.GetUniformLocation(program, "proj")
-	if mv == -1 {
+	if proj == -1 {
 		fmt.println("body_program proj uniform could not load")
 	}
 
 	sun_pos_view := gl.GetUniformLocation(program, "sun_pos_view")
-	if mv == -1 {
+	if sun_pos_view == -1 {
 		fmt.println("body_program sun_pos_view uniform could not load")
 	}
 
 	emissive := gl.GetUniformLocation(program, "emissive")
-	if mv == -1 {
+	if emissive == -1 {
 		fmt.println("body_program emissive uniform could not load")
 	}
 
 	lit := gl.GetUniformLocation(program, "lit")
-	if mv == -1 {
+	if lit == -1 {
 		fmt.println("body_program lit uniform could not load")
 	}
 
@@ -93,14 +93,6 @@ trail_program_load :: proc(program: u32) -> Trail_Program {
 
 shader_set_int :: proc(location: i32, value: i32) {
 	gl.Uniform1i(location, value)
-}
-
-shader_set_float :: proc(location: i32, value: f32) {
-	gl.Uniform1f(location, value)
-}
-
-shader_set_vec2 :: proc(location: i32, x: f32, y: f32) {
-	gl.Uniform2f(location, x, y)
 }
 
 shader_set_vec3 :: proc(location: i32, x: f32, y: f32, z: f32) {
