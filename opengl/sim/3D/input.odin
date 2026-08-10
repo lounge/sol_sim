@@ -47,13 +47,16 @@ callback_click :: proc "c" (window: glfw.WindowHandle, button, action, mods: i32
 	cursor: Pixel_Pos = {cursor_x, cursor_y}
 
 	if button == glfw.MOUSE_BUTTON_LEFT {
-		state.input.orbiting = action == glfw.PRESS
-		state.input.press_anchor = Pixel_Pos(cursor)
+		if action == glfw.PRESS {
+			state.input.press_anchor = Pixel_Pos(cursor)
+			state.input.orbiting = true
+		}
 
 		delta := ([2]f64)(cursor) - ([2]f64)(state.input.press_anchor)
 
 		if action == glfw.RELEASE {
-			if linalg.length2(delta) < MIN_MARKER_PX {
+			state.input.orbiting = false
+			if linalg.length2(delta) < MIN_MARKER_PX * MIN_MARKER_PX {
 				state.input.pending_click = cursor
 			}
 		}
