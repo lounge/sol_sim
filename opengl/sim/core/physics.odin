@@ -10,6 +10,7 @@ DT :: #config(DT, 0.0001)
 AU_KM :: 1.495978707e8
 SECONDS_IN_DAY :: 86400
 SECONDS_IN_YEAR :: 3.156e7
+NANO_IN_SECONDS :: 1e9
 T_UNIT_SECONDS :: SECONDS_IN_YEAR / (2 * math.PI) // ≈5.023e6, the G=1/AU/solar-mass time unit
 KM_PER_VEL_UNIT :: AU_KM / T_UNIT_SECONDS
 Vec :: [3]f64
