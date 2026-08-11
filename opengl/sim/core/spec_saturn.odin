@@ -3,12 +3,12 @@ package sim_core
 SATURN :: Body_Spec {
 	mass            = 2.858e-4,
 	radius          = 3.893e-4,
-	eccentricity    = 0.055404,
-	mean_anomaly    = 275.9188,
-	semi_major_axis = 9.54389175,
-	inclination     = 2.4867,
-	lon_asc_node    = 113.5609,
-	arg_perihelion  = 338.4393,
+	eccentricity    = 0.055354,
+	mean_anomaly    = 276.1417,
+	semi_major_axis = 9.54596155,
+	inclination     = 2.4879,
+	lon_asc_node    = 113.6324,
+	arg_perihelion  = 338.1383,
 	color           = PALETTE[.Saturn],
 	name            = "Saturn",
 	satellites      = {

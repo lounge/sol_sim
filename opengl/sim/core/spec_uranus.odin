@@ -3,12 +3,12 @@ package sim_core
 URANUS :: Body_Spec {
 	mass            = 4.366e-5,
 	radius          = 1.695e-4,
-	eccentricity    = 0.046816,
-	mean_anomaly    = 259.4053,
-	semi_major_axis = 19.2838841,
-	inclination     = 0.7747,
-	lon_asc_node    = 73.9794,
-	arg_perihelion  = 91.3636,
+	eccentricity    = 0.046825,
+	mean_anomaly    = 259.3559,
+	semi_major_axis = 19.2831036,
+	inclination     = 0.7728,
+	lon_asc_node    = 74.0166,
+	arg_perihelion  = 91.3757,
 	color           = PALETTE[.Uranus],
 	name            = "Uranus",
 	satellites      = {

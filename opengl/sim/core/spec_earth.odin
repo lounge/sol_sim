@@ -3,12 +3,12 @@ package sim_core
 EARTH :: Body_Spec {
 	mass            = 3.003e-6,
 	radius          = 4.259e-5,
-	eccentricity    = 0.015914,
-	mean_anomaly    = 356.3524,
-	semi_major_axis = 0.999194905,
-	inclination     = 0.0035,
-	lon_asc_node    = 177.6179,
-	arg_perihelion  = 286.3569,
+	eccentricity    = 0.016670,
+	mean_anomaly    = 357.2702,
+	semi_major_axis = 1.00000189,
+	inclination     = 0.0034,
+	lon_asc_node    = 174.9687,
+	arg_perihelion  = 288.0618,
 	color           = PALETTE[.Earth],
 	name            = "Earth",
 	satellites      = {

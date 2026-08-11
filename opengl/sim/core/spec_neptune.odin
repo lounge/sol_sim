@@ -3,12 +3,12 @@ package sim_core
 NEPTUNE :: Body_Spec {
 	mass            = 5.150e-5,
 	radius          = 1.646e-4,
-	eccentricity    = 0.010964,
-	mean_anomaly    = 312.7649,
-	semi_major_axis = 30.1069637,
-	inclination     = 1.7739,
-	lon_asc_node    = 131.9235,
-	arg_perihelion  = 277.2514,
+	eccentricity    = 0.011112,
+	mean_anomaly    = 313.958,
+	semi_major_axis = 30.1151345,
+	inclination     = 1.7706,
+	lon_asc_node    = 131.8,
+	arg_perihelion  = 276.1762,
 	color           = PALETTE[.Neptune],
 	name            = "Neptune",
 	satellites      = {

@@ -3,12 +3,12 @@ package sim_core
 JUPITER :: Body_Spec {
 	mass            = 9.545e-4,
 	radius          = 4.673e-4,
-	eccentricity    = 0.048159,
-	mean_anomaly    = 89.2286,
-	semi_major_axis = 5.20320813,
-	inclination     = 1.3032,
-	lon_asc_node    = 100.5155,
-	arg_perihelion  = 273.7112,
+	eccentricity    = 0.048268,
+	mean_anomaly    = 89.3924,
+	semi_major_axis = 5.20244666,
+	inclination     = 1.3036,
+	lon_asc_node    = 100.5179,
+	arg_perihelion  = 273.5333,
 	color           = PALETTE[.Jupiter],
 	name            = "Jupiter",
 	satellites      = {

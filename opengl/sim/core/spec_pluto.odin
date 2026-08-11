@@ -3,12 +3,12 @@ package sim_core
 PLUTO :: Body_Spec {
 	mass            = 6.55e-9,
 	radius          = 7.94e-6,
-	eccentricity    = 0.247454,
-	mean_anomaly    = 51.8352,
-	semi_major_axis = 39.6192863,
-	inclination     = 17.0299,
-	lon_asc_node    = 110.2194,
-	arg_perihelion  = 114.9681,
+	eccentricity    = 0.247180,
+	mean_anomaly    = 53.2804,
+	semi_major_axis = 39.3387758,
+	inclination     = 17.176,
+	lon_asc_node    = 110.3364,
+	arg_perihelion  = 113.1505,
 	color           = PALETTE[.Pluto],
 	name            = "Pluto",
 	satellites      = {
