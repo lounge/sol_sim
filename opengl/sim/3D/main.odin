@@ -18,14 +18,23 @@ TOTAL_STEPS :: #config(TOTAL_STEPS, 0) // > 0 = headless runner, no window
 MAX_SIM_SPEED :: #config(MAX_SIM_SPEED, int(50 * sim.SECONDS_IN_YEAR))
 PHYSICS_BUDGET :: #config(PHYSICS_BUDGET, 0.010) // Seconds of wall clock per frame
 GOVERNOR_FRAMES :: #config(GOVERNOR_FRAMES, 30) // COnsecutive overloaded frames before halving
-START_JD :: #config(START_JD, 0.0) // Start datetime for sim
+START_JD :: #config(START_JD, 0.0) // Start datetime for sim; 0 = wall clock (spec epoch in deterministic builds)
+
+// Oracle dumps, soaks, and benchmarks must be reproducible run-to-run, so they
+// never read the wall clock: unpinned deterministic builds start at the spec
+// epoch (delta_t = 0). A runtime `if` on this constant keeps both branches
+// type-checked in every matrix cell, so no import can strand behind a false `when`.
+DETERMINISTIC_START :: sim.DETERMINISM_STEPS > 0 || TOTAL_STEPS > 0 || sim.MEASURE
 
 main :: proc() {
 	start_jd := START_JD
 	if (start_jd == 0.0) {
-		start_jd =
-			f64(time.to_unix_nanoseconds(time.now())) / sim.NANO_IN_SECONDS / sim.SECONDS_IN_DAY +
-			sim.JD_UNIX_EPOCH
+		start_jd = sim.JD_EPOCH
+		if (!DETERMINISTIC_START) {
+			start_jd =
+				f64(time.to_unix_nanoseconds(time.now())) / sim.NANO_IN_SECONDS / sim.SECONDS_IN_DAY +
+				sim.JD_UNIX_EPOCH
+		}
 	}
 
 	delta_t := (start_jd - sim.JD_EPOCH) * sim.SECONDS_IN_DAY / sim.T_UNIT_SECONDS
