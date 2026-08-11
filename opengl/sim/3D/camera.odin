@@ -8,7 +8,7 @@ import "core:math/linalg"
 
 CAMERA_FOV :: math.PI / 4
 CAMERA_NEAR_FACTOR :: 1e-3
-CAMERA_FAR_FACTOR :: 1e3
+CAMERA_FAR_FACTOR :: 1e5
 CAMERA_ELEVATION_MAX :: math.PI / 2 - 0.01
 CAMERA_VIEW_SCALE :: 75
 
