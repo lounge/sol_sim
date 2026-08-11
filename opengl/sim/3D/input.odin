@@ -22,6 +22,7 @@ Input :: struct {
 	pending_spawn:  Maybe(Spawn_Request),
 	drag_start:     Maybe(Pixel_Pos),
 	spawn_mass_exp: f64,
+	hide_trails:    bool,
 }
 
 Spawn_Request :: struct {
@@ -136,6 +137,10 @@ callback_key :: proc "c" (window: glfw.WindowHandle, key, scancode, action, mods
 
 		if key == glfw.KEY_BACKSPACE || key == glfw.KEY_DELETE {
 			state.input.pending_delete = true
+		}
+
+		if key == glfw.KEY_T {
+			state.input.hide_trails = !state.input.hide_trails
 		}
 	}
 }

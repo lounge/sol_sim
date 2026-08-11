@@ -236,14 +236,18 @@ main :: proc() {
 			measure.bodies_seconds += glfw.GetTime() - measure_t0
 		}
 
-		when sim.MEASURE {
-			measure_t0 = glfw.GetTime()
+		if !state.input.hide_trails {
+			when sim.MEASURE {
+				measure_t0 = glfw.GetTime()
+			}
+
+			trails_draw(trails[:], bodies[:], trail_mesh, trail_program, camera_frame, alpha)
+			when sim.MEASURE {
+				measure.trails_seconds += glfw.GetTime() - measure_t0
+			}
 		}
 
-		trails_draw(trails[:], bodies[:], trail_mesh, trail_program, camera_frame, alpha)
-
 		when sim.MEASURE {
-			measure.trails_seconds += glfw.GetTime() - measure_t0
 			sim.measure_frame_report(&measure, trails[:], glfw.GetTime())
 		}
 
@@ -341,7 +345,7 @@ window_title_update :: proc(
 			TITLE,
 			f64(state.sim_speed * (state.time_reversed ? -1 : 1)) / sim.SECONDS_IN_DAY,
 			f64(state.sim_speed * (state.time_reversed ? -1 : 1)) / sim.SECONDS_IN_YEAR,
-			state.sim_speed *(state.time_reversed ? -1 : 1),
+			state.sim_speed * (state.time_reversed ? -1 : 1),
 			date.year,
 			date.month,
 			date.day,
