@@ -177,9 +177,11 @@ main :: proc() {
 				measure.collision_seconds += glfw.GetTime() - measure_c0
 			}
 
-			sim.physics_step(bodies[:], sim.DT, &gravity_tree)
+			dt := f64(state.time_reversed ? -1 : 1) * sim.DT
+
+			sim.physics_step(bodies[:], dt, &gravity_tree)
 			sim.trail_record(bodies[:], trails[:])
-			sim_time += sim.DT
+			sim_time += dt
 			accumulator -= sim.DT
 			steps += 1
 
@@ -326,9 +328,9 @@ window_title_update :: proc(
 			"%s - %s - %f days/sec - %f years/sec - sim_speed %d - %04d-%02d-%02d",
 			TITLE,
 			tracked_body_name,
-			f64(state.sim_speed) / sim.SECONDS_IN_DAY,
-			f64(state.sim_speed) / sim.SECONDS_IN_YEAR,
-			state.sim_speed,
+			f64(state.sim_speed * (state.time_reversed ? -1 : 1)) / sim.SECONDS_IN_DAY,
+			f64(state.sim_speed * (state.time_reversed ? -1 : 1)) / sim.SECONDS_IN_YEAR,
+			state.sim_speed * (state.time_reversed ? -1 : 1),
 			date.year,
 			date.month,
 			date.day,
@@ -337,9 +339,9 @@ window_title_update :: proc(
 		title = fmt.ctprintf(
 			"%s - %f days/sec - %f years/sec - sim_speed %d - %04d-%02d-%02d",
 			TITLE,
-			f64(state.sim_speed) / sim.SECONDS_IN_DAY,
-			f64(state.sim_speed) / sim.SECONDS_IN_YEAR,
-			state.sim_speed,
+			f64(state.sim_speed * (state.time_reversed ? -1 : 1)) / sim.SECONDS_IN_DAY,
+			f64(state.sim_speed * (state.time_reversed ? -1 : 1)) / sim.SECONDS_IN_YEAR,
+			state.sim_speed *(state.time_reversed ? -1 : 1),
 			date.year,
 			date.month,
 			date.day,

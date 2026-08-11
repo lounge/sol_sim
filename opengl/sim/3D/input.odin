@@ -92,11 +92,27 @@ callback_key :: proc "c" (window: glfw.WindowHandle, key, scancode, action, mods
 		}
 
 		if key == glfw.KEY_LEFT {
-			state.sim_speed = math.max(1, state.sim_speed / 2)
+			if !state.time_reversed {
+				if state.sim_speed == 1 do state.time_reversed = true
+				else {
+					state.sim_speed /= 2
+				}
+			} else {
+				state.sim_speed = math.min(MAX_SIM_SPEED, state.sim_speed * 2)
+			}
+
 			state.title_stale = true
 		}
 		if key == glfw.KEY_RIGHT {
-			state.sim_speed = math.min(MAX_SIM_SPEED, state.sim_speed * 2)
+			if state.time_reversed {
+				if state.sim_speed == 1 do state.time_reversed = false
+				else {
+					state.sim_speed /= 2
+				}
+			} else {
+				state.sim_speed = math.min(MAX_SIM_SPEED, state.sim_speed * 2)
+			}
+
 			state.title_stale = true
 		}
 
