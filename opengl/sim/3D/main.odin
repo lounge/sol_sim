@@ -20,10 +20,6 @@ PHYSICS_BUDGET :: #config(PHYSICS_BUDGET, 0.010) // Seconds of wall clock per fr
 GOVERNOR_FRAMES :: #config(GOVERNOR_FRAMES, 30) // COnsecutive overloaded frames before halving
 START_JD :: #config(START_JD, 0.0) // Start datetime for sim; 0 = wall clock (spec epoch in deterministic builds)
 
-// Oracle dumps, soaks, and benchmarks must be reproducible run-to-run, so they
-// never read the wall clock: unpinned deterministic builds start at the spec
-// epoch (delta_t = 0). A runtime `if` on this constant keeps both branches
-// type-checked in every matrix cell, so no import can strand behind a false `when`.
 DETERMINISTIC_START :: sim.DETERMINISM_STEPS > 0 || TOTAL_STEPS > 0 || sim.MEASURE
 
 main :: proc() {
@@ -40,9 +36,29 @@ main :: proc() {
 	}
 
 	delta_t := (start_jd - sim.JD_EPOCH) * sim.SECONDS_IN_DAY / sim.T_UNIT_SECONDS
+	catch_up := delta_t >= 0
+	spec_delta_t := catch_up ? 0 : delta_t
 
 	gravity_tree: sim.Gravity_Tree
-	bodies, trails := sim.create_system(&gravity_tree, delta_t)
+	bodies, trails := sim.create_system(&gravity_tree, spec_delta_t)
+
+	sim_time: f64
+	accumulator: f64
+
+	if catch_up {
+		n := int(math.floor(delta_t / sim.DT))
+		tracked := -1
+
+		for _ in 0 ..< n {
+			_ = sim.collision_drain(&bodies, &trails, &tracked, &gravity_tree)
+			sim.physics_step(bodies[:], sim.DT, &gravity_tree)
+			sim.trail_record(bodies[:], trails[:])
+		}
+
+		sim_time = f64(n) * sim.DT
+		accumulator = delta_t - f64(n) * sim.DT
+		start_jd = sim.JD_EPOCH
+	}
 
 	when sim.MEASURE {
 		measure: sim.Measure
@@ -116,8 +132,7 @@ main :: proc() {
 	circle_mesh := circle_mesh_create(32)
 	trail_mesh := trail_mesh_create()
 
-	sim_time: f64
-	accumulator: f64
+
 	overload_frames: int
 	prev_cursor: [2]f64
 	last_time := glfw.GetTime()
