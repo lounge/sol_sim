@@ -35,7 +35,7 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 30. Start at a real date (now, current datetime) (mean anomaly, Kepler's equation) - DONE
 31. Binary-correct setup: G(M+m) gravitational parameters everywhere; heliocentric rows become system barycenters with reflex placement (Pluto's wobble around a point outside itself). - DONE
 32. Launch-time catch-up: no-args launches integrate from the spec epoch to now, so the start state is the integrator's prediction, not a stale-element lookup. - DONE
-33. Cast shadows: eclipses as an occlusion term on the lighting.
+33. Cast shadows: eclipses as an occlusion term on the lighting. - DONE
 34. z-spawning
 35. Make bodies spheres.
 36. Simple textures? Glowing sun?
