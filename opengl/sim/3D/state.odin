@@ -4,7 +4,7 @@ import "core:math"
 
 State :: struct {
 	sim_speed:      int,
-	time_reversed: bool,
+	time_reversed:  bool,
 	spawned_bodies: int,
 	input:          Input,
 	camera:         Camera,

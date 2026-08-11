@@ -158,7 +158,7 @@ bodies_draw :: proc(
 	shader_set_int(program.lit, i32(lit))
 
 	slots := make([]i32, len(bodies), context.temp_allocator)
-	for &slot in slots{
+	for &slot in slots {
 		slot = -1
 	}
 
@@ -286,7 +286,16 @@ mass_preview_draw :: proc(
 	projection32 := (matrix[4, 4]f32)(camera_frame.proj)
 	shader_set_mat4(program.proj, &projection32)
 
-	circle_draw(radius, sim.PALETTE[.Spawn], mesh, program, center_view, -center_view.z, height, -1)
+	circle_draw(
+		radius,
+		sim.PALETTE[.Spawn],
+		mesh,
+		program,
+		center_view,
+		-center_view.z,
+		height,
+		-1,
+	)
 }
 
 drag_preview_pass :: proc(

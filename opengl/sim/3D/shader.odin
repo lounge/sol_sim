@@ -6,20 +6,19 @@ import gl "vendor:OpenGL"
 MAX_OCCLUDERS :: 32 // Needs to stay in sync with body frag shader
 
 Body_Program :: struct {
-	id:           u32,
-	mv:           i32,
-	proj:         i32,
-	color:        i32,
-	sun_pos_view: i32,
-	emissive:     i32,
-	lit:          i32,
-
+	id:                u32,
+	mv:                i32,
+	proj:              i32,
+	color:             i32,
+	sun_pos_view:      i32,
+	emissive:          i32,
+	lit:               i32,
 	occluder_pos_view: i32,
-	occluder_radius: i32,
-	occluder_count: i32,
-	sun_radius: i32,
-	receiver_slot: i32,
-	body_radius: i32,
+	occluder_radius:   i32,
+	occluder_count:    i32,
+	sun_radius:        i32,
+	receiver_slot:     i32,
+	body_radius:       i32,
 }
 
 Trail_Program :: struct {
@@ -31,19 +30,19 @@ Trail_Program :: struct {
 
 body_program_load :: proc(program: u32) -> Body_Program {
 	program := Body_Program {
-		id           = program,
-		mv           = uniform_lookup(program, "mv"),
-		proj         = uniform_lookup(program, "proj"),
-		color        = uniform_lookup(program, "color"),
-		emissive     = uniform_lookup(program, "emissive"),
-		lit          = uniform_lookup(program, "lit"),
-		sun_pos_view = uniform_lookup(program, "sun_pos_view"),
+		id                = program,
+		mv                = uniform_lookup(program, "mv"),
+		proj              = uniform_lookup(program, "proj"),
+		color             = uniform_lookup(program, "color"),
+		emissive          = uniform_lookup(program, "emissive"),
+		lit               = uniform_lookup(program, "lit"),
+		sun_pos_view      = uniform_lookup(program, "sun_pos_view"),
 		occluder_pos_view = uniform_lookup(program, "occluder_pos_view"),
-		occluder_radius = uniform_lookup(program, "occluder_radius"),
-		occluder_count = uniform_lookup(program, "occluder_count"),
-		sun_radius = uniform_lookup(program, "sun_radius"),
-		receiver_slot = uniform_lookup(program, "receiver_slot"),
-		body_radius = uniform_lookup(program, "body_radius"),
+		occluder_radius   = uniform_lookup(program, "occluder_radius"),
+		occluder_count    = uniform_lookup(program, "occluder_count"),
+		sun_radius        = uniform_lookup(program, "sun_radius"),
+		receiver_slot     = uniform_lookup(program, "receiver_slot"),
+		body_radius       = uniform_lookup(program, "body_radius"),
 	}
 
 	return program
@@ -97,9 +96,9 @@ shader_set_vec3_array :: proc(location: i32, value: [][3]f32) {
 
 shader_set :: proc {
 	shader_set_int,
- 	shader_set_vec3,
-  	shader_set_mat4,
-   shader_set_float,
-   shader_set_float_array,
-   shader_set_vec3_array,
+	shader_set_vec3,
+	shader_set_mat4,
+	shader_set_float,
+	shader_set_float_array,
+	shader_set_vec3_array,
 }
