@@ -30,62 +30,6 @@ Trail_Program :: struct {
 }
 
 body_program_load :: proc(program: u32) -> Body_Program {
-	// mv := gl.GetUniformLocation(program, "mv")
-	// if mv == -1 {
-	// 	fmt.println("body_program mv uniform could not load")
-	// }
-
-	// proj := gl.GetUniformLocation(program, "proj")
-	// if proj == -1 {
-	// 	fmt.println("body_program proj uniform could not load")
-	// }
-
-	// sun_pos_view := gl.GetUniformLocation(program, "sun_pos_view")
-	// if sun_pos_view == -1 {
-	// 	fmt.println("body_program sun_pos_view uniform could not load")
-	// }
-
-	// emissive := gl.GetUniformLocation(program, "emissive")
-	// if emissive == -1 {
-	// 	fmt.println("body_program emissive uniform could not load")
-	// }
-
-	// lit := gl.GetUniformLocation(program, "lit")
-	// if lit == -1 {
-	// 	fmt.println("body_program lit uniform could not load")
-	// }
-
-	// color := gl.GetUniformLocation(program, "color")
-	// if color == -1 {
-	// 	fmt.println("body_program color uniform could not load")
-	// }
-
-
-	// occluder_pos_view := gl.GetUniformLocation(program, "occluder_pos_view")
-	// if occluder_pos_view == -1 {
-	// 	fmt.println("body_program occluder_pos_view uniform could not load")
-	// }
-	// occluder_radius := gl.GetUniformLocation(program, "occluder_radius")
-	// if occluder_radius == -1 {
-	// 	fmt.println("body_program occluder_radius uniform could not load")
-	// }
-	// occluder_count := gl.GetUniformLocation(program, "occluder_count")
-	// if occluder_count == -1 {
-	// 	fmt.println("body_program occluder_count uniform could not load")
-	// }
-	// sun_radius := gl.GetUniformLocation(program, "sun_radius")
-	// if sun_radius == -1 {
-	// 	fmt.println("body_program sun_radius uniform could not load")
-	// }
-	// receiver_slot := gl.GetUniformLocation(program, "receiver_slot")
-	// if receiver_slot == -1 {
-	// 	fmt.println("body_program receiver_slot uniform could not load")
-	// }
-	// body_radius := gl.GetUniformLocation(program, "body_radius")
-	// if body_radius == -1 {
-	// 	fmt.println("body_program body_radius uniform could not load")
-	// }
-
 	program := Body_Program {
 		id           = program,
 		mv           = uniform_lookup(program, "mv"),
@@ -106,21 +50,6 @@ body_program_load :: proc(program: u32) -> Body_Program {
 }
 
 trail_program_load :: proc(program: u32) -> Trail_Program {
-	// mvp := gl.GetUniformLocation(program, "mvp")
-	// if mvp == -1 {
-	// 	fmt.println("trail_program mvp uniform could not load")
-	// }
-
-	// color := gl.GetUniformLocation(program, "color")
-	// if color == -1 {
-	// 	fmt.println("trail_program color uniform could not load")
-	// }
-
-	// count := gl.GetUniformLocation(program, "count")
-	// if count == -1 {
-	// 	fmt.println("trail_program count uniform could not load")
-	// }
-
 	program := Trail_Program {
 		id    = program,
 		mvp   = uniform_lookup(program, "mvp"),
