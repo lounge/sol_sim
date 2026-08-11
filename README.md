@@ -33,10 +33,11 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 28. 3D spawn: ecliptic-plane ray + drag preview. - DONE
 29. Real inclinations: orbital-plane Body_Spec fields - DONE
 30. Start at a real date (now, current datetime) (mean anomaly, Kepler's equation) - DONE
-31. Binary-correct setup: G(M+m) gravitational parameters everywhere; heliocentric rows become system barycenters with reflex placement (Pluto's wobble around a point outside itself).
-32. z-spawning
-33. Make bodies spheres.
-34. Simple textures? Glowing sun?
-35. Cast shadows: eclipses as an occlusion term on the lighting.
-36. Thread accels_compute across cores, runtime-scaled to the user's machine.
-37. Per-body substepping for fast moons (Phobos-class orbits).
+31. Binary-correct setup: G(M+m) gravitational parameters everywhere; heliocentric rows become system barycenters with reflex placement (Pluto's wobble around a point outside itself). - DONE
+32. Launch-time catch-up: no-args launches integrate from the spec epoch to now, so the start state is the integrator's prediction, not a stale-element lookup.
+33. z-spawning
+34. Make bodies spheres.
+35. Simple textures? Glowing sun?
+36. Cast shadows: eclipses as an occlusion term on the lighting.
+37. Thread accels_compute across cores, runtime-scaled to the user's machine.
+38. Per-body substepping for fast moons (Phobos-class orbits).
