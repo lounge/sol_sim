@@ -6,14 +6,14 @@ JD_EPOCH :: 2461041.5 // 2026-01-01 00:00 UTC
 JD_UNIX_EPOCH :: 2440587.5 // JD of 1970-01-01 00:00 UTC (JD days start at noon)
 JDN_UNIX_EPOCH :: int(JD_UNIX_EPOCH + 0.5) // = 2440588, the JDN jd_to_civil rounds to
 
-Civil_Date :: struct {
+Date :: struct {
 	year:  int,
 	month: int,
 	day:   int,
 }
 
 // Howard Hinnant’s algo
-date_civil_from_days :: proc "contextless" (z_in: int) -> Civil_Date {
+date_from_days :: proc "contextless" (z_in: int) -> Date {
 	z := z_in
 	z += 719468
 
@@ -42,11 +42,11 @@ date_civil_from_days :: proc "contextless" (z_in: int) -> Civil_Date {
 }
 
 //  Julian Date to Gregorian civil date
-date_jd_to_civil :: proc "contextless" (jd: f64) -> Civil_Date {
+date_from_jd :: proc "contextless" (jd: f64) -> Date {
 	jdn := int(math.floor(jd + 0.5))
 
 	// JDN of 1970-01-01 is 2440588
 	days_since_unix_epoch := jdn - JDN_UNIX_EPOCH
 
-	return date_civil_from_days(days_since_unix_epoch)
+	return date_from_days(days_since_unix_epoch)
 }

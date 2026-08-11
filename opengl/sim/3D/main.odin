@@ -251,7 +251,7 @@ main :: proc() {
 				window_title_drag_update(window, &state, a, b)
 			}
 		} else {
-			window_title_update(window, &state, bodies[:], sim.date_jd_to_civil(current_jd))
+			window_title_update(window, &state, bodies[:], sim.date_from_jd(current_jd))
 		}
 
 		glfw.SwapBuffers(window)
@@ -289,7 +289,7 @@ window_title_update :: proc(
 	window: glfw.WindowHandle,
 	state: ^State,
 	bodies: []sim.Body,
-	date: sim.Civil_Date,
+	date: sim.Date,
 ) {
 	title: cstring
 
