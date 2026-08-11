@@ -13,7 +13,7 @@ State :: struct {
 
 state_init :: proc() -> State {
 	return State {
-		sim_speed = 200000,
+		sim_speed = 1,
 		input = Input{},
 		camera = Camera{target = {0, 0, 0}, azimuth = math.PI / 2, elevation = 0, distance = 45},
 		title_stale = true,
