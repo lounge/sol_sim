@@ -39,6 +39,6 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 34. Reverse time: ← below sim_speed 1 flips the arrow of time, Verlet integrates backward. - DONE
 35. z-spawning
 36. Make bodies spheres.
-37. Simple textures? Glowing sun?
+37. Simple textures? Glowing sun/bloom?
 38. Thread accels_compute across cores, runtime-scaled to the user's machine.
 39. Per-body substepping for fast moons (Phobos-class orbits).
