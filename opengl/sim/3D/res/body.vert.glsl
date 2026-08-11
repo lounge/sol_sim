@@ -5,6 +5,7 @@ uniform mat4 proj;
 
 out vec3 v_pos_view;
 out vec2 v_local;
+flat out vec3 v_center_view;
 
 void main()
 {
@@ -12,4 +13,5 @@ void main()
     v_pos_view = pos_view.xyz;
     v_local = a_pos;
     gl_Position = proj * pos_view;
+    v_center_view = (mv * vec4(0,0,0,1)).xyz;
 }
