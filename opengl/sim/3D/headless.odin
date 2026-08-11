@@ -28,7 +28,7 @@ when TOTAL_STEPS > 0 {
 				step_t0 := time.tick_now()
 			}
 
-			_ = sim.collisions_drain(bodies, trails, &tracked, gravity_tree)
+			_ = sim.collision_drain(bodies, trails, &tracked, gravity_tree)
 
 			when sim.MEASURE {
 				measure.collision_seconds += time.duration_seconds(time.tick_since(step_t0))

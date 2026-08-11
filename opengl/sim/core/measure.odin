@@ -107,7 +107,7 @@ when DETERMINISM_STEPS > 0 {
 		tracked := -1
 
 		for _ in 0 ..< DETERMINISM_STEPS {
-			_ = collisions_drain(bodies, trails, &tracked, tree)
+			_ = collision_drain(bodies, trails, &tracked, tree)
 
 			physics_step(bodies[:], DT, tree)
 			trail_record(bodies[:], trails[:])

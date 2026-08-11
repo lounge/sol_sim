@@ -84,7 +84,7 @@ collision_merge :: proc(
 	body_remove(removed_index, bodies, trails, tree)
 }
 
-collisions_drain :: proc(
+collision_drain :: proc(
 	bodies: ^[dynamic]Body,
 	trails: ^[dynamic]Trail,
 	tracked_body: ^int,

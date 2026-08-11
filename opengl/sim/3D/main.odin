@@ -156,7 +156,7 @@ main :: proc() {
 				measure_c0 := glfw.GetTime()
 			}
 
-			if sim.collisions_drain(&bodies, &trails, &state.tracked_body, &gravity_tree) do state.title_stale = true
+			if sim.collision_drain(&bodies, &trails, &state.tracked_body, &gravity_tree) do state.title_stale = true
 
 			when sim.MEASURE {
 				measure.collision_seconds += glfw.GetTime() - measure_c0
