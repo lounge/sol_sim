@@ -98,7 +98,10 @@ pending_spawn_apply :: proc(
 
 		if !s_ok || !e_ok do return
 
-		vel := (([2]f64)(e_hit) - ([2]f64)(s_hit)) / DRAG_TIME
+		tracked_vel := state.tracked_body >= 0 ? bodies[state.tracked_body].vel : {}
+		drag_vel := (([2]f64)(e_hit) - ([2]f64)(s_hit)) / DRAG_TIME
+
+		spawn_vel := tracked_vel + {drag_vel.x, drag_vel.y, 0}
 
 		sim.body_spawn(
 			bodies,
@@ -107,7 +110,7 @@ pending_spawn_apply :: proc(
 			fmt.aprintf("Spawnius %d", state.spawned_bodies + 1),
 			sim.PALETTE[.Spawn],
 			{e_hit.x, e_hit.y, 0},
-			{vel.x, vel.y, 0},
+			spawn_vel,
 			spawn.mass,
 			spawn.radius,
 		)
