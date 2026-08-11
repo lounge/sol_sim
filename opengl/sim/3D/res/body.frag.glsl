@@ -1,15 +1,25 @@
 #version 330 core
+
+const float AMBIENT = 0.05;
+const int MAX_OCCLUDERS = 32; // Needs to stay in sync with shader.odin
+
+
 uniform vec3 color;
 uniform vec3 sun_pos_view;
 uniform int emissive;
 uniform int lit;
 
+uniform vec3 occluder_pos_view[MAX_OCCLUDERS];
+uniform float occluder_radius[MAX_OCCLUDERS];
+uniform int occluder_count;
+uniform float sun_radius;
+uniform int receiver_slot;
+uniform float body_radius;
+
 in vec3 v_pos_view;
 in vec2 v_local;
 
 out vec4 FragColor;
-
-const float AMBIENT = 0.05;
 
 void main()
 {

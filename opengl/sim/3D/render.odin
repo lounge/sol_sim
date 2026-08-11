@@ -84,6 +84,7 @@ trails_draw :: proc(
 		shader_set_vec3(program.color, color.x, color.y, color.z)
 		shader_set_int(program.count, i32(trail_count))
 
+
 		gl.BindBuffer(gl.ARRAY_BUFFER, mesh.vbo)
 		gl.BufferData(gl.ARRAY_BUFFER, (sim.TRAIL_CAP + 1) * 3 * size_of(f32), nil, gl.STREAM_DRAW)
 
@@ -155,6 +156,10 @@ bodies_draw :: proc(
 
 	light_index, lit := light_scan(bodies)
 	shader_set_int(program.lit, i32(lit))
+
+
+	// shader_set_vec3(program.occluder_pos_view,) ??
+	// shader_set_float(program.occluder_radius, )
 
 	if lit {
 		sun_rel := pos_render(bodies[light_index], alpha) - camera_frame.eye
