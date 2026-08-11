@@ -32,7 +32,9 @@ main :: proc() {
 		start_jd = sim.JD_EPOCH
 		if (!DETERMINISTIC_START) {
 			start_jd =
-				f64(time.to_unix_nanoseconds(time.now())) / sim.NANO_IN_SECONDS / sim.SECONDS_IN_DAY +
+				f64(time.to_unix_nanoseconds(time.now())) /
+					sim.NANO_IN_SECONDS /
+					sim.SECONDS_IN_DAY +
 				sim.JD_UNIX_EPOCH
 		}
 	}
