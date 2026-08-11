@@ -36,8 +36,9 @@ A from-scratch orbital simulation whose real purpose is the learning along the w
 31. Binary-correct setup: G(M+m) gravitational parameters everywhere; heliocentric rows become system barycenters with reflex placement (Pluto's wobble around a point outside itself). - DONE
 32. Launch-time catch-up: no-args launches integrate from the spec epoch to now, so the start state is the integrator's prediction, not a stale-element lookup. - DONE
 33. Cast shadows: eclipses as an occlusion term on the lighting. - DONE
-34. z-spawning
-35. Make bodies spheres.
-36. Simple textures? Glowing sun?
-37. Thread accels_compute across cores, runtime-scaled to the user's machine.
-38. Per-body substepping for fast moons (Phobos-class orbits).
+34. Reverse time: ← below sim_speed 1 flips the arrow of time, Verlet integrates backward. - DONE
+35. z-spawning
+36. Make bodies spheres.
+37. Simple textures? Glowing sun?
+38. Thread accels_compute across cores, runtime-scaled to the user's machine.
+39. Per-body substepping for fast moons (Phobos-class orbits).
