@@ -157,9 +157,10 @@ bodies_draw :: proc(
 	light_index, lit := light_scan(bodies)
 	shader_set_int(program.lit, i32(lit))
 
-
-	// shader_set_vec3(program.occluder_pos_view,) ??
-	// shader_set_float(program.occluder_radius, )
+	slots := make([]i32, len(bodies), context.temp_allocator)
+	for &slot in slots{
+		slot = -1
+	}
 
 	if lit {
 		sun_rel := pos_render(bodies[light_index], alpha) - camera_frame.eye
@@ -171,6 +172,26 @@ bodies_draw :: proc(
 			f32(sun_pos_view.y),
 			f32(sun_pos_view.z),
 		)
+
+		occ_pos: [MAX_OCCLUDERS][3]f32
+		occ_rad: [MAX_OCCLUDERS]f32
+		n := 0
+		for body, i in bodies {
+			if i == light_index do continue
+			if n == MAX_OCCLUDERS do break
+
+			rel := pos_render(body, alpha) - camera_frame.eye
+			pos_v := camera_frame.view * [4]f64{rel.x, rel.y, rel.z, 1}
+			occ_pos[n] = ([3]f32)(pos_v.xyz)
+			occ_rad[n] = f32(body.radius)
+			slots[i] = i32(n)
+			n += 1
+		}
+
+		shader_set_vec3_array(program.occluder_pos_view, occ_pos[:n])
+		shader_set_float_array(program.occluder_radius, occ_rad[:n])
+		shader_set_int(program.occluder_count, i32(n))
+		shader_set_float(program.sun_radius, f32(bodies[light_index].radius))
 	}
 
 
@@ -182,7 +203,7 @@ bodies_draw :: proc(
 		emissive := (lit && i == light_index) ? 1 : 0
 		shader_set_int(program.emissive, i32(emissive))
 
-		circle_draw(body.radius, body.color, mesh, program, center_view, depth, height)
+		circle_draw(body.radius, body.color, mesh, program, center_view, depth, height, slots[i])
 	}
 }
 
@@ -194,6 +215,7 @@ circle_draw :: proc(
 	center_view: [4]f64,
 	depth: f64,
 	height: i32,
+	receiver_slots: i32,
 ) {
 	draw_radius := math.max(
 		radius,
@@ -207,6 +229,8 @@ circle_draw :: proc(
 
 	shader_set_vec3(program.color, color.x, color.y, color.z)
 	shader_set_mat4(program.mv, &mv32)
+	shader_set_float(program.body_radius, f32(radius))
+	shader_set_int(program.receiver_slot, receiver_slots)
 
 	gl.DrawArrays(mesh.primitive, 0, mesh.vertex_count)
 }
@@ -262,7 +286,7 @@ mass_preview_draw :: proc(
 	projection32 := (matrix[4, 4]f32)(camera_frame.proj)
 	shader_set_mat4(program.proj, &projection32)
 
-	circle_draw(radius, sim.PALETTE[.Spawn], mesh, program, center_view, -center_view.z, height)
+	circle_draw(radius, sim.PALETTE[.Spawn], mesh, program, center_view, -center_view.z, height, -1)
 }
 
 drag_preview_pass :: proc(
