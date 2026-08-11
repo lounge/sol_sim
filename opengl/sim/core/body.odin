@@ -3,6 +3,7 @@ package sim_core
 import "core:math"
 
 INCL_SCALE :: #config(INCL_SCALE, 1.0)
+KEPLER_MAX_ITERATIONS :: 12
 
 Body :: struct {
 	name:     string,
@@ -30,10 +31,23 @@ body_add :: proc(
 
 	if parent_index >= 0 {
 		parent := bodies[parent_index]
-		ecc_factor := 1 - spec.eccentricity
 
-		start_dist := spec.semi_major_axis * ecc_factor
-		start_speed := math.sqrt(G * parent.mass * (2 / start_dist - 1 / spec.semi_major_axis))
+		a := spec.semi_major_axis
+		e := spec.eccentricity
+		n := math.sqrt(G * parent.mass / math.pow(a, 3))
+
+		M := math.to_radians(spec.mean_anomaly) + n * delta_t
+		M = math.mod(M, 2 * math.PI)
+		E := kepler_solve(M, e)
+
+		r := a * (1 - e * math.cos(E))
+
+		x := a * (math.cos(E) - e) // along p_hat
+		y := a * math.sqrt(1 - e*e) * math.sin(E) // along q_hat
+
+		v_scale  := math.sqrt(G * parent.mass * a) / r
+		vx := -v_scale * math.sin(E)
+		vy := v_scale * math.sqrt(1 - e*e) * math.cos(E)
 
 		cos_i := math.cos(math.to_radians(spec.inclination * INCL_SCALE))
 		sin_i := math.sin(math.to_radians(spec.inclination * INCL_SCALE))
@@ -56,8 +70,8 @@ body_add :: proc(
 			cos_w * sin_i,
 		}
 
-		pos = parent.pos + start_dist * p_hat
-		vel = parent.vel + start_speed * q_hat
+		pos = parent.pos + x * p_hat + y * q_hat
+		vel = parent.vel + vx * p_hat + vy * q_hat
 
 		T :=
 			2 *
@@ -144,4 +158,19 @@ body_spawn :: proc(
 	append(trails, trail_make_default())
 
 	accels_compute(bodies[:], tree)
+}
+
+// Keplers equation solver
+kepler_solve :: proc "contextless" (m, e: f64) -> f64 {
+	E := m
+
+	for _ in 0 ..< KEPLER_MAX_ITERATIONS {
+		f := E - e * math.sin(E) - m
+		f_prime := 1 - e * math.cos(E)
+		delta := f / f_prime
+		E = E - delta
+		if E - delta == E do break
+	}
+
+	return E
 }
