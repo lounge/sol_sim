@@ -15,17 +15,25 @@ check() {
 }
 
 # --- core, standalone (fast signal; -no-entry-point because it is a library)
+# (no -debug cell: core has no `when ODIN_DEBUG` code, and the 3D -debug cell
+# compiles core anyway — a core -debug cell would re-check the default surface)
 check opengl/sim/core -no-entry-point -vet -strict-style
-check opengl/sim/core -no-entry-point -vet -strict-style -debug
 check opengl/sim/core -no-entry-point -vet -strict-style -define:MEASURE=true
 check opengl/sim/core -no-entry-point -vet -strict-style -define:BH_DEBUG=true -define:BH_VALIDATE=true
 check opengl/sim/core -no-entry-point -vet -strict-style -define:DETERMINISM_STEPS=10
+# `when` EXPRESSIONS skip their untaken arm too (verified empirically), so the
+# non-default palette arms are unchecked without their own cells
+check opengl/sim/core -no-entry-point -vet -strict-style -define:PALETTE_SET=realistic
+check opengl/sim/core -no-entry-point -vet -strict-style -define:PALETTE_SET=vibrant
 
 # --- the app
 check opengl/sim/3D -vet -strict-style
 check opengl/sim/3D -vet -strict-style -debug
 check opengl/sim/3D -vet -strict-style -define:MEASURE=true
 check opengl/sim/3D -vet -strict-style -define:BH_DEBUG=true -define:BH_VALIDATE=true
+# VALIDATE solo is the documented workflow (paired with -define:BH_THRESHOLD=0);
+# the combined cell above never checks VALIDATE-without-DEBUG
+check opengl/sim/3D -vet -strict-style -define:BH_VALIDATE=true
 check opengl/sim/3D -vet -strict-style -define:BH_DEBUG_DRAW=true
 check opengl/sim/3D -vet -strict-style -define:DETERMINISM_STEPS=10
 check opengl/sim/3D -vet -strict-style -define:TOTAL_STEPS=10
