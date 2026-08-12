@@ -296,6 +296,12 @@ main :: proc() {
 	return
 }
 
+state_get :: proc "contextless" (window: glfw.WindowHandle) -> ^State {
+	state := (^State)(glfw.GetWindowUserPointer(window))
+	return state
+}
+
+@(private = "file")
 window_title_drag_update :: proc(
 	window: glfw.WindowHandle,
 	state: ^State,
@@ -316,6 +322,7 @@ window_title_drag_update :: proc(
 	state.title_stale = true
 }
 
+@(private = "file")
 window_title_update :: proc(
 	window: glfw.WindowHandle,
 	state: ^State,
@@ -360,11 +367,7 @@ window_title_update :: proc(
 }
 
 
+@(private = "file")
 callback_framebuffer_size :: proc "c" (window: glfw.WindowHandle, width, height: i32) {
 	gl.Viewport(0, 0, width, height)
-}
-
-state_get :: proc "contextless" (window: glfw.WindowHandle) -> ^State {
-	state := (^State)(glfw.GetWindowUserPointer(window))
-	return state
 }

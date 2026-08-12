@@ -59,41 +59,6 @@ trail_program_load :: proc(program: u32) -> Trail_Program {
 	return program
 }
 
-
-uniform_lookup :: proc(program: u32, name: cstring) -> i32 {
-	uniform := gl.GetUniformLocation(program, name)
-	if uniform == -1 {
-		fmt.printfln("program: %d, %s uniform could not load", program, name)
-	}
-
-	return uniform
-}
-
-
-shader_set_int :: proc(location: i32, value: i32) {
-	gl.Uniform1i(location, value)
-}
-
-shader_set_vec3 :: proc(location: i32, x: f32, y: f32, z: f32) {
-	gl.Uniform3f(location, x, y, z)
-}
-
-shader_set_mat4 :: proc(location: i32, value: ^matrix[4, 4]f32) {
-	gl.UniformMatrix4fv(location, 1, false, &value[0, 0])
-}
-
-shader_set_float :: proc(location: i32, value: f32) {
-	gl.Uniform1f(location, value)
-}
-
-shader_set_float_array :: proc(location: i32, value: []f32) {
-	gl.Uniform1fv(location, i32(len(value)), raw_data(value))
-}
-
-shader_set_vec3_array :: proc(location: i32, value: [][3]f32) {
-	gl.Uniform3fv(location, i32(len(value)), cast([^]f32)raw_data(value))
-}
-
 shader_set :: proc {
 	shader_set_int,
 	shader_set_vec3,
@@ -101,4 +66,44 @@ shader_set :: proc {
 	shader_set_float,
 	shader_set_float_array,
 	shader_set_vec3_array,
+}
+
+@(private = "file")
+shader_set_int :: proc(location: i32, value: i32) {
+	gl.Uniform1i(location, value)
+}
+
+@(private = "file")
+shader_set_vec3 :: proc(location: i32, x: f32, y: f32, z: f32) {
+	gl.Uniform3f(location, x, y, z)
+}
+
+@(private = "file")
+shader_set_mat4 :: proc(location: i32, value: ^matrix[4, 4]f32) {
+	gl.UniformMatrix4fv(location, 1, false, &value[0, 0])
+}
+
+@(private = "file")
+shader_set_float :: proc(location: i32, value: f32) {
+	gl.Uniform1f(location, value)
+}
+
+@(private = "file")
+shader_set_float_array :: proc(location: i32, value: []f32) {
+	gl.Uniform1fv(location, i32(len(value)), raw_data(value))
+}
+
+@(private = "file")
+shader_set_vec3_array :: proc(location: i32, value: [][3]f32) {
+	gl.Uniform3fv(location, i32(len(value)), cast([^]f32)raw_data(value))
+}
+
+@(private = "file")
+uniform_lookup :: proc(program: u32, name: cstring) -> i32 {
+	uniform := gl.GetUniformLocation(program, name)
+	if uniform == -1 {
+		fmt.printfln("program: %d, %s uniform could not load", program, name)
+	}
+
+	return uniform
 }

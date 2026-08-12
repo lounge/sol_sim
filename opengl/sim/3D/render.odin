@@ -52,7 +52,7 @@ trails_draw :: proc(
 
 	projection := camera_frame.proj * camera_frame.view
 	mvp := (matrix[4, 4]f32)(projection)
-	shader_set_mat4(program.mvp, &mvp)
+	shader_set(program.mvp, &mvp)
 
 	for trail, i in trails {
 		if trail.count == 0 do continue
@@ -81,8 +81,8 @@ trails_draw :: proc(
 		color := body.color
 		trail_count := trail.count + 1
 
-		shader_set_vec3(program.color, color.x, color.y, color.z)
-		shader_set_int(program.count, i32(trail_count))
+		shader_set(program.color, color.x, color.y, color.z)
+		shader_set(program.count, i32(trail_count))
 
 
 		gl.BindBuffer(gl.ARRAY_BUFFER, mesh.vbo)
@@ -152,10 +152,10 @@ bodies_draw :: proc(
 	gl.BindVertexArray(mesh.vao)
 
 	projection32 := (matrix[4, 4]f32)(camera_frame.proj)
-	shader_set_mat4(program.proj, &projection32)
+	shader_set(program.proj, &projection32)
 
 	light_index, lit := light_scan(bodies)
-	shader_set_int(program.lit, i32(lit))
+	shader_set(program.lit, i32(lit))
 
 	slots := make([]i32, len(bodies), context.temp_allocator)
 	for &slot in slots {
@@ -166,7 +166,7 @@ bodies_draw :: proc(
 		sun_rel := pos_render(bodies[light_index], alpha) - camera_frame.eye
 		sun_pos_view := camera_frame.view * [4]f64{sun_rel.x, sun_rel.y, sun_rel.z, 1}
 
-		shader_set_vec3(
+		shader_set(
 			program.sun_pos_view,
 			f32(sun_pos_view.x),
 			f32(sun_pos_view.y),
@@ -188,10 +188,10 @@ bodies_draw :: proc(
 			n += 1
 		}
 
-		shader_set_vec3_array(program.occluder_pos_view, occ_pos[:n])
-		shader_set_float_array(program.occluder_radius, occ_rad[:n])
-		shader_set_int(program.occluder_count, i32(n))
-		shader_set_float(program.sun_radius, f32(bodies[light_index].radius))
+		shader_set(program.occluder_pos_view, occ_pos[:n])
+		shader_set(program.occluder_radius, occ_rad[:n])
+		shader_set(program.occluder_count, i32(n))
+		shader_set(program.sun_radius, f32(bodies[light_index].radius))
 	}
 
 
@@ -201,12 +201,13 @@ bodies_draw :: proc(
 		depth := -center_view.z
 
 		emissive := (lit && i == light_index) ? 1 : 0
-		shader_set_int(program.emissive, i32(emissive))
+		shader_set(program.emissive, i32(emissive))
 
 		circle_draw(body.radius, body.color, mesh, program, center_view, depth, height, slots[i])
 	}
 }
 
+@(private = "file")
 circle_draw :: proc(
 	radius: f64,
 	color: sim.Color,
@@ -227,75 +228,12 @@ circle_draw :: proc(
 		linalg.matrix4_scale_f64({draw_radius, draw_radius, draw_radius})
 	mv32 := (matrix[4, 4]f32)(mv)
 
-	shader_set_vec3(program.color, color.x, color.y, color.z)
-	shader_set_mat4(program.mv, &mv32)
-	shader_set_float(program.body_radius, f32(radius))
-	shader_set_int(program.receiver_slot, receiver_slots)
+	shader_set(program.color, color.x, color.y, color.z)
+	shader_set(program.mv, &mv32)
+	shader_set(program.body_radius, f32(radius))
+	shader_set(program.receiver_slot, receiver_slots)
 
 	gl.DrawArrays(mesh.primitive, 0, mesh.vertex_count)
-}
-
-drag_preview_draw :: proc(
-	start_world, end_world: World_Pos,
-	mesh: Mesh,
-	program: Trail_Program,
-	camera_frame: Camera_Frame,
-) {
-	scratch_buffer: [2][3]f32
-	projection := camera_frame.proj * camera_frame.view
-	projection32 := (matrix[4, 4]f32)(projection)
-
-	start := [3]f64{start_world.x, start_world.y, 0} - camera_frame.eye
-	end := [3]f64{end_world.x, end_world.y, 0} - camera_frame.eye
-
-	scratch_buffer[0] = {f32(start.x), f32(start.y), f32(start.z)}
-	scratch_buffer[1] = {f32(end.x), f32(end.y), f32(end.z)}
-
-	gl.DepthMask(gl.FALSE)
-	gl.UseProgram(program.id)
-	gl.BindVertexArray(mesh.vao)
-	gl.BindBuffer(gl.ARRAY_BUFFER, mesh.vbo)
-
-	shader_set_mat4(program.mvp, &projection32)
-	shader_set_vec3(program.color, 1, 1, 1)
-	shader_set_int(program.count, 1)
-
-	gl.BufferData(gl.ARRAY_BUFFER, (sim.TRAIL_CAP + 1) * 3 * size_of(f32), nil, gl.STREAM_DRAW)
-	gl.BufferSubData(gl.ARRAY_BUFFER, 0, size_of(scratch_buffer), raw_data(&scratch_buffer))
-
-	gl.DrawArrays(gl.LINE_STRIP, 0, 2)
-	gl.DepthMask(gl.TRUE)
-}
-
-mass_preview_draw :: proc(
-	world: World_Pos,
-	radius: f64,
-	mesh: Mesh,
-	program: Body_Program,
-	camera_frame: Camera_Frame,
-	height: i32,
-) {
-	gl.UseProgram(program.id)
-	gl.BindVertexArray(mesh.vao)
-
-	rel := [3]f64{world.x, world.y, 0} - camera_frame.eye
-	center_view := camera_frame.view * [4]f64{rel.x, rel.y, rel.z, 1}
-
-	shader_set_int(program.emissive, 1)
-
-	projection32 := (matrix[4, 4]f32)(camera_frame.proj)
-	shader_set_mat4(program.proj, &projection32)
-
-	circle_draw(
-		radius,
-		sim.PALETTE[.Spawn],
-		mesh,
-		program,
-		center_view,
-		-center_view.z,
-		height,
-		-1,
-	)
 }
 
 drag_preview_pass :: proc(
@@ -350,9 +288,9 @@ gravity_tree_cells_draw :: proc(
 	gl.BindBuffer(gl.ARRAY_BUFFER, mesh.vbo)
 
 
-	shader_set_mat4(program.mvp, &mvp32)
-	shader_set_vec3(program.color, 1.0, 0.0, 0.0)
-	shader_set_int(program.count, 1) // meaningless with blend off
+	shader_set(program.mvp, &mvp32)
+	shader_set(program.color, 1.0, 0.0, 0.0)
+	shader_set(program.count, 1) // meaningless with blend off
 
 	for node in tree.node {
 		if filled + 24 > len(scratch_buffer) {
@@ -380,6 +318,84 @@ gravity_tree_cells_draw :: proc(
 	gl.Enable(gl.BLEND)
 }
 
+pos_render :: proc(body: sim.Body, alpha: f64) -> [3]f64 {
+	return body.prev_pos + (body.pos - body.prev_pos) * alpha
+}
+
+gl_check_error :: proc(loc := #caller_location) {
+	when ODIN_DEBUG {
+		for err := gl.GetError(); err != gl.NO_ERROR; err = gl.GetError() {
+			fmt.printfln("GL Error 0x%x at %v", err, loc)
+		}
+	}
+}
+
+@(private = "file")
+drag_preview_draw :: proc(
+	start_world, end_world: World_Pos,
+	mesh: Mesh,
+	program: Trail_Program,
+	camera_frame: Camera_Frame,
+) {
+	scratch_buffer: [2][3]f32
+	projection := camera_frame.proj * camera_frame.view
+	projection32 := (matrix[4, 4]f32)(projection)
+
+	start := [3]f64{start_world.x, start_world.y, 0} - camera_frame.eye
+	end := [3]f64{end_world.x, end_world.y, 0} - camera_frame.eye
+
+	scratch_buffer[0] = {f32(start.x), f32(start.y), f32(start.z)}
+	scratch_buffer[1] = {f32(end.x), f32(end.y), f32(end.z)}
+
+	gl.DepthMask(gl.FALSE)
+	gl.UseProgram(program.id)
+	gl.BindVertexArray(mesh.vao)
+	gl.BindBuffer(gl.ARRAY_BUFFER, mesh.vbo)
+
+	shader_set(program.mvp, &projection32)
+	shader_set(program.color, 1, 1, 1)
+	shader_set(program.count, 1)
+
+	gl.BufferData(gl.ARRAY_BUFFER, (sim.TRAIL_CAP + 1) * 3 * size_of(f32), nil, gl.STREAM_DRAW)
+	gl.BufferSubData(gl.ARRAY_BUFFER, 0, size_of(scratch_buffer), raw_data(&scratch_buffer))
+
+	gl.DrawArrays(gl.LINE_STRIP, 0, 2)
+	gl.DepthMask(gl.TRUE)
+}
+
+@(private = "file")
+mass_preview_draw :: proc(
+	world: World_Pos,
+	radius: f64,
+	mesh: Mesh,
+	program: Body_Program,
+	camera_frame: Camera_Frame,
+	height: i32,
+) {
+	gl.UseProgram(program.id)
+	gl.BindVertexArray(mesh.vao)
+
+	rel := [3]f64{world.x, world.y, 0} - camera_frame.eye
+	center_view := camera_frame.view * [4]f64{rel.x, rel.y, rel.z, 1}
+
+	shader_set(program.emissive, 1)
+
+	projection32 := (matrix[4, 4]f32)(camera_frame.proj)
+	shader_set(program.proj, &projection32)
+
+	circle_draw(
+		radius,
+		sim.PALETTE[.Spawn],
+		mesh,
+		program,
+		center_view,
+		-center_view.z,
+		height,
+		-1,
+	)
+}
+
+@(private = "file")
 tree_cell_corner :: proc(node: sim.Tree_Node, bits: int) -> [3]f64 {
 	offset: [3]f64
 	for axis in 0 ..< 3 {
@@ -388,6 +404,7 @@ tree_cell_corner :: proc(node: sim.Tree_Node, bits: int) -> [3]f64 {
 	return ([3]f64)(node.center) + offset
 }
 
+@(private = "file")
 tree_cells_flush :: proc(scratch: ^[sim.TRAIL_CAP + 1][3]f32, filled: ^int) {
 	if filled^ == 0 do return
 
@@ -397,11 +414,7 @@ tree_cells_flush :: proc(scratch: ^[sim.TRAIL_CAP + 1][3]f32, filled: ^int) {
 	filled^ = 0
 }
 
-
-pos_render :: proc(body: sim.Body, alpha: f64) -> [3]f64 {
-	return body.prev_pos + (body.pos - body.prev_pos) * alpha
-}
-
+@(private = "file")
 light_scan :: proc(bodies: []sim.Body) -> (index: int, lit: bool) {
 	if len(bodies) == 0 {
 		return -1, false
@@ -410,13 +423,4 @@ light_scan :: proc(bodies: []sim.Body) -> (index: int, lit: bool) {
 	largest_mass_index := sim.most_massive_body_index(bodies[:], 0)
 
 	return largest_mass_index, bodies[largest_mass_index].mass >= MIN_STAR_MASS
-}
-
-
-gl_check_error :: proc(loc := #caller_location) {
-	when ODIN_DEBUG {
-		for err := gl.GetError(); err != gl.NO_ERROR; err = gl.GetError() {
-			fmt.printfln("GL Error 0x%x at %v", err, loc)
-		}
-	}
 }
