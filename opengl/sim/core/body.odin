@@ -137,7 +137,7 @@ body_spawn :: proc(
 	accels_compute(bodies[:], tree)
 }
 
-@(private = "file")
+@(private)
 spec_rel_state :: proc "contextless" (
 	spec: Body_Spec,
 	mu: f64,
@@ -191,7 +191,7 @@ spec_rel_state :: proc "contextless" (
 
 
 // Keplers equation solver
-@(private = "file")
+@(private)
 kepler_solve :: proc "contextless" (m, e: f64) -> f64 {
 	E := m
 
