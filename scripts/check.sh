@@ -44,3 +44,11 @@ check opengl/sim/3D -vet -strict-style -define:DETERMINISM_STEPS=10 -define:MEAS
 check opengl/sim/3D -vet -strict-style -define:MEASURE=true -define:BH_DEBUG_DRAW=true
 
 echo "matrix clean ($cells cells)"
+
+# --- unit tests (milestone 36): the pure leaves — run, not just type-check.
+# The *_test.odin files are package members, so the core cells above already
+# lint them in every define combination; this step executes the assertions.
+echo "== odin test opengl/sim/core"
+odin test opengl/sim/core -out:/tmp/sim_core_test
+
+echo "unit tests pass"
