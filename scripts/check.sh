@@ -30,5 +30,9 @@ check opengl/sim/3D -vet -strict-style -define:BH_DEBUG_DRAW=true
 check opengl/sim/3D -vet -strict-style -define:DETERMINISM_STEPS=10
 check opengl/sim/3D -vet -strict-style -define:TOTAL_STEPS=10
 check opengl/sim/3D -vet -strict-style -define:TOTAL_STEPS=10 -define:MEASURE=true
+# used compositions (same rationale as TOTAL_STEPS+MEASURE above): the
+# benchmark-scene determinism oracle, and debug-draw over the measure disk
+check opengl/sim/3D -vet -strict-style -define:DETERMINISM_STEPS=10 -define:MEASURE=true
+check opengl/sim/3D -vet -strict-style -define:MEASURE=true -define:BH_DEBUG_DRAW=true
 
 echo "matrix clean ($cells cells)"
