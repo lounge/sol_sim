@@ -323,8 +323,13 @@ scene_target_create :: proc(width, height: i32) -> Scene_Target {
 
 	scene_target_storage(&target, width, height)
 
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+
+	// TODO:     set filters, attach colour
+	// if want_depth: attach depth
+
+
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 
@@ -346,12 +351,7 @@ scene_target_create :: proc(width, height: i32) -> Scene_Target {
 
 	frame_buff_status := gl.CheckFramebufferStatus(gl.FRAMEBUFFER)
 	if frame_buff_status != gl.FRAMEBUFFER_COMPLETE {
-		panic(
-			fmt.aprintf(
-				"scene framebuffer is incomplete 0x%x",
-				frame_buff_status
-			),
-		)
+		panic(fmt.aprintf("scene framebuffer is incomplete 0x%x", frame_buff_status))
 	}
 
 
