@@ -1,6 +1,6 @@
 # sol_sim
 
-A from-scratch orbital simulation. Trying to learn some new stuff...
+A from-scratch orbital simulation of the solar system. Trying to learn some new stuff...
 
 ## Learning
 
