@@ -8,10 +8,10 @@ JDN_UNIX_EPOCH :: int(JD_UNIX_EPOCH + 0.5) // = 2440588, the JDN jd_to_civil rou
 MINUTE_EPS :: (1.0 / SECONDS_IN_DAY)
 
 Date :: struct {
-	year:  int,
-	month: int,
-	day:   int,
-	hours: int,
+	year:    int,
+	month:   int,
+	day:     int,
+	hours:   int,
 	minutes: int,
 }
 
@@ -22,9 +22,9 @@ date_from_jd :: proc "contextless" (jd: f64) -> Date {
 
 	days_since_unix_epoch := jdn - JDN_UNIX_EPOCH
 
-	minutes  := int((t - math.floor(t)) * 1440)
+	minutes := int((t - math.floor(t)) * 1440)
 	minute := minutes % 60
-	hours     := minutes / 60
+	hours := minutes / 60
 
 	date := date_from_days(days_since_unix_epoch)
 

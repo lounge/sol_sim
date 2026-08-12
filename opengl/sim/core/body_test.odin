@@ -105,7 +105,11 @@ rel_state_invariants_check :: proc(t: ^testing.T, spec: Body_Spec, mu, delta_t: 
 	// the orbit normal implied by (i, Ω)
 	incl := math.to_radians(spec.inclination * INCL_SCALE)
 	node := math.to_radians(spec.lon_asc_node * INCL_SCALE)
-	n_want := Vec{math.sin(incl) * math.sin(node), -math.sin(incl) * math.cos(node), math.cos(incl)}
+	n_want := Vec {
+		math.sin(incl) * math.sin(node),
+		-math.sin(incl) * math.cos(node),
+		math.cos(incl),
+	}
 	h_hat := h / h_len
 	testing.expectf(
 		t,
@@ -134,7 +138,10 @@ rel_state_invariants_check :: proc(t: ^testing.T, spec: Body_Spec, mu, delta_t: 
 		peri := math.to_radians(spec.arg_perihelion * INCL_SCALE)
 		n_line := Vec{math.cos(node), math.sin(node), 0}
 		e_hat := e_vec / linalg.length(e_vec)
-		w_got := math.atan2(linalg.dot(linalg.cross(n_line, e_hat), h_hat), linalg.dot(n_line, e_hat))
+		w_got := math.atan2(
+			linalg.dot(linalg.cross(n_line, e_hat), h_hat),
+			linalg.dot(n_line, e_hat),
+		)
 		dw := math.mod(w_got - peri + 3 * math.PI, 2 * math.PI) - math.PI
 		testing.expectf(
 			t,
@@ -247,8 +254,20 @@ spec_rel_state_periodicity_test :: proc(t: ^testing.T) {
 	for dt in dts {
 		p1, v1 := spec_rel_state(MERCURY, mu, dt)
 		p2, v2 := spec_rel_state(MERCURY, mu, dt + period)
-		testing.expectf(t, linalg.length(p2 - p1) <= 1e-12 * a, "dt=%v: pos drift %e", dt, linalg.length(p2 - p1))
-		testing.expectf(t, linalg.length(v2 - v1) <= 1e-12 * v_ref, "dt=%v: vel drift %e", dt, linalg.length(v2 - v1))
+		testing.expectf(
+			t,
+			linalg.length(p2 - p1) <= 1e-12 * a,
+			"dt=%v: pos drift %e",
+			dt,
+			linalg.length(p2 - p1),
+		)
+		testing.expectf(
+			t,
+			linalg.length(v2 - v1) <= 1e-12 * v_ref,
+			"dt=%v: vel drift %e",
+			dt,
+			linalg.length(v2 - v1),
+		)
 	}
 }
 
@@ -271,8 +290,18 @@ spec_rel_state_time_symmetry_test :: proc(t: ^testing.T) {
 	for dt in dts {
 		pf, vf := spec_rel_state(spec, 1.0, dt)
 		pb, vb := spec_rel_state(spec, 1.0, -dt)
-		testing.expectf(t, within(linalg.length(pf), linalg.length(pb), 1e-12 * a), "dt=%v: |r| asymmetric", dt)
-		testing.expectf(t, within(linalg.length(vf), linalg.length(vb), 1e-12 * v_ref), "dt=%v: |v| asymmetric", dt)
+		testing.expectf(
+			t,
+			within(linalg.length(pf), linalg.length(pb), 1e-12 * a),
+			"dt=%v: |r| asymmetric",
+			dt,
+		)
+		testing.expectf(
+			t,
+			within(linalg.length(vf), linalg.length(vb), 1e-12 * v_ref),
+			"dt=%v: |v| asymmetric",
+			dt,
+		)
 		testing.expectf(
 			t,
 			within(linalg.dot(pf, vf), -linalg.dot(pb, vb), 1e-12 * a * v_ref),
