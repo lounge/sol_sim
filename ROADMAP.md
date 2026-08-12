@@ -36,9 +36,10 @@
 34. [x] Reverse time: ← below sim_speed 1 flips the arrow of time, Verlet integrates backward.
 35. [x] Debug/Confirm correctness against the real sky live. Solar Eclipse (Sweden: 2026-08-12 19:00-21:00) 
 36. [x] tests for the pure leaves (date conversions, kepler_solve round-trip, spec_rel_state)
-37. [ ] Make bodies spheres.
-38. [ ] Simple textures? Glowing sun/bloom?
-39. [ ] Thread accels_compute across cores, runtime-scaled to the user's machine. Test improvment ganes
-40. [ ] Per-body substepping for fast moons (Phobos-class orbits).
-41. [ ] z-spawning
-42. [ ] Port to Vulkan? :'(
+37. [ ] Make sun bloom
+38. [ ] Make bodies spheres.
+39. [ ] Simple textures?
+40. [ ] Thread accels_compute across cores, runtime-scaled to the user's machine. Test improvment ganes
+41. [ ] Per-body substepping for fast moons (Phobos-class orbits).
+42. [ ] z-spawning
+43. [ ] Port to Vulkan? :'(
