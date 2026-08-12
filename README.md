@@ -1,4 +1,4 @@
-# Sol Sim
+# sol_sim
 
 A from-scratch orbital simulation. Trying to learn some new stuff...
 
