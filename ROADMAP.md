@@ -34,9 +34,11 @@
 32. [x] Launch-time catch-up: no-args launches integrate from the spec epoch to now, so the start state is the integrator's prediction, not a stale-element lookup.
 33. [x] Cast shadows: eclipses as an occlusion term on the lighting.
 34. [x] Reverse time: ← below sim_speed 1 flips the arrow of time, Verlet integrates backward.
-35. [ ] tests for the pure leaves (date conversions, kepler_solve round-trip, spec_rel_state)
-36. [ ] Make bodies spheres.
-37. [ ] Simple textures? Glowing sun/bloom?
-38. [ ] Thread accels_compute across cores, runtime-scaled to the user's machine.
-39. [ ] Per-body substepping for fast moons (Phobos-class orbits).
-40. [ ] z-spawning
+35. [ ] Debug/Confirm correctness against the real sky live. Solar Eclipse (Sweden: 2026-08-12 19:00-21:00) 
+36. [ ] tests for the pure leaves (date conversions, kepler_solve round-trip, spec_rel_state)
+37. [ ] Make bodies spheres.
+38. [ ] Simple textures? Glowing sun/bloom?
+39. [ ] Thread accels_compute across cores, runtime-scaled to the user's machine. Test improvment ganes
+40. [ ] Per-body substepping for fast moons (Phobos-class orbits).
+41. [ ] z-spawning
+42. [ ] Port to Vulkan? :'(
