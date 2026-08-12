@@ -15,6 +15,7 @@ uniform int occluder_count;
 uniform float sun_radius;
 uniform int receiver_slot;
 uniform float body_radius;
+uniform float emissive_intensity;
 
 flat in vec3 v_center_view;
 in vec3 v_pos_view;
@@ -43,7 +44,7 @@ void main()
 {
 
     if (emissive == 1) {
-        FragColor = vec4(color, 1.0);
+        FragColor = vec4(pow(color, vec3(2.2)) * emissive_intensity, 1.0);
     } else {
         float diffuse = 0.0;
         if (lit == 1) {
@@ -85,7 +86,7 @@ void main()
         vec3 albedo = pow(color, vec3(2.2));
         float lighting = AMBIENT + (1.0 - AMBIENT) * diffuse;
         vec3 shading = albedo * lighting;
-        FragColor = vec4(pow(shading, vec3(1.0 / 2.2)), 1.0);
+        FragColor = vec4(shading, 1.0);
     }
 
 }
