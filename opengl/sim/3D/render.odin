@@ -18,6 +18,14 @@ Mesh :: struct {
 	primitive:    u32,
 }
 
+Scene_Target :: struct {
+	fbo:       u32,
+	color_tex: u32,
+	depth_rb:  u32,
+	width:     i32,
+	height:    i32,
+}
+
 trail_mesh_create :: proc() -> Mesh {
 	vbo, vao: u32
 
@@ -207,35 +215,6 @@ bodies_draw :: proc(
 	}
 }
 
-@(private = "file")
-circle_draw :: proc(
-	radius: f64,
-	color: sim.Color,
-	mesh: Mesh,
-	program: Body_Program,
-	center_view: [4]f64,
-	depth: f64,
-	height: i32,
-	receiver_slots: i32,
-) {
-	draw_radius := math.max(
-		radius,
-		MIN_MARKER_PX * depth * math.tan_f64(CAMERA_FOV / 2) / (f64(height) / 2),
-	)
-
-	mv :=
-		linalg.matrix4_translate(center_view.xyz) *
-		linalg.matrix4_scale_f64({draw_radius, draw_radius, draw_radius})
-	mv32 := (matrix[4, 4]f32)(mv)
-
-	shader_set(program.color, color.x, color.y, color.z)
-	shader_set(program.mv, &mv32)
-	shader_set(program.body_radius, f32(radius))
-	shader_set(program.receiver_slot, receiver_slots)
-
-	gl.DrawArrays(mesh.primitive, 0, mesh.vertex_count)
-}
-
 drag_preview_pass :: proc(
 	state: ^State,
 	cursor: Pixel_Pos,
@@ -318,6 +297,89 @@ gravity_tree_cells_draw :: proc(
 	gl.Enable(gl.BLEND)
 }
 
+
+scene_target_create :: proc(width, height: i32) -> Scene_Target {
+	target: Scene_Target
+	target.width = width
+	target.height = height
+
+	gl.GenFramebuffers(1, &target.fbo)
+	gl.BindFramebuffer(gl.FRAMEBUFFER, target.fbo)
+
+	gl.GenTextures(1, &target.color_tex)
+	gl.BindTexture(gl.TEXTURE_2D, target.color_tex)
+
+	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, nil)
+
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+
+	gl.FramebufferTexture2D(
+		gl.FRAMEBUFFER,
+		gl.COLOR_ATTACHMENT0,
+		gl.TEXTURE_2D,
+		target.color_tex,
+		0,
+	)
+
+	// depth renderbuffer
+	gl.GenRenderbuffers(1, &target.depth_rb)
+	gl.BindRenderbuffer(gl.RENDERBUFFER, target.depth_rb)
+
+	gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, width, height)
+
+	gl.FramebufferRenderbuffer(
+		gl.FRAMEBUFFER,
+		gl.DEPTH_ATTACHMENT,
+		gl.RENDERBUFFER,
+		target.depth_rb,
+	)
+
+	if gl.CheckFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE {
+		panic("scene framebuffer is incomplete")
+	}
+
+	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+
+	return target
+}
+
+scene_target_resize :: proc(target: ^Scene_Target, width, height: i32) {
+	if width == target.width && height == target.height {
+		return
+	}
+
+	gl.BindTexture(gl.TEXTURE_2D, target.color_tex)
+	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, nil)
+
+	gl.BindRenderbuffer(gl.RENDERBUFFER, target.depth_rb)
+	gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, width, height)
+
+	target.width = width
+	target.height = height
+}
+
+composite_draw :: proc(target: ^Scene_Target, program: ^Composite_Program, vao: u32) {
+	gl.Disable(gl.DEPTH_TEST)
+	gl.Disable(gl.BLEND)
+
+	gl.UseProgram(program.id)
+	gl.BindVertexArray(vao)
+
+	gl.ActiveTexture(gl.TEXTURE0)
+	gl.BindTexture(gl.TEXTURE_2D, target.color_tex)
+
+	shader_set(program.scene, 0)
+
+	gl.DrawArrays(gl.TRIANGLES, 0, 3)
+
+	gl.Enable(gl.BLEND)
+	gl.Enable(gl.DEPTH_TEST)
+}
+
+
 pos_render :: proc(body: sim.Body, alpha: f64) -> [3]f64 {
 	return body.prev_pos + (body.pos - body.prev_pos) * alpha
 }
@@ -328,6 +390,36 @@ gl_check_error :: proc(loc := #caller_location) {
 			fmt.printfln("GL Error 0x%x at %v", err, loc)
 		}
 	}
+}
+
+
+@(private = "file")
+circle_draw :: proc(
+	radius: f64,
+	color: sim.Color,
+	mesh: Mesh,
+	program: Body_Program,
+	center_view: [4]f64,
+	depth: f64,
+	height: i32,
+	receiver_slots: i32,
+) {
+	draw_radius := math.max(
+		radius,
+		MIN_MARKER_PX * depth * math.tan_f64(CAMERA_FOV / 2) / (f64(height) / 2),
+	)
+
+	mv :=
+		linalg.matrix4_translate(center_view.xyz) *
+		linalg.matrix4_scale_f64({draw_radius, draw_radius, draw_radius})
+	mv32 := (matrix[4, 4]f32)(mv)
+
+	shader_set(program.color, color.x, color.y, color.z)
+	shader_set(program.mv, &mv32)
+	shader_set(program.body_radius, f32(radius))
+	shader_set(program.receiver_slot, receiver_slots)
+
+	gl.DrawArrays(mesh.primitive, 0, mesh.vertex_count)
 }
 
 @(private = "file")

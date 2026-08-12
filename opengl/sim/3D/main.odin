@@ -126,12 +126,24 @@ main :: proc() {
 		os.exit(-1)
 	}
 
+	composite_prg, composite_loaded_ok := gl.load_shaders_file(
+		#directory + "res/fullscreen.vert.glsl",
+		#directory + "res/composite.frag.glsl",
+	)
+	if !composite_loaded_ok {
+		fmt.println("Failed to load and build composite shaders")
+		os.exit(-1)
+	}
+
 	body_program := body_program_load(body_prg)
 	trail_program := trail_program_load(trail_prg)
+	composite_program := composite_program_load(composite_prg)
 
 	circle_mesh := circle_mesh_create(32)
 	trail_mesh := trail_mesh_create()
 
+	empty_vao: u32
+	gl.GenVertexArrays(1, &empty_vao)
 
 	overload_frames: int
 	prev_cursor: [2]f64
@@ -140,11 +152,16 @@ main :: proc() {
 
 	gl.ClearColor(0.0, 0.0, 0.0, 0.0)
 
+	target_scene := scene_target_create(fb_width, fb_height)
 
 	for !glfw.WindowShouldClose(window) {
 		fb_width, fb_height = glfw.GetFramebufferSize(window)
 		window_width, window_height := glfw.GetWindowSize(window)
 
+		scene_target_resize(&target_scene, fb_width, fb_height)
+
+		gl.BindFramebuffer(gl.FRAMEBUFFER, target_scene.fbo)
+		gl.Viewport(0, 0, fb_width, fb_height)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 		now := glfw.GetTime()
@@ -284,6 +301,12 @@ main :: proc() {
 		} else {
 			window_title_update(window, &state, bodies[:], sim.date_from_jd(current_jd))
 		}
+
+		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+		gl.Viewport(0, 0, fb_width, fb_height)
+
+
+		composite_draw(&target_scene, &composite_program, empty_vao)
 
 		glfw.SwapBuffers(window)
 		glfw.PollEvents()

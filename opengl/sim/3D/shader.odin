@@ -28,6 +28,11 @@ Trail_Program :: struct {
 	count: i32,
 }
 
+Composite_Program :: struct {
+	id:    u32,
+	scene: i32,
+}
+
 body_program_load :: proc(program: u32) -> Body_Program {
 	program := Body_Program {
 		id                = program,
@@ -54,6 +59,15 @@ trail_program_load :: proc(program: u32) -> Trail_Program {
 		mvp   = uniform_lookup(program, "mvp"),
 		color = uniform_lookup(program, "color"),
 		count = uniform_lookup(program, "count"),
+	}
+
+	return program
+}
+
+composite_program_load :: proc(program: u32) -> Composite_Program {
+	program := Composite_Program {
+		id    = program,
+		scene = uniform_lookup(program, "scene"),
 	}
 
 	return program
