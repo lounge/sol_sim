@@ -136,7 +136,7 @@ main :: proc() {
 	overload_frames: int
 	prev_cursor: [2]f64
 	last_time := glfw.GetTime()
-	last_shown_date: int
+	last_shown_minute: int
 
 	gl.ClearColor(0.0, 0.0, 0.0, 0.0)
 
@@ -188,8 +188,7 @@ main :: proc() {
 			if glfw.GetTime() >= deadline do break
 		}
 
-		current_jd := start_jd + sim_time * sim.T_UNIT_SECONDS / sim.SECONDS_IN_DAY
-
+		current_jd := start_jd + (sim_time + accumulator) * sim.T_UNIT_SECONDS / sim.SECONDS_IN_DAY
 		when sim.MEASURE {
 			measure.physics_seconds += glfw.GetTime() - measure_t0
 			measure.steps += steps
@@ -255,9 +254,9 @@ main :: proc() {
 			gravity_tree_cells_draw(&gravity_tree, trail_mesh, trail_program, camera_frame)
 		}
 
-		shown_day := int(math.floor(current_jd + 0.5))
-		if shown_day != last_shown_date {
-			last_shown_date = shown_day
+		shown_minute := int(math.floor((current_jd + 0.5) * 1440))
+		if shown_minute != last_shown_minute {
+			last_shown_minute = shown_minute
 			state.title_stale = true
 		}
 
@@ -329,7 +328,7 @@ window_title_update :: proc(
 	if state.tracked_body >= 0 {
 		tracked_body_name := bodies[state.tracked_body].name
 		title = fmt.ctprintf(
-			"%s - %s - %f days/sec - %f years/sec - sim_speed %d - %04d-%02d-%02d",
+			"%s - %s - %f days/sec - %f years/sec - sim_speed %d - %04d-%02d-%02d %02d:%02d",
 			TITLE,
 			tracked_body_name,
 			f64(state.sim_speed * (state.time_reversed ? -1 : 1)) / sim.SECONDS_IN_DAY,
@@ -338,10 +337,12 @@ window_title_update :: proc(
 			date.year,
 			date.month,
 			date.day,
+			date.hours,
+			date.minutes,
 		)
 	} else {
 		title = fmt.ctprintf(
-			"%s - %f days/sec - %f years/sec - sim_speed %d - %04d-%02d-%02d",
+			"%s - %f days/sec - %f years/sec - sim_speed %d - %04d-%02d-%02d %02d:%02d",
 			TITLE,
 			f64(state.sim_speed * (state.time_reversed ? -1 : 1)) / sim.SECONDS_IN_DAY,
 			f64(state.sim_speed * (state.time_reversed ? -1 : 1)) / sim.SECONDS_IN_YEAR,
@@ -349,6 +350,8 @@ window_title_update :: proc(
 			date.year,
 			date.month,
 			date.day,
+			date.hours,
+			date.minutes,
 		)
 	}
 

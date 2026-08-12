@@ -10,6 +10,8 @@ Date :: struct {
 	year:  int,
 	month: int,
 	day:   int,
+	hours: int,
+	minutes: int,
 }
 
 // Howard Hinnant’s algo
@@ -28,6 +30,8 @@ date_from_days :: proc "contextless" (z_in: int) -> Date {
 	doy := doe - (365 * yoe + yoe / 4 - yoe / 100)
 	mp := (5 * doy + 2) / 153
 	d := doy - (153 * mp + 2) / 5 + 1
+
+
 
 	m := mp + 3
 	if mp >= 10 {
@@ -48,5 +52,15 @@ date_from_jd :: proc "contextless" (jd: f64) -> Date {
 	// JDN of 1970-01-01 is 2440588
 	days_since_unix_epoch := jdn - JDN_UNIX_EPOCH
 
-	return date_from_days(days_since_unix_epoch)
+	day_frac := jd + 0.5 - math.floor(jd + 0.5)   // [0, 1) since midnight
+	minutes  := int(day_frac * 1440)
+	hour     := minutes / 60
+	minute   := minutes % 60
+
+	date := date_from_days(days_since_unix_epoch)
+
+	date.hours = hour
+	date.minutes = minute
+
+	return date
 }
