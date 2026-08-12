@@ -1,6 +1,6 @@
 # Journal
 
-The milestone-by-milestone record of this project: what was built, the bugs hit on the way, and the lessons each one taught. Entries are chronological, newest at the bottom, and preserved as written — this is the history. `README.md` holds the roadmap.
+The milestone-by-milestone record of this project: what was built, the bugs hit on the way, and the lessons each one taught. Entries are chronological, newest at the bottom, and preserved as written — this is the history. `ROADMAP.md` holds the roadmap.
 
 - **learnopengl exercises** through the shaders chapter are done (`opengl/learn/1_window`, `opengl/learn/2_triangle`, `opengl/learn/3_shaders`).
 - **Rendering**: the sim renders a procedurally generated circle mesh (TRIANGLE_FAN), drawn once per body at any position/size via `offset`/`scale`/`aspect` uniforms.
