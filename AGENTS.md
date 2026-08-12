@@ -11,11 +11,12 @@ This is a learning project — the learning is the point, the simulation is the 
 ```sh
 odin run opengl/sim/3D            # build and run (debug)
 odin run opengl/sim/3D -o:speed   # optimized (~9×) — needed for high sim speeds
-scripts/check.sh                  # the lint bar: the define/lint matrix, 17 cells — keep it clean
+scripts/check.sh                  # the lint bar: the define/lint matrix (17 cells) + the unit tests — keep it clean
+odin test opengl/sim/core         # the unit tests alone (note: `odin test` does not run vet)
 scripts/sweep.sh                  # BH_THRESHOLD crossover sweep (headless MEASURE builds)
 ```
 
-Physics constants are `#config(...)`-overridable (`-define:DT=…`, `MAX_SIM_SPEED`, `START_JD`, …). No unit tests; validation is headless builds:
+Physics constants are `#config(...)`-overridable (`-define:DT=…`, `MAX_SIM_SPEED`, `START_JD`, …). Unit tests (`*_test.odin`, in-package) cover the pure leaves only — date conversions, `kepler_solve`, `spec_rel_state`; everything stateful is validated by headless builds:
 
 - `-define:DETERMINISM_STEPS=N` — dumps positions as raw f64 bit patterns; two builds are equivalent iff dumps match bitwise (the regression oracle for refactors that must not change physics; composes with `MEASURE` to cover the benchmark scene).
 - `-define:TOTAL_STEPS=N -define:INCL_SCALE=0` — windowless soak asserting bitwise-zero z (without `INCL_SCALE=0` the assert fires by design); with `MEASURE` it is sweep.sh's timing vehicle.
@@ -52,7 +53,7 @@ Completing a milestone = check the roadmap box + write the journal entry.
 - **Lighting**: Lambert + ambient floor on sphere-impostor normals (exact because the billboard MV has no rotation). The emissive branch must skip the lighting math entirely (NaN at the star's own fragments). Gamma 2.2 sandwich, non-emissive branch only; alpha stays 1 (blending is globally live). Per-draw uniforms are set before the draw they govern. The light is a per-frame most-massive scan gated by `MIN_STAR_MASS` (0.08 M☉).
 - **Eclipse shadows**: an analytic per-fragment occlusion term multiplied into diffuse only (never ambient/emissive). `circle_draw` carries two radii — clamped `draw_radius` in `mv`, physical in the `body_radius` uniform; crossing them fails silently at marker zoom. The occluder loop is bounded by `occluder_count`, never the array size (stale slots = ghost shadows). `MAX_OCCLUDERS` is duplicated in `shader.odin` and `body.frag.glsl` — keep in sync. Small angles use `atan(|a×b|, a·b)`, never `acos(dot)`.
 - **Draw procs are two-tier**: batch procs own `UseProgram`/`BindVertexArray`; primitives set only per-draw uniforms. One `Camera_Frame` per frame feeds every pass and picking. `gl.Uniform*` writes to the *bound* program — set uniforms after your own `UseProgram`.
-- **Odin traps**: `::` is compile-time; integer division inside float formulas; `tprintf` strings die at the per-frame `free_all` (use `aprintf` for longer-lived; spec names are literals — never free them); prefix casts need parens (`([2]f64)(v)`); `os.exit` skips defers; a `when ODIN_DEBUG` block can strand an import (`_ :: fmt`); a false `when` branch — statement *or* expression — is never type-checked: lint with the flag on (the matrix). When a value's representation changes, migrate every read/write/guard/reset site together — or change the leaf signature and let the compiler enumerate the sites.
+- **Odin traps**: `::` is compile-time; integer division inside float formulas; `tprintf` strings die at the per-frame `free_all` (use `aprintf` for longer-lived; spec names are literals — never free them); prefix casts need parens (`([2]f64)(v)`); `os.exit` skips defers; a `when ODIN_DEBUG` block can strand an import (`_ :: fmt`); a false `when` branch — statement *or* expression — is never type-checked: lint with the flag on (the matrix). Test files are ordinary package members (so the matrix lints them under every define), but `odin test` does not run vet — green tests are not a green matrix. When a value's representation changes, migrate every read/write/guard/reset site together — or change the leaf signature and let the compiler enumerate the sites.
 
 ## Issue and PR Guidelines
 
