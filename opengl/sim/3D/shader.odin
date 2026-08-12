@@ -6,19 +6,19 @@ import gl "vendor:OpenGL"
 MAX_OCCLUDERS :: 32 // Needs to stay in sync with body frag shader
 
 Body_Program :: struct {
-	id:                u32,
-	mv:                i32,
-	proj:              i32,
-	color:             i32,
-	sun_pos_view:      i32,
-	emissive:          i32,
-	lit:               i32,
-	occluder_pos_view: i32,
-	occluder_radius:   i32,
-	occluder_count:    i32,
-	sun_radius:        i32,
-	receiver_slot:     i32,
-	body_radius:       i32,
+	id:                 u32,
+	mv:                 i32,
+	proj:               i32,
+	color:              i32,
+	sun_pos_view:       i32,
+	emissive:           i32,
+	lit:                i32,
+	occluder_pos_view:  i32,
+	occluder_radius:    i32,
+	occluder_count:     i32,
+	sun_radius:         i32,
+	receiver_slot:      i32,
+	body_radius:        i32,
 	emissive_intensity: i32,
 }
 
@@ -36,20 +36,20 @@ Composite_Program :: struct {
 
 body_program_load :: proc(program: u32) -> Body_Program {
 	program := Body_Program {
-		id                = program,
-		mv                = uniform_lookup(program, "mv"),
-		proj              = uniform_lookup(program, "proj"),
-		color             = uniform_lookup(program, "color"),
-		emissive          = uniform_lookup(program, "emissive"),
-		lit               = uniform_lookup(program, "lit"),
-		sun_pos_view      = uniform_lookup(program, "sun_pos_view"),
-		occluder_pos_view = uniform_lookup(program, "occluder_pos_view"),
-		occluder_radius   = uniform_lookup(program, "occluder_radius"),
-		occluder_count    = uniform_lookup(program, "occluder_count"),
-		sun_radius        = uniform_lookup(program, "sun_radius"),
-		receiver_slot     = uniform_lookup(program, "receiver_slot"),
-		body_radius       = uniform_lookup(program, "body_radius"),
-		emissive_intensity = uniform_lookup(program, "emissive_intensity")
+		id                 = program,
+		mv                 = uniform_lookup(program, "mv"),
+		proj               = uniform_lookup(program, "proj"),
+		color              = uniform_lookup(program, "color"),
+		emissive           = uniform_lookup(program, "emissive"),
+		lit                = uniform_lookup(program, "lit"),
+		sun_pos_view       = uniform_lookup(program, "sun_pos_view"),
+		occluder_pos_view  = uniform_lookup(program, "occluder_pos_view"),
+		occluder_radius    = uniform_lookup(program, "occluder_radius"),
+		occluder_count     = uniform_lookup(program, "occluder_count"),
+		sun_radius         = uniform_lookup(program, "sun_radius"),
+		receiver_slot      = uniform_lookup(program, "receiver_slot"),
+		body_radius        = uniform_lookup(program, "body_radius"),
+		emissive_intensity = uniform_lookup(program, "emissive_intensity"),
 	}
 
 	return program

@@ -10,6 +10,7 @@ _ :: fmt
 
 MIN_MARKER_PX :: 4
 MIN_STAR_MASS :: 0.08
+EMISSIVE_INTENSITY :: 8.0
 
 Mesh :: struct {
 	vao:          u32,
@@ -210,7 +211,7 @@ bodies_draw :: proc(
 
 		emissive := (lit && i == light_index) ? 1 : 0
 		shader_set(program.emissive, i32(emissive))
-		shader_set(program.emissive_intensity, 8.0)
+		shader_set(program.emissive_intensity, EMISSIVE_INTENSITY)
 		circle_draw(body.radius, body.color, mesh, program, center_view, depth, height, slots[i])
 	}
 }
@@ -318,15 +319,9 @@ scene_target_create :: proc(width, height: i32) -> Scene_Target {
 	gl.BindFramebuffer(gl.FRAMEBUFFER, target.fbo)
 
 	gl.GenTextures(1, &target.color_tex)
-
-	// gl.BindTexture(gl.TEXTURE_2D, target.color_tex)
-	// gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, nil)
-
-	scene_target_storage(&target, width, height)
-
 	gl.GenRenderbuffers(1, &target.depth_rb)
 
-
+	scene_target_storage(&target, width, height)
 
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
@@ -341,9 +336,6 @@ scene_target_create :: proc(width, height: i32) -> Scene_Target {
 		0,
 	)
 
-	// gl.BindRenderbuffer(gl.RENDERBUFFER, target.depth_rb)
-	// gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, width, height)
-
 	gl.FramebufferRenderbuffer(
 		gl.FRAMEBUFFER,
 		gl.DEPTH_ATTACHMENT,
@@ -352,13 +344,16 @@ scene_target_create :: proc(width, height: i32) -> Scene_Target {
 	)
 
 
-	if gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT {
-		panic("scene framebuffer is incomplete")
-	} else if gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT {
-		panic("scene framebuffer nothing attached")
-	} else if gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_UNSUPPORTED {
-		panic("scene framebuffer rejected")
+	frame_buff_status := gl.CheckFramebufferStatus(gl.FRAMEBUFFER)
+	if frame_buff_status != gl.FRAMEBUFFER_COMPLETE {
+		panic(
+			fmt.aprintf(
+				"scene framebuffer is incomplete 0x%x",
+				frame_buff_status
+			),
+		)
 	}
+
 
 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 
@@ -371,16 +366,6 @@ scene_target_resize :: proc(target: ^Scene_Target, width, height: i32) {
 	}
 
 	scene_target_storage(target, width, height)
-
-
-	// 	gl.BindTexture(gl.TEXTURE_2D, target.color_tex)
-	// 	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, nil)
-
-	// 	gl.BindRenderbuffer(gl.RENDERBUFFER, target.depth_rb)
-	// 	gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, width, height)
-
-	// 	target.width = width
-	// 	target.height = height
 }
 
 composite_draw :: proc(target: ^Scene_Target, program: ^Composite_Program, vao: u32) {
@@ -493,7 +478,7 @@ mass_preview_draw :: proc(
 	center_view := camera_frame.view * [4]f64{rel.x, rel.y, rel.z, 1}
 
 	shader_set(program.emissive, 1)
-	shader_set(program.emissive_intensity, 8.0)
+	shader_set(program.emissive_intensity, EMISSIVE_INTENSITY)
 
 	projection32 := (matrix[4, 4]f32)(camera_frame.proj)
 	shader_set(program.proj, &projection32)
