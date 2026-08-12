@@ -58,98 +58,6 @@ gravity_tree_build :: proc(tree: ^Gravity_Tree, bodies: []Body) {
 	gravity_tree_calc(tree, bodies)
 }
 
-gravity_tree_create_node :: proc(tree: ^Gravity_Tree, center: Vec, half_size: f64) -> int {
-	node := Tree_Node {
-		center = center,
-		half_size = half_size,
-		children = {0 ..< 8 = -1},
-		body = -1,
-	}
-
-	append(&tree.node, node)
-
-	return len(tree.node) - 1
-}
-
-gravity_tree_insert :: proc(
-	tree: ^Gravity_Tree,
-	node_idx: int,
-	body_idx: i32,
-	bodies: []Body,
-	depth: int,
-) {
-	for child in tree.node[node_idx].children {
-		if child != -1 {
-			gravity_tree_push_down(tree, node_idx, body_idx, bodies, depth)
-			return
-		}
-	}
-
-	if tree.node[node_idx].body == -1 {
-		tree.node[node_idx].body = body_idx
-		tree.max_depth = max(tree.max_depth, depth)
-		return
-	}
-
-	assert(depth < BH_MAX_DEPTH)
-
-	old := tree.node[node_idx].body
-	tree.node[node_idx].body = -1
-
-	gravity_tree_push_down(tree, node_idx, old, bodies, depth)
-	gravity_tree_push_down(tree, node_idx, body_idx, bodies, depth)
-}
-
-gravity_tree_push_down :: proc(
-	tree: ^Gravity_Tree,
-	node_idx: int,
-	body_idx: i32,
-	bodies: []Body,
-	depth: int,
-) {
-	quad := 0
-	pos := bodies[body_idx].pos
-	center := tree.node[node_idx].center
-	for i in 0 ..< 3 do quad |= int(pos[i] > center[i]) << uint(i)
-
-	if tree.node[node_idx].children[quad] == -1 {
-		offset := tree.node[node_idx].half_size / 2
-		child_center := center
-		for i in 0 ..< 3 {
-			child_center[i] += (quad >> uint(i)) & 1 == 1 ? +offset : -offset
-		}
-
-		child_idx := gravity_tree_create_node(tree, child_center, offset)
-		tree.node[node_idx].children[quad] = i32(child_idx)
-	}
-
-	gravity_tree_insert(tree, int(tree.node[node_idx].children[quad]), body_idx, bodies, depth + 1)
-}
-
-gravity_tree_calc :: proc(tree: ^Gravity_Tree, bodies: []Body) {
-	#reverse for &node in tree.node {
-		if (node.body >= 0) {
-			node.mass = bodies[node.body].mass
-			node.com = bodies[node.body].pos
-			continue
-		}
-
-		total_mass := 0.0
-		total_com := Vec{}
-		for &child in node.children {
-			if child == -1 do continue
-
-			child_node := tree.node[child]
-
-			total_mass += child_node.mass
-			total_com += child_node.com * child_node.mass
-		}
-
-		node.mass = total_mass
-		node.com = total_com / total_mass
-	}
-}
-
 gravity_tree_accel :: proc(
 	tree: ^Gravity_Tree,
 	node_idx: int,
@@ -224,10 +132,109 @@ gravity_tree_contact :: proc(
 	return
 }
 
+
+@(private = "file")
+gravity_tree_create_node :: proc(tree: ^Gravity_Tree, center: Vec, half_size: f64) -> int {
+	node := Tree_Node {
+		center = center,
+		half_size = half_size,
+		children = {0 ..< 8 = -1},
+		body = -1,
+	}
+
+	append(&tree.node, node)
+
+	return len(tree.node) - 1
+}
+
+@(private = "file")
+gravity_tree_insert :: proc(
+	tree: ^Gravity_Tree,
+	node_idx: int,
+	body_idx: i32,
+	bodies: []Body,
+	depth: int,
+) {
+	for child in tree.node[node_idx].children {
+		if child != -1 {
+			gravity_tree_push_down(tree, node_idx, body_idx, bodies, depth)
+			return
+		}
+	}
+
+	if tree.node[node_idx].body == -1 {
+		tree.node[node_idx].body = body_idx
+		tree.max_depth = max(tree.max_depth, depth)
+		return
+	}
+
+	assert(depth < BH_MAX_DEPTH)
+
+	old := tree.node[node_idx].body
+	tree.node[node_idx].body = -1
+
+	gravity_tree_push_down(tree, node_idx, old, bodies, depth)
+	gravity_tree_push_down(tree, node_idx, body_idx, bodies, depth)
+}
+
+@(private = "file")
+gravity_tree_push_down :: proc(
+	tree: ^Gravity_Tree,
+	node_idx: int,
+	body_idx: i32,
+	bodies: []Body,
+	depth: int,
+) {
+	quad := 0
+	pos := bodies[body_idx].pos
+	center := tree.node[node_idx].center
+	for i in 0 ..< 3 do quad |= int(pos[i] > center[i]) << uint(i)
+
+	if tree.node[node_idx].children[quad] == -1 {
+		offset := tree.node[node_idx].half_size / 2
+		child_center := center
+		for i in 0 ..< 3 {
+			child_center[i] += (quad >> uint(i)) & 1 == 1 ? +offset : -offset
+		}
+
+		child_idx := gravity_tree_create_node(tree, child_center, offset)
+		tree.node[node_idx].children[quad] = i32(child_idx)
+	}
+
+	gravity_tree_insert(tree, int(tree.node[node_idx].children[quad]), body_idx, bodies, depth + 1)
+}
+
+@(private = "file")
+gravity_tree_calc :: proc(tree: ^Gravity_Tree, bodies: []Body) {
+	#reverse for &node in tree.node {
+		if (node.body >= 0) {
+			node.mass = bodies[node.body].mass
+			node.com = bodies[node.body].pos
+			continue
+		}
+
+		total_mass := 0.0
+		total_com := Vec{}
+		for &child in node.children {
+			if child == -1 do continue
+
+			child_node := tree.node[child]
+
+			total_mass += child_node.mass
+			total_com += child_node.com * child_node.mass
+		}
+
+		node.mass = total_mass
+		node.com = total_com / total_mass
+	}
+}
+
+@(private = "file")
 box_within_reach :: proc(center: Vec, half_size: f64, pos: Vec, reach: f64) -> bool {
 	overhang := linalg.max(linalg.abs(pos - center) - half_size, Vec{})
 	return linalg.dot(overhang, overhang) < reach * reach
 }
+
 
 when BH_DEBUG {
 	gravity_tree_debug :: proc(tree: ^Gravity_Tree, bodies: []Body, now: f64) {

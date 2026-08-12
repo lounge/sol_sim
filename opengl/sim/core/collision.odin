@@ -3,6 +3,30 @@ package sim_core
 import "core:math"
 import "core:math/linalg"
 
+bodies_overlap :: proc(body_a, body_b: ^Body) -> bool {
+	r_vec := body_a.pos - body_b.pos
+	reach := body_a.radius + body_b.radius
+	return linalg.length2(r_vec) < reach * reach
+}
+
+collision_drain :: proc(
+	bodies: ^[dynamic]Body,
+	trails: ^[dynamic]Trail,
+	tracked_body: ^int,
+	tree: ^Gravity_Tree,
+) -> bool {
+	merged := false
+	for {
+		pair, collision := collision_compute(bodies[:], tree)
+		if !collision do break
+		collision_merge(pair, bodies, trails, tracked_body, tree)
+		merged = true
+	}
+	return merged
+}
+
+
+@(private = "file")
 collision_compute :: proc(bodies: []Body, tree: ^Gravity_Tree) -> (pair: [2]int, collision: bool) {
 	if len(bodies) < BH_THRESHOLD {
 		return collision_scan(bodies)
@@ -24,6 +48,7 @@ collision_compute :: proc(bodies: []Body, tree: ^Gravity_Tree) -> (pair: [2]int,
 	return
 }
 
+@(private = "file")
 collision_scan :: proc(bodies: []Body) -> (pair: [2]int, collision: bool) {
 	for i in 0 ..< len(bodies) {
 		for j in (i + 1) ..< len(bodies) {
@@ -36,12 +61,7 @@ collision_scan :: proc(bodies: []Body) -> (pair: [2]int, collision: bool) {
 	return
 }
 
-bodies_overlap :: proc(body_a, body_b: ^Body) -> bool {
-	r_vec := body_a.pos - body_b.pos
-	reach := body_a.radius + body_b.radius
-	return linalg.length2(r_vec) < reach * reach
-}
-
+@(private = "file")
 collision_merge :: proc(
 	pair: [2]int,
 	bodies: ^[dynamic]Body,
@@ -82,20 +102,4 @@ collision_merge :: proc(
 	if tracked_body^ > removed_index do tracked_body^ -= 1
 
 	body_remove(removed_index, bodies, trails, tree)
-}
-
-collision_drain :: proc(
-	bodies: ^[dynamic]Body,
-	trails: ^[dynamic]Trail,
-	tracked_body: ^int,
-	tree: ^Gravity_Tree,
-) -> bool {
-	merged := false
-	for {
-		pair, collision := collision_compute(bodies[:], tree)
-		if !collision do break
-		collision_merge(pair, bodies, trails, tracked_body, tree)
-		merged = true
-	}
-	return merged
 }
