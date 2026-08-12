@@ -1,6 +1,6 @@
 # Roadmap
 
-1. [x] learnopengl.com ch. 1,2,3,4
+1. [x] learnopengl.com.
 2. [x] One circle you can draw at any position.
 3. [x] Two bodies with gravity and a naive integrator ( Explicit Euler) — watch it misbehave.
 4. [x] Fix the integrator.
