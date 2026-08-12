@@ -11,5 +11,5 @@ odin run opengl/sim/3D -o:speed   # optimized build — needed for high sim spee
 
 ## Documentation
 
-- [ROADMAP.md](ROADMAP.md) — the milestone roadmap: bare goal lines, marked DONE as they land.
-- [JOURNAL.md](JOURNAL.md) — the chronological history: what was built, the bugs hit, and the lesson each taught.
+- [ROADMAP.md](ROADMAP.md)
+- [JOURNAL.md](JOURNAL.md)
