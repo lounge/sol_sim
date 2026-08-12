@@ -5,30 +5,30 @@ import "core:math"
 JD_EPOCH :: 2461041.5 // 2026-01-01 00:00 UTC
 JD_UNIX_EPOCH :: 2440587.5 // JD of 1970-01-01 00:00 UTC (JD days start at noon)
 JDN_UNIX_EPOCH :: int(JD_UNIX_EPOCH + 0.5) // = 2440588, the JDN jd_to_civil rounds to
+MINUTE_EPS :: (1.0 / SECONDS_IN_DAY)
 
 Date :: struct {
-	year:    int,
-	month:   int,
-	day:     int,
-	hours:   int,
+	year:  int,
+	month: int,
+	day:   int,
+	hours: int,
 	minutes: int,
 }
 
 //  Julian Date to Gregorian civil date
 date_from_jd :: proc "contextless" (jd: f64) -> Date {
-	jdn := int(math.floor(jd + 0.5))
+	t := jd + 0.5 + MINUTE_EPS
+	jdn := int(math.floor(t))
 
-	// JDN of 1970-01-01 is 2440588
 	days_since_unix_epoch := jdn - JDN_UNIX_EPOCH
 
-	day_frac := jd + 0.5 - math.floor(jd + 0.5) // [0, 1) since midnight
-	minutes := int(day_frac * 1440)
-	hour := minutes / 60
+	minutes  := int((t - math.floor(t)) * 1440)
 	minute := minutes % 60
+	hours     := minutes / 60
 
 	date := date_from_days(days_since_unix_epoch)
 
-	date.hours = hour
+	date.hours = hours
 	date.minutes = minute
 
 	return date
