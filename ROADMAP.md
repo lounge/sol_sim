@@ -34,8 +34,9 @@
 32. [x] Launch-time catch-up: no-args launches integrate from the spec epoch to now, so the start state is the integrator's prediction, not a stale-element lookup.
 33. [x] Cast shadows: eclipses as an occlusion term on the lighting.
 34. [x] Reverse time: ← below sim_speed 1 flips the arrow of time, Verlet integrates backward.
-35. [ ] z-spawning
+35. [ ] tests for the pure leaves (date conversions, kepler_solve round-trip, spec_rel_state)
 36. [ ] Make bodies spheres.
 37. [ ] Simple textures? Glowing sun/bloom?
 38. [ ] Thread accels_compute across cores, runtime-scaled to the user's machine.
 39. [ ] Per-body substepping for fast moons (Phobos-class orbits).
+40. [ ] z-spawning
