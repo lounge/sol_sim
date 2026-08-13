@@ -5,7 +5,8 @@ A from-scratch orbital simulation of the solar system. Trying to learn some new 
 ## Learning
 
 - **Odin** — lang
-- **Graphics programming** — raw OpenGL, GLSL shaders, cameras & picking, f64→f32 precision at the GPU boundary
+- **Graphics programming** — raw OpenGL, GLSL shaders, cameras & picking, f64→f32 precision at the GPU boundary, framebuffer objects & post-processing chains
+- **Lighting & colour** — Lambert diffuse on sphere impostors, analytic eclipse occlusion, linear-light workflow & gamma 2.2, HDR and bloom, Narkowicz's ACES filmic tonemapping
 - **Math** — numerical integration (explicit/semi-implicit Euler → velocity Verlet / leapfrog), vectors, floating-point behavior
 - **Physics** — Newtonian gravity, orbital mechanics: Kepler's equation, osculating elements, barycenters & reflex motion
 - **Algorithms** — Barnes–Hut octree, fixed-timestep loop, ring buffers
