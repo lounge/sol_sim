@@ -41,6 +41,12 @@ Brightness_Program :: struct {
 	knee:      i32,
 }
 
+Blur_Program :: struct {
+	id: u32,
+	source: i32,
+	axis: i32,
+}
+
 body_program_load :: proc(program: u32) -> Body_Program {
 	program := Body_Program {
 		id                 = program,
@@ -93,8 +99,19 @@ brightness_program_load :: proc(program: u32) -> Brightness_Program {
 	return program
 }
 
+blur_program_load :: proc(program: u32) -> Blur_Program {
+	program := Blur_Program {
+		id    = program,
+		source = uniform_lookup(program, "source"),
+		axis = uniform_lookup(program, "axis"),
+	}
+
+	return program
+}
+
 shader_set :: proc {
 	shader_set_int,
+	shader_set_vec2,
 	shader_set_vec3,
 	shader_set_mat4,
 	shader_set_float,
@@ -105,6 +122,11 @@ shader_set :: proc {
 @(private = "file")
 shader_set_int :: proc(location: i32, value: i32) {
 	gl.Uniform1i(location, value)
+}
+
+@(private = "file")
+shader_set_vec2 :: proc(location: i32, x: f32, y: f32) {
+	gl.Uniform2f(location, x, y)
 }
 
 @(private = "file")

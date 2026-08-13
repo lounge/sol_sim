@@ -147,10 +147,21 @@ main :: proc() {
 		os.exit(-1)
 	}
 
+	blur_prg, blur_loaded_ok := gl.load_shaders_file(
+		#directory + "res/fullscreen.vert.glsl",
+		#directory + "res/blur.frag.glsl",
+	)
+	if !blur_loaded_ok {
+		fmt.println("Failed to load and build blur shaders")
+		os.exit(-1)
+	}
+
 	body_program := body_program_load(body_prg)
 	trail_program := trail_program_load(trail_prg)
 	composite_program := composite_program_load(composite_prg)
 	brightness_program := brightness_program_load(brightness_prg)
+	blur_program := blur_program_load(blur_prg)
+
 
 	circle_mesh := circle_mesh_create(32)
 	trail_mesh := trail_mesh_create()
@@ -168,6 +179,12 @@ main :: proc() {
 	target_scene := render_target_create(fb_width, fb_height, true)
 	target_brightness := render_target_create(fb_half_width, fb_half_height, false)
 
+	// Ping-Pong gurantees source != dest
+	target_blur: [2]Render_Target
+	target_blur[0] = render_target_create(fb_half_width, fb_half_height, false)
+	target_blur[1] = render_target_create(fb_half_width, fb_half_height, false)
+
+
 
 	for !glfw.WindowShouldClose(window) {
 		fb_width, fb_height = glfw.GetFramebufferSize(window)
@@ -178,6 +195,8 @@ main :: proc() {
 
 		render_target_resize(&target_scene, fb_width, fb_height)
 		render_target_resize(&target_brightness, fb_half_width, fb_half_height)
+		render_target_resize(&target_blur[0], fb_half_width, fb_half_height)
+		render_target_resize(&target_blur[1], fb_half_width, fb_half_height)
 
 
 		gl.BindFramebuffer(gl.FRAMEBUFFER, target_scene.fbo)
@@ -323,6 +342,7 @@ main :: proc() {
 		}
 
 		brightness_draw(&target_scene, &target_brightness, &brightness_program, empty_vao)
+		_ = bloom_blur(&target_brightness, &target_blur, &blur_program, empty_vao, BLOOM_ITERATIONS)
 
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 		gl.Viewport(0, 0, fb_width, fb_height)

@@ -11,6 +11,9 @@ _ :: fmt
 MIN_MARKER_PX :: 4
 MIN_STAR_MASS :: 0.08
 EMISSIVE_INTENSITY :: 8.0
+BLOOM_THRESHOLD  :: 1.0
+BLOOM_KNEE       :: 0.5
+BLOOM_ITERATIONS :: 5
 
 Mesh :: struct {
 	vao:          u32,
@@ -409,13 +412,62 @@ brightness_draw :: proc(
 	gl.BindTexture(gl.TEXTURE_2D, source.color_tex)
 
 	shader_set(program.scene, 0)
-	shader_set(program.threshold, 1.0)
-	shader_set(program.knee, 0.5)
+	shader_set(program.threshold, BLOOM_THRESHOLD)
+	shader_set(program.knee, BLOOM_KNEE)
 
 	gl.DrawArrays(gl.TRIANGLES, 0, 3)
 	gl.Enable(gl.BLEND)
 	gl.Enable(gl.DEPTH_TEST)
 }
+
+
+blur_draw :: proc(
+	source: ^Render_Target,
+	dest: ^Render_Target,
+	program: ^Blur_Program,
+	vao: u32,
+	axis_x, axis_y: f64,
+) {
+	gl.BindFramebuffer(gl.FRAMEBUFFER, dest.fbo)
+	gl.Viewport(0, 0, dest.width, dest.height)
+
+	gl.Disable(gl.DEPTH_TEST)
+	gl.Disable(gl.BLEND)
+	gl.UseProgram(program.id)
+	gl.BindVertexArray(vao)
+
+	gl.ActiveTexture(gl.TEXTURE0)
+	gl.BindTexture(gl.TEXTURE_2D, source.color_tex)
+
+	shader_set(program.source, 0)
+	shader_set(program.axis, f32(axis_x), f32( axis_y))
+
+	gl.DrawArrays(gl.TRIANGLES, 0, 3)
+	gl.Enable(gl.BLEND)
+	gl.Enable(gl.DEPTH_TEST)
+}
+
+bloom_blur :: proc(
+	brightness: ^Render_Target,
+	targets: ^[2]Render_Target,
+	program: ^Blur_Program,
+	vao: u32,
+	iterations: int,
+) -> ^Render_Target {
+	source := brightness
+	dest := 0
+
+	for i in 0 ..< iterations * 2 {
+		horizontal := (i % 2 == 0)
+		blur_draw(source, &targets[dest], program, vao, horizontal ? 1 : 0, horizontal ? 0 : 1)
+		source = &targets[dest]
+		dest = 1 - dest
+	}
+
+	return source
+}
+
+
 
 
 pos_render :: proc(body: sim.Body, alpha: f64) -> [3]f64 {
