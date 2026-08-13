@@ -34,6 +34,13 @@ Composite_Program :: struct {
 	scene: i32,
 }
 
+Brightness_Program :: struct {
+	id:        u32,
+	scene:     i32,
+	threshold: i32,
+	knee:      i32,
+}
+
 body_program_load :: proc(program: u32) -> Body_Program {
 	program := Body_Program {
 		id                 = program,
@@ -70,6 +77,17 @@ composite_program_load :: proc(program: u32) -> Composite_Program {
 	program := Composite_Program {
 		id    = program,
 		scene = uniform_lookup(program, "scene"),
+	}
+
+	return program
+}
+
+brightness_program_load :: proc(program: u32) -> Brightness_Program {
+	program := Brightness_Program {
+		id        = program,
+		scene     = uniform_lookup(program, "scene"),
+		threshold = uniform_lookup(program, "threshold"),
+		knee      = uniform_lookup(program, "knee"),
 	}
 
 	return program

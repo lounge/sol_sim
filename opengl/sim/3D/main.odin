@@ -106,6 +106,9 @@ main :: proc() {
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
 	fb_width, fb_height := glfw.GetFramebufferSize(window)
+	fb_half_width := math.max(1, fb_width / 2)
+	fb_half_height := math.max(1, fb_height / 2)
+
 	gl.Viewport(0, 0, fb_width, fb_height)
 
 	body_prg, body_loaded_ok := gl.load_shaders_file(
@@ -135,9 +138,19 @@ main :: proc() {
 		os.exit(-1)
 	}
 
+	brightness_prg, brightness_loaded_ok := gl.load_shaders_file(
+		#directory + "res/fullscreen.vert.glsl",
+		#directory + "res/brightness.frag.glsl",
+	)
+	if !brightness_loaded_ok {
+		fmt.println("Failed to load and build brightness shaders")
+		os.exit(-1)
+	}
+
 	body_program := body_program_load(body_prg)
 	trail_program := trail_program_load(trail_prg)
 	composite_program := composite_program_load(composite_prg)
+	brightness_program := brightness_program_load(brightness_prg)
 
 	circle_mesh := circle_mesh_create(32)
 	trail_mesh := trail_mesh_create()
@@ -152,13 +165,20 @@ main :: proc() {
 
 	gl.ClearColor(0.0, 0.0, 0.0, 0.0)
 
-	target_scene := scene_target_create(fb_width, fb_height)
+	target_scene := render_target_create(fb_width, fb_height, true)
+	target_brightness := render_target_create(fb_half_width, fb_half_height, false)
+
 
 	for !glfw.WindowShouldClose(window) {
 		fb_width, fb_height = glfw.GetFramebufferSize(window)
 		window_width, window_height := glfw.GetWindowSize(window)
 
-		scene_target_resize(&target_scene, fb_width, fb_height)
+		fb_half_width = math.max(1, fb_width / 2)
+		fb_half_height = math.max(1, fb_height / 2)
+
+		render_target_resize(&target_scene, fb_width, fb_height)
+		render_target_resize(&target_brightness, fb_half_width, fb_half_height)
+
 
 		gl.BindFramebuffer(gl.FRAMEBUFFER, target_scene.fbo)
 		gl.Viewport(0, 0, fb_width, fb_height)
@@ -302,11 +322,13 @@ main :: proc() {
 			window_title_update(window, &state, bodies[:], sim.date_from_jd(current_jd))
 		}
 
+		brightness_draw(&target_scene, &target_brightness, &brightness_program, empty_vao)
+
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 		gl.Viewport(0, 0, fb_width, fb_height)
 
-
 		composite_draw(&target_scene, &composite_program, empty_vao)
+
 
 		glfw.SwapBuffers(window)
 		glfw.PollEvents()

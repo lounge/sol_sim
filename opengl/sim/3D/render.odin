@@ -19,7 +19,7 @@ Mesh :: struct {
 	primitive:    u32,
 }
 
-Scene_Target :: struct {
+Render_Target :: struct {
 	fbo:       u32,
 	color_tex: u32,
 	depth_rb:  u32,
@@ -298,20 +298,22 @@ gravity_tree_cells_draw :: proc(
 	gl.Enable(gl.BLEND)
 }
 
-scene_target_storage :: proc(target: ^Scene_Target, width, height: i32) {
+render_target_storage :: proc(target: ^Render_Target, width, height: i32) {
 	gl.BindTexture(gl.TEXTURE_2D, target.color_tex)
 	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, width, height, 0, gl.RGBA, gl.HALF_FLOAT, nil)
 
-	gl.BindRenderbuffer(gl.RENDERBUFFER, target.depth_rb)
-	gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, width, height)
+	if target.depth_rb != 0 {
+		gl.BindRenderbuffer(gl.RENDERBUFFER, target.depth_rb)
+		gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, width, height)
+	}
 
 	target.width = width
 	target.height = height
 }
 
 
-scene_target_create :: proc(width, height: i32) -> Scene_Target {
-	target: Scene_Target
+render_target_create :: proc(width, height: i32, want_depth: bool) -> Render_Target {
+	target: Render_Target
 	target.width = width
 	target.height = height
 
@@ -319,13 +321,15 @@ scene_target_create :: proc(width, height: i32) -> Scene_Target {
 	gl.BindFramebuffer(gl.FRAMEBUFFER, target.fbo)
 
 	gl.GenTextures(1, &target.color_tex)
-	gl.GenRenderbuffers(1, &target.depth_rb)
-
-	scene_target_storage(&target, width, height)
-
 
 	// TODO:     set filters, attach colour
-	// if want_depth: attach depth
+	if want_depth {
+		gl.GenRenderbuffers(1, &target.depth_rb)
+	} else {
+		target.depth_rb = 0
+	}
+
+	render_target_storage(&target, width, height)
 
 
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
@@ -341,34 +345,34 @@ scene_target_create :: proc(width, height: i32) -> Scene_Target {
 		0,
 	)
 
-	gl.FramebufferRenderbuffer(
-		gl.FRAMEBUFFER,
-		gl.DEPTH_ATTACHMENT,
-		gl.RENDERBUFFER,
-		target.depth_rb,
-	)
-
+	if want_depth {
+		gl.FramebufferRenderbuffer(
+			gl.FRAMEBUFFER,
+			gl.DEPTH_ATTACHMENT,
+			gl.RENDERBUFFER,
+			target.depth_rb,
+		)
+	}
 
 	frame_buff_status := gl.CheckFramebufferStatus(gl.FRAMEBUFFER)
 	if frame_buff_status != gl.FRAMEBUFFER_COMPLETE {
 		panic(fmt.aprintf("scene framebuffer is incomplete 0x%x", frame_buff_status))
 	}
 
-
 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 
 	return target
 }
 
-scene_target_resize :: proc(target: ^Scene_Target, width, height: i32) {
+render_target_resize :: proc(target: ^Render_Target, width, height: i32) {
 	if width == target.width && height == target.height {
 		return
 	}
 
-	scene_target_storage(target, width, height)
+	render_target_storage(target, width, height)
 }
 
-composite_draw :: proc(target: ^Scene_Target, program: ^Composite_Program, vao: u32) {
+composite_draw :: proc(source: ^Render_Target, program: ^Composite_Program, vao: u32) {
 	gl.Disable(gl.DEPTH_TEST)
 	gl.Disable(gl.BLEND)
 
@@ -376,12 +380,39 @@ composite_draw :: proc(target: ^Scene_Target, program: ^Composite_Program, vao: 
 	gl.BindVertexArray(vao)
 
 	gl.ActiveTexture(gl.TEXTURE0)
-	gl.BindTexture(gl.TEXTURE_2D, target.color_tex)
+	gl.BindTexture(gl.TEXTURE_2D, source.color_tex)
 
 	shader_set(program.scene, 0)
 
 	gl.DrawArrays(gl.TRIANGLES, 0, 3)
 
+	gl.Enable(gl.BLEND)
+	gl.Enable(gl.DEPTH_TEST)
+}
+
+brightness_draw :: proc(
+	source: ^Render_Target,
+	dest: ^Render_Target,
+	program: ^Brightness_Program,
+	vao: u32,
+) {
+	gl.BindFramebuffer(gl.FRAMEBUFFER, dest.fbo)
+	gl.Viewport(0, 0, dest.width, dest.height) //  half res
+
+	gl.Disable(gl.DEPTH_TEST)
+	gl.Disable(gl.BLEND)
+
+	gl.UseProgram(program.id)
+	gl.BindVertexArray(vao)
+
+	gl.ActiveTexture(gl.TEXTURE0)
+	gl.BindTexture(gl.TEXTURE_2D, source.color_tex)
+
+	shader_set(program.scene, 0)
+	shader_set(program.threshold, 1.0)
+	shader_set(program.knee, 0.5)
+
+	gl.DrawArrays(gl.TRIANGLES, 0, 3)
 	gl.Enable(gl.BLEND)
 	gl.Enable(gl.DEPTH_TEST)
 }
