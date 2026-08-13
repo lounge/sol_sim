@@ -11,9 +11,10 @@ _ :: fmt
 MIN_MARKER_PX :: 4
 MIN_STAR_MASS :: 0.08
 EMISSIVE_INTENSITY :: 8.0
-BLOOM_THRESHOLD  :: 1.0
-BLOOM_KNEE       :: 0.5
+BLOOM_THRESHOLD :: 1.0
+BLOOM_KNEE :: 0.5
 BLOOM_ITERATIONS :: 5
+BLOOM_STRENGTH :: 5.0
 
 Mesh :: struct {
 	vao:          u32,
@@ -214,7 +215,6 @@ bodies_draw :: proc(
 
 		emissive := (lit && i == light_index) ? 1 : 0
 		shader_set(program.emissive, i32(emissive))
-		shader_set(program.emissive_intensity, EMISSIVE_INTENSITY)
 		circle_draw(body.radius, body.color, mesh, program, center_view, depth, height, slots[i])
 	}
 }
@@ -375,7 +375,12 @@ render_target_resize :: proc(target: ^Render_Target, width, height: i32) {
 	render_target_storage(target, width, height)
 }
 
-composite_draw :: proc(source: ^Render_Target, program: ^Composite_Program, vao: u32) {
+composite_draw :: proc(
+	scene_src: ^Render_Target,
+	bloom_src: ^Render_Target,
+	program: ^Composite_Program,
+	vao: u32,
+) {
 	gl.Disable(gl.DEPTH_TEST)
 	gl.Disable(gl.BLEND)
 
@@ -383,12 +388,18 @@ composite_draw :: proc(source: ^Render_Target, program: ^Composite_Program, vao:
 	gl.BindVertexArray(vao)
 
 	gl.ActiveTexture(gl.TEXTURE0)
-	gl.BindTexture(gl.TEXTURE_2D, source.color_tex)
+	gl.BindTexture(gl.TEXTURE_2D, scene_src.color_tex)
+
+	gl.ActiveTexture(gl.TEXTURE1)
+	gl.BindTexture(gl.TEXTURE_2D, bloom_src.color_tex)
 
 	shader_set(program.scene, 0)
+	shader_set(program.bloom, 1)
+	shader_set(program.bloom_strength, BLOOM_STRENGTH)
 
 	gl.DrawArrays(gl.TRIANGLES, 0, 3)
 
+	gl.ActiveTexture(gl.TEXTURE0)
 	gl.Enable(gl.BLEND)
 	gl.Enable(gl.DEPTH_TEST)
 }
@@ -440,7 +451,7 @@ blur_draw :: proc(
 	gl.BindTexture(gl.TEXTURE_2D, source.color_tex)
 
 	shader_set(program.source, 0)
-	shader_set(program.axis, f32(axis_x), f32( axis_y))
+	shader_set(program.axis, f32(axis_x), f32(axis_y))
 
 	gl.DrawArrays(gl.TRIANGLES, 0, 3)
 	gl.Enable(gl.BLEND)
@@ -466,8 +477,6 @@ bloom_blur :: proc(
 
 	return source
 }
-
-
 
 
 pos_render :: proc(body: sim.Body, alpha: f64) -> [3]f64 {
@@ -504,10 +513,14 @@ circle_draw :: proc(
 		linalg.matrix4_scale_f64({draw_radius, draw_radius, draw_radius})
 	mv32 := (matrix[4, 4]f32)(mv)
 
+	flux_scale := (radius / draw_radius) * (radius / draw_radius)
+	emissive_intensity := 1.0 + (EMISSIVE_INTENSITY - 1.0) * flux_scale
+
 	shader_set(program.color, color.x, color.y, color.z)
 	shader_set(program.mv, &mv32)
 	shader_set(program.body_radius, f32(radius))
 	shader_set(program.receiver_slot, receiver_slots)
+	shader_set(program.emissive_intensity, f32(emissive_intensity))
 
 	gl.DrawArrays(mesh.primitive, 0, mesh.vertex_count)
 }
@@ -561,7 +574,6 @@ mass_preview_draw :: proc(
 	center_view := camera_frame.view * [4]f64{rel.x, rel.y, rel.z, 1}
 
 	shader_set(program.emissive, 1)
-	shader_set(program.emissive_intensity, EMISSIVE_INTENSITY)
 
 	projection32 := (matrix[4, 4]f32)(camera_frame.proj)
 	shader_set(program.proj, &projection32)

@@ -30,8 +30,10 @@ Trail_Program :: struct {
 }
 
 Composite_Program :: struct {
-	id:    u32,
-	scene: i32,
+	id:             u32,
+	scene:          i32,
+	bloom:          i32,
+	bloom_strength: i32,
 }
 
 Brightness_Program :: struct {
@@ -42,9 +44,9 @@ Brightness_Program :: struct {
 }
 
 Blur_Program :: struct {
-	id: u32,
+	id:     u32,
 	source: i32,
-	axis: i32,
+	axis:   i32,
 }
 
 body_program_load :: proc(program: u32) -> Body_Program {
@@ -81,8 +83,10 @@ trail_program_load :: proc(program: u32) -> Trail_Program {
 
 composite_program_load :: proc(program: u32) -> Composite_Program {
 	program := Composite_Program {
-		id    = program,
-		scene = uniform_lookup(program, "scene"),
+		id             = program,
+		scene          = uniform_lookup(program, "scene"),
+		bloom          = uniform_lookup(program, "bloom"),
+		bloom_strength = uniform_lookup(program, "bloom_strength"),
 	}
 
 	return program
@@ -101,9 +105,9 @@ brightness_program_load :: proc(program: u32) -> Brightness_Program {
 
 blur_program_load :: proc(program: u32) -> Blur_Program {
 	program := Blur_Program {
-		id    = program,
+		id     = program,
 		source = uniform_lookup(program, "source"),
-		axis = uniform_lookup(program, "axis"),
+		axis   = uniform_lookup(program, "axis"),
 	}
 
 	return program

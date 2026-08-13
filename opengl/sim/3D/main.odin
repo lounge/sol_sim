@@ -185,7 +185,6 @@ main :: proc() {
 	target_blur[1] = render_target_create(fb_half_width, fb_half_height, false)
 
 
-
 	for !glfw.WindowShouldClose(window) {
 		fb_width, fb_height = glfw.GetFramebufferSize(window)
 		window_width, window_height := glfw.GetWindowSize(window)
@@ -342,12 +341,18 @@ main :: proc() {
 		}
 
 		brightness_draw(&target_scene, &target_brightness, &brightness_program, empty_vao)
-		_ = bloom_blur(&target_brightness, &target_blur, &blur_program, empty_vao, BLOOM_ITERATIONS)
+		bloom := bloom_blur(
+			&target_brightness,
+			&target_blur,
+			&blur_program,
+			empty_vao,
+			BLOOM_ITERATIONS,
+		)
 
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 		gl.Viewport(0, 0, fb_width, fb_height)
 
-		composite_draw(&target_scene, &composite_program, empty_vao)
+		composite_draw(&target_scene, bloom, &composite_program, empty_vao)
 
 
 		glfw.SwapBuffers(window)
