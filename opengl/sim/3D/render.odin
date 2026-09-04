@@ -113,25 +113,22 @@ trails_draw :: proc(
 	gl.DepthMask(gl.TRUE)
 }
 
-circle_mesh_create :: proc(segments: i32) -> Mesh {
+sphere_mesh_create :: proc(rings: i32, segments: i32) -> Mesh {
 	vbo, vao: u32
-
 	vertices: [dynamic]f32
+
 	defer delete(vertices)
 
-	radius: f32 = 1.0
-	origin_x: f32 = 0.0
-	origin_y: f32 = 0.0
+	for ring in 0 ..< rings {
+		for seg in 0 ..< segments {
+			a := sphere_point(ring, seg, rings, segments) // upper-left of the quad
+			b := sphere_point(ring + 1, seg, rings, segments) // lower-left
+			c := sphere_point(ring + 1, seg + 1, rings, segments) // lower-right
+			d := sphere_point(ring, seg + 1, rings, segments) // upper-right
 
-	append(&vertices, origin_x, origin_y)
-
-	for i := 0; i <= int(segments); i += 1 {
-		angle := f32(i) * (2 * math.PI / f32(segments))
-
-		x := origin_x + f32(radius) * math.cos(angle)
-		y := origin_y + f32(radius) * math.sin(angle)
-
-		append(&vertices, x, y)
+			append(&vertices, a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z) // counter-clockwise
+			append(&vertices, a.x, a.y, a.z, c.x, c.y, c.z, d.x, d.y, d.z)
+		}
 	}
 
 	gl.GenVertexArrays(1, &vao)
@@ -144,13 +141,21 @@ circle_mesh_create :: proc(segments: i32) -> Mesh {
 		raw_data(vertices),
 		gl.STATIC_DRAW,
 	)
-	gl.VertexAttribPointer(0, 2, gl.FLOAT, gl.FALSE, 2 * size_of(f32), 0)
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, 3 * size_of(f32), 0)
 	gl.EnableVertexAttribArray(0)
 	gl.BindVertexArray(0)
 
-	mesh := Mesh{vao, vbo, segments + 2, gl.TRIANGLE_FAN}
+	mesh := Mesh{vao, vbo, rings * segments * 6, gl.TRIANGLES}
 
 	return mesh
+
+}
+
+@(private = "file")
+sphere_point :: proc(ring, segment, rings, segments: i32) -> [3]f32 {
+	theta := math.PI * f32(ring) / f32(rings)
+	phi := 2 * math.PI * f32(segment) / f32(segments)
+	return {math.sin(theta) * math.cos(phi), math.sin(theta) * math.sin(phi), math.cos(theta)}
 }
 
 bodies_draw :: proc(
@@ -160,6 +165,7 @@ bodies_draw :: proc(
 	camera_frame: Camera_Frame,
 	height: i32,
 	alpha: f64,
+	render_time: f64,
 ) {
 	gl.UseProgram(program.id)
 	gl.BindVertexArray(mesh.vao)
@@ -212,18 +218,40 @@ bodies_draw :: proc(
 		rel := pos_render(body, alpha) - camera_frame.eye
 		center_view := camera_frame.view * [4]f64{rel.x, rel.y, rel.z, 1}
 		depth := -center_view.z
-
 		emissive := (lit && i == light_index) ? 1 : 0
+		angle := bodies_spin_angle(body.rotation_period, render_time)
+
 		shader_set(program.emissive, i32(emissive))
-		circle_draw(body.radius, body.color, mesh, program, center_view, depth, height, slots[i])
+		sphere_draw(
+			body.radius,
+			body.color,
+			mesh,
+			program,
+			center_view,
+			camera_frame.view,
+			angle,
+			depth,
+			height,
+			slots[i],
+		)
 	}
+}
+
+@(private = "file")
+bodies_spin_angle :: proc(period_days: f64, t: f64) -> f64 {
+	if period_days == 0 do return 0
+
+	period_units := period_days * sim.SECONDS_IN_DAY / sim.T_UNIT_SECONDS
+	turns := t / period_units
+	return (2* math.PI) * (turns - math.floor_f64(turns))
+
 }
 
 drag_preview_pass :: proc(
 	state: ^State,
 	cursor: Pixel_Pos,
 	drag: Pixel_Pos,
-	trail_mesh, circle_mesh: Mesh,
+	trail_mesh, sphere_mesh: Mesh,
 	trail_program: Trail_Program,
 	body_program: Body_Program,
 	camera_frame: Camera_Frame,
@@ -245,7 +273,7 @@ drag_preview_pass :: proc(
 		drag_preview_draw(a, b, trail_mesh, trail_program, camera_frame)
 
 		_, radius := mass_radius_get(state.input.spawn_mass_exp)
-		mass_preview_draw(b, radius, circle_mesh, body_program, camera_frame, fb_height)
+		mass_preview_draw(b, radius, sphere_mesh, body_program, camera_frame, fb_height)
 	}
 
 	return a, b, a_ok && b_ok
@@ -493,12 +521,14 @@ gl_check_error :: proc(loc := #caller_location) {
 
 
 @(private = "file")
-circle_draw :: proc(
+sphere_draw :: proc(
 	radius: f64,
 	color: sim.Color,
 	mesh: Mesh,
 	program: Body_Program,
 	center_view: [4]f64,
+	view: matrix[4, 4]f64,
+	angle: f64,
 	depth: f64,
 	height: i32,
 	receiver_slots: i32,
@@ -510,7 +540,10 @@ circle_draw :: proc(
 
 	mv :=
 		linalg.matrix4_translate(center_view.xyz) *
+		view *
+		linalg.matrix4_rotate_f64(angle, {0, 0, 1}) *
 		linalg.matrix4_scale_f64({draw_radius, draw_radius, draw_radius})
+
 	mv32 := (matrix[4, 4]f32)(mv)
 
 	flux_scale := (radius / draw_radius) * (radius / draw_radius)
@@ -578,12 +611,14 @@ mass_preview_draw :: proc(
 	projection32 := (matrix[4, 4]f32)(camera_frame.proj)
 	shader_set(program.proj, &projection32)
 
-	circle_draw(
+	sphere_draw(
 		radius,
 		sim.PALETTE[.Spawn],
 		mesh,
 		program,
 		center_view,
+		camera_frame.view,
+		0,
 		-center_view.z,
 		height,
 		-1,

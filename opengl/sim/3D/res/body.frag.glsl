@@ -19,7 +19,7 @@ uniform float emissive_intensity;
 
 flat in vec3 v_center_view;
 in vec3 v_pos_view;
-in vec2 v_local;
+in vec3 v_normal_view;
 
 out vec4 FragColor;
 
@@ -48,12 +48,12 @@ void main()
     } else {
         float diffuse = 0.0;
         if (lit == 1) {
-            float r2 = dot(v_local, v_local);
+            // float r2 = dot(v_local, v_local);
+
+            vec3 N = normalize(v_normal_view);
             vec3 L = normalize(sun_pos_view - v_pos_view);
-            vec3 N = vec3(v_local, sqrt(max(0.0, 1.0 - r2)));
-
-
             vec3 P = v_center_view + N * body_radius;
+
             vec3 to_sun = sun_pos_view - P;
             float d_sun = length(to_sun);
             float a_sun = asin(clamp(sun_radius / d_sun, 0, 1));

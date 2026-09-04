@@ -45,6 +45,8 @@ main :: proc() {
 	sim_time: f64
 	accumulator: f64
 
+
+	// loop to catch-up to current date pos
 	if catch_up {
 		n := int(math.floor(delta_t / sim.DT))
 		tracked := -1
@@ -163,7 +165,7 @@ main :: proc() {
 	blur_program := blur_program_load(blur_prg)
 
 
-	circle_mesh := circle_mesh_create(32)
+	sphere_mesh := sphere_mesh_create(16, 32)
 	trail_mesh := trail_mesh_create()
 
 	empty_vao: u32
@@ -264,6 +266,8 @@ main :: proc() {
 		}
 
 		alpha := accumulator / sim.DT
+		dt_signed := state.time_reversed ? -sim.DT : sim.DT
+		render_time := sim_time - (1 - alpha) * dt_signed
 		cx, cy := glfw.GetCursorPos(window)
 
 		camera_update(&state, {cx, cy}, &prev_cursor, bodies[:], alpha)
@@ -284,7 +288,19 @@ main :: proc() {
 			measure_t0 = glfw.GetTime()
 		}
 
-		bodies_draw(bodies[:], circle_mesh, body_program, camera_frame, fb_height, alpha)
+		if state.input.polygon_mode do gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
+
+		bodies_draw(
+			bodies[:],
+			sphere_mesh,
+			body_program,
+			camera_frame,
+			fb_height,
+			alpha,
+			render_time,
+		)
+
+		if state.input.polygon_mode do gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
 
 		when sim.MEASURE {
 			measure.bodies_seconds += glfw.GetTime() - measure_t0
@@ -324,7 +340,7 @@ main :: proc() {
 				cursor,
 				drag,
 				trail_mesh,
-				circle_mesh,
+				sphere_mesh,
 				trail_program,
 				body_program,
 				camera_frame,
