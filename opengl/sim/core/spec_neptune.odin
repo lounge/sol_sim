@@ -9,6 +9,7 @@ NEPTUNE :: Body_Spec {
 	inclination     = 1.7706,
 	lon_asc_node    = 131.8,
 	arg_perihelion  = 276.1762,
+	rotation_period = 0.67125, // 16.11 h
 	color           = PALETTE[.Neptune],
 	name            = "Neptune",
 	satellites      = {
@@ -21,6 +22,7 @@ NEPTUNE :: Body_Spec {
 			inclination = 129.1481,
 			lon_asc_node = 222.662,
 			arg_perihelion = 102.1705,
+			rotation_period = -5.8769,
 			color = PALETTE[.Moon],
 			name = "Triton",
 		},

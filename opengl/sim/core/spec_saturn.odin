@@ -9,6 +9,7 @@ SATURN :: Body_Spec {
 	inclination     = 2.4879,
 	lon_asc_node    = 113.6324,
 	arg_perihelion  = 338.1383,
+	rotation_period = 0.44401, // 10.656 h
 	color           = PALETTE[.Saturn],
 	name            = "Saturn",
 	satellites      = {
@@ -21,6 +22,7 @@ SATURN :: Body_Spec {
 			inclination = 27.709,
 			lon_asc_node = 169.0774,
 			arg_perihelion = 177.9434,
+			rotation_period = 15.945,
 			color = PALETTE[.Moon],
 			name = "Titan",
 		},
@@ -33,6 +35,7 @@ SATURN :: Body_Spec {
 			inclination = 28.2426,
 			lon_asc_node = 170.0345,
 			arg_perihelion = 157.314,
+			rotation_period = 4.5175,
 			color = PALETTE[.Moon],
 			name = "Rhea",
 		},
@@ -45,6 +48,7 @@ SATURN :: Body_Spec {
 			inclination = 16.9953,
 			lon_asc_node = 138.8959,
 			arg_perihelion = 231.0227,
+			rotation_period = 79.3215,
 			color = PALETTE[.Moon],
 			name = "Iapetus",
 		},

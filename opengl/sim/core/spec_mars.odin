@@ -9,6 +9,7 @@ MARS :: Body_Spec {
 	inclination     = 1.8475,
 	lon_asc_node    = 49.4832,
 	arg_perihelion  = 286.6232,
+	rotation_period = 1.02596, // 24.623 h
 	color           = PALETTE[.Mars],
 	name            = "Mars",
 }

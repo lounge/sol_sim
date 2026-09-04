@@ -9,6 +9,7 @@ URANUS :: Body_Spec {
 	inclination     = 0.7728,
 	lon_asc_node    = 74.0166,
 	arg_perihelion  = 91.3757,
+	rotation_period = -0.71833, // 17.24 h, retrograde seen from ecliptic north (97.8 deg tilt, no obliquity yet)
 	color           = PALETTE[.Uranus],
 	name            = "Uranus",
 	satellites      = {
@@ -21,6 +22,7 @@ URANUS :: Body_Spec {
 			inclination = 99.1861,
 			lon_asc_node = 163.423,
 			arg_perihelion = 55.8591,
+			rotation_period = -1.4135,
 			color = PALETTE[.Moon],
 			name = "Miranda",
 		},
@@ -33,6 +35,7 @@ URANUS :: Body_Spec {
 			inclination = 97.7633,
 			lon_asc_node = 167.6422,
 			arg_perihelion = 261.8914,
+			rotation_period = -8.7059,
 			color = PALETTE[.Moon],
 			name = "Titania",
 		},
@@ -45,6 +48,7 @@ URANUS :: Body_Spec {
 			inclination = 97.9056,
 			lon_asc_node = 167.7098,
 			arg_perihelion = 156.6162,
+			rotation_period = -13.4632,
 			color = PALETTE[.Moon],
 			name = "Oberon",
 		},

@@ -6,15 +6,16 @@ INCL_SCALE :: #config(INCL_SCALE, 1.0)
 KEPLER_MAX_ITERATIONS :: 12
 
 Body :: struct {
-	name:     string,
-	color:    Color,
-	pos:      Vec,
-	prev_pos: Vec,
-	vel:      Vec,
-	mass:     f64,
-	radius:   f64,
-	accel:    Vec,
-	spawned:  bool, // if dynamically spawned
+	name:            string,
+	color:           Color,
+	pos:             Vec,
+	prev_pos:        Vec,
+	vel:             Vec,
+	mass:            f64,
+	radius:          f64,
+	accel:           Vec,
+	rotation_period: f64,
+	spawned:         bool, // if dynamically spawned
 }
 
 body_add :: proc(
@@ -60,14 +61,15 @@ body_add :: proc(
 
 
 	body := Body {
-		name     = spec.name,
-		color    = spec.color,
-		pos      = pos,
-		prev_pos = pos,
-		vel      = vel,
-		mass     = spec.mass,
-		radius   = spec.radius,
-		accel    = {},
+		name            = spec.name,
+		color           = spec.color,
+		pos             = pos,
+		prev_pos        = pos,
+		vel             = vel,
+		mass            = spec.mass,
+		radius          = spec.radius,
+		accel           = {},
+		rotation_period = spec.rotation_period,
 	}
 
 	trail := trail_make_orbital(parent_index, steps_per_orbit, stride)

@@ -9,6 +9,7 @@ EARTH :: Body_Spec {
 	inclination     = 0.0034,
 	lon_asc_node    = 174.9687,
 	arg_perihelion  = 288.0618,
+	rotation_period = 0.99727, // 23.934 h
 	color           = PALETTE[.Earth],
 	name            = "Earth",
 	satellites      = {
@@ -21,6 +22,7 @@ EARTH :: Body_Spec {
 			inclination = 5.0596,
 			lon_asc_node = 340.5846,
 			arg_perihelion = 101.0339,
+			rotation_period = 27.3217,
 			color = PALETTE[.Moon],
 			name = "Moon",
 		},

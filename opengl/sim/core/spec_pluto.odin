@@ -9,6 +9,7 @@ PLUTO :: Body_Spec {
 	inclination     = 17.176,
 	lon_asc_node    = 110.3364,
 	arg_perihelion  = 113.1505,
+	rotation_period = -6.3872, // 6.387 d, retrograde
 	color           = PALETTE[.Pluto],
 	name            = "Pluto",
 	satellites      = {
@@ -21,6 +22,7 @@ PLUTO :: Body_Spec {
 			inclination = 112.8878,
 			lon_asc_node = 227.393,
 			arg_perihelion = 172.4679,
+			rotation_period = -6.3872,
 			color = PALETTE[.Moon],
 			name = "Charon",
 		},

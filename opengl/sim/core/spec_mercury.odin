@@ -9,6 +9,7 @@ MERCURY :: Body_Spec {
 	inclination     = 7.0034,
 	lon_asc_node    = 48.2988,
 	arg_perihelion  = 29.1988,
+	rotation_period = 58.6462, // 58.646 d
 	color           = PALETTE[.Mercury],
 	name            = "Mercury",
 }
