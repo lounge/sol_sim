@@ -37,9 +37,10 @@
 35. [x] Debug/Confirm correctness against the real sky live. Solar Eclipse (Sweden: 2026-08-12 19:00-21:00) 
 36. [x] tests for the pure leaves (date conversions, kepler_solve round-trip, spec_rel_state)
 37. [x] Make sun bloom
-38. [ ] Make bodies spheres.
+38. [x] Make bodies spheres.
 39. [ ] Simple textures?
-40. [ ] Thread accels_compute across cores, runtime-scaled to the user's machine. Test improvment ganes
-41. [ ] Per-body substepping for fast moons (Phobos-class orbits).
-42. [ ] z-spawning
-43. [ ] Port to Vulkan? :'(
+40. [ ] If sun is delted or another body gets larger mass make the new largest bloom?
+41. [ ] Thread accels_compute across cores, runtime-scaled to the user's machine. Test improvment ganes
+42. [ ] Per-body substepping for fast moons (Phobos-class orbits).
+43. [ ] z-spawning
+44. [ ] Port to Vulkan? :'(
