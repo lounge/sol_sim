@@ -39,7 +39,7 @@
 37. [x] Make sun bloom
 38. [x] Make bodies spheres.
 39. [x] Simple textures?
-40. [ ] If sun is delted or another body gets larger mass make the new largest emit?
+40. [x] If sun is delted or another body gets larger mass make the new largest emit?
 41. [ ] Obliquity: IAU pole (RA/Dec) per spec row, one tilt rotation between view and spin.
 42. [ ] Epoch spin phase: prime meridian at JD_EPOCH, audited by sub-solar longitude against Horizons.
 43. [ ] Earth night map on the dark side.
