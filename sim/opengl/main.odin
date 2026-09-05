@@ -2,68 +2,20 @@ package main
 
 import sim "../core"
 
-import "core:fmt"
 import "core:math"
-import "core:math/linalg"
-import "core:os"
-import "core:time"
-import gl "vendor:OpenGL"
 import "vendor:glfw"
 
-TITLE :: "sol_sim 3D"
-SCR_WIDTH :: 800
-SCR_HEIGHT :: 600
-
 TOTAL_STEPS :: #config(TOTAL_STEPS, 0) // > 0 = headless runner, no window
-MAX_SIM_SPEED :: #config(MAX_SIM_SPEED, int(50 * sim.SECONDS_IN_YEAR))
-PHYSICS_BUDGET :: #config(PHYSICS_BUDGET, 0.010) // Seconds of wall clock per frame
-GOVERNOR_FRAMES :: #config(GOVERNOR_FRAMES, 30) // COnsecutive overloaded frames before halving
-START_JD :: #config(START_JD, 0.0) // Start datetime for sim; 0 = wall clock (spec epoch in deterministic builds)
-
-DETERMINISTIC_START :: sim.DETERMINISM_STEPS > 0 || TOTAL_STEPS > 0 || sim.MEASURE
 
 main :: proc() {
-	start_jd := START_JD
-	if (start_jd == 0.0) {
-		start_jd = sim.JD_EPOCH
-		if (!DETERMINISTIC_START) {
-			start_jd =
-				f64(time.to_unix_nanoseconds(time.now())) /
-					sim.NANO_IN_SECONDS /
-					sim.SECONDS_IN_DAY +
-				sim.JD_UNIX_EPOCH
-		}
-	}
-
-	delta_t := (start_jd - sim.JD_EPOCH) * sim.SECONDS_IN_DAY / sim.T_UNIT_SECONDS
-	catch_up := delta_t >= 0
-	spec_delta_t := catch_up ? 0 : delta_t
+	start_jd := start_jd_resolve()
 
 	gravity_tree: sim.Gravity_Tree
-	bodies, trails := sim.create_system(&gravity_tree, spec_delta_t)
+	bodies, trails := sim.create_system(&gravity_tree, min(clock_delta_t(start_jd), 0))
+	clock := clock_start(start_jd, &bodies, &trails, &gravity_tree)
 
-	sim_time: f64
-	accumulator: f64
-
-
-	// loop to catch-up to current date pos
-	if catch_up {
-		n := int(math.floor(delta_t / sim.DT))
-		tracked := -1
-
-		for _ in 0 ..< n {
-			_ = sim.collision_drain(&bodies, &trails, &tracked, &gravity_tree)
-			sim.physics_step(bodies[:], sim.DT, &gravity_tree)
-			sim.trail_record(bodies[:], trails[:])
-		}
-
-		sim_time = f64(n) * sim.DT
-		accumulator = delta_t - f64(n) * sim.DT
-		start_jd = sim.JD_EPOCH
-	}
-
+	measure: Measure
 	when sim.MEASURE {
-		measure: sim.Measure
 		sim.measure_spawn(&bodies, &trails, &gravity_tree)
 	}
 
@@ -77,200 +29,52 @@ main :: proc() {
 		return
 	}
 
-	glfw.Init()
+	state := state_init()
+	window := window_create(&state)
 	defer glfw.Terminate()
 
-	glfw.WindowHint(glfw.CONTEXT_VERSION_MAJOR, 3)
-	glfw.WindowHint(glfw.CONTEXT_VERSION_MINOR, 3)
-	glfw.WindowHint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
-
-	window := glfw.CreateWindow(SCR_WIDTH, SCR_HEIGHT, TITLE, nil, nil)
-	if window == nil {
-		fmt.println("Failed to create GLFW window")
-		glfw.Terminate()
-		os.exit(-1)
-	}
-
-	state := state_init()
-	glfw.SetWindowUserPointer(window, &state)
-
-	glfw.SetFramebufferSizeCallback(window, callback_framebuffer_size)
-	glfw.SetScrollCallback(window, callback_scroll)
-	glfw.SetMouseButtonCallback(window, callback_click)
-	glfw.SetKeyCallback(window, callback_key)
-
-	glfw.MakeContextCurrent(window)
-	glfw.SwapInterval(1)
-
-	gl.load_up_to(3, 3, glfw.gl_set_proc_address)
-	gl.Enable(gl.DEPTH_TEST)
-	gl.Enable(gl.BLEND)
-	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-
 	fb_width, fb_height := glfw.GetFramebufferSize(window)
-	fb_half_width := math.max(1, fb_width / 2)
-	fb_half_height := math.max(1, fb_height / 2)
+	renderer := renderer_create(fb_width, fb_height)
 
-	gl.Viewport(0, 0, fb_width, fb_height)
-
-	body_prg, body_loaded_ok := gl.load_shaders_file(
-		#directory + "res/body.vert.glsl",
-		#directory + "res/body.frag.glsl",
-	)
-	if !body_loaded_ok {
-		fmt.println("Failed to load and build body shaders")
-		os.exit(-1)
-	}
-
-	trail_prg, trail_loaded_ok := gl.load_shaders_file(
-		#directory + "res/trail.vert.glsl",
-		#directory + "res/trail.frag.glsl",
-	)
-	if !trail_loaded_ok {
-		fmt.println("Failed to load and build trail shaders")
-		os.exit(-1)
-	}
-
-	composite_prg, composite_loaded_ok := gl.load_shaders_file(
-		#directory + "res/fullscreen.vert.glsl",
-		#directory + "res/composite.frag.glsl",
-	)
-	if !composite_loaded_ok {
-		fmt.println("Failed to load and build composite shaders")
-		os.exit(-1)
-	}
-
-	brightness_prg, brightness_loaded_ok := gl.load_shaders_file(
-		#directory + "res/fullscreen.vert.glsl",
-		#directory + "res/brightness.frag.glsl",
-	)
-	if !brightness_loaded_ok {
-		fmt.println("Failed to load and build brightness shaders")
-		os.exit(-1)
-	}
-
-	blur_prg, blur_loaded_ok := gl.load_shaders_file(
-		#directory + "res/fullscreen.vert.glsl",
-		#directory + "res/blur.frag.glsl",
-	)
-	if !blur_loaded_ok {
-		fmt.println("Failed to load and build blur shaders")
-		os.exit(-1)
-	}
-
-	body_program := body_program_load(body_prg)
-	trail_program := trail_program_load(trail_prg)
-	composite_program := composite_program_load(composite_prg)
-	brightness_program := brightness_program_load(brightness_prg)
-	blur_program := blur_program_load(blur_prg)
-
-
-	sphere_mesh := sphere_mesh_create(16, 32)
-	trail_mesh := trail_mesh_create()
-	textures := texture_create()
-
-	empty_vao: u32
-	gl.GenVertexArrays(1, &empty_vao)
-
-	overload_frames: int
 	prev_cursor: [2]f64
 	last_time := glfw.GetTime()
 	last_shown_minute: int
 
-	gl.ClearColor(0.0, 0.0, 0.0, 0.0)
-
-	target_scene := render_target_create(fb_width, fb_height, true)
-	target_brightness := render_target_create(fb_half_width, fb_half_height, false)
-
-	// Ping-Pong gurantees source != dest
-	target_blur: [2]Render_Target
-	target_blur[0] = render_target_create(fb_half_width, fb_half_height, false)
-	target_blur[1] = render_target_create(fb_half_width, fb_half_height, false)
-
-
 	for !glfw.WindowShouldClose(window) {
 		fb_width, fb_height = glfw.GetFramebufferSize(window)
 		window_width, window_height := glfw.GetWindowSize(window)
-
-		fb_half_width = math.max(1, fb_width / 2)
-		fb_half_height = math.max(1, fb_height / 2)
-
-		render_target_resize(&target_scene, fb_width, fb_height)
-		render_target_resize(&target_brightness, fb_half_width, fb_half_height)
-		render_target_resize(&target_blur[0], fb_half_width, fb_half_height)
-		render_target_resize(&target_blur[1], fb_half_width, fb_half_height)
-
-
-		gl.BindFramebuffer(gl.FRAMEBUFFER, target_scene.fbo)
-		gl.Viewport(0, 0, fb_width, fb_height)
-		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+		renderer_begin_frame(&renderer, fb_width, fb_height)
 
 		now := glfw.GetTime()
-		frame_time := now - last_time
-		frame_time = min(frame_time, 0.1)
+		frame_time := min(now - last_time, 0.1)
 		last_time = now
-		accumulator += frame_time * f64(state.sim_speed) / sim.T_UNIT_SECONDS
-
-
-		when sim.MEASURE {
-			measure_t0 := glfw.GetTime()
-		}
+		clock_advance(&clock, frame_time, state.sim_speed)
 
 		when sim.BH_DEBUG {
 			sim.gravity_tree_debug(&gravity_tree, bodies[:], now)
 		}
 
-		// Physics step
-		deadline := glfw.GetTime() + PHYSICS_BUDGET
-		steps: int
-		for accumulator >= sim.DT {
-			// Drain loop
-			when sim.MEASURE {
-				measure_c0 := glfw.GetTime()
-			}
+		_, merged := clock_drain(
+			&clock,
+			&bodies,
+			&trails,
+			&state.tracked_body,
+			&gravity_tree,
+			state.time_reversed,
+			&measure,
+		)
+		if merged do state.title_stale = true
 
-			if sim.collision_drain(&bodies, &trails, &state.tracked_body, &gravity_tree) do state.title_stale = true
-
-			when sim.MEASURE {
-				measure.collision_seconds += glfw.GetTime() - measure_c0
-			}
-
-			dt := f64(state.time_reversed ? -1 : 1) * sim.DT
-
-			sim.physics_step(bodies[:], dt, &gravity_tree)
-			sim.trail_record(bodies[:], trails[:])
-			sim_time += dt
-			accumulator -= sim.DT
-			steps += 1
-
-			if glfw.GetTime() >= deadline do break
-		}
-
-		current_jd := start_jd + (sim_time + accumulator) * sim.T_UNIT_SECONDS / sim.SECONDS_IN_DAY
-		when sim.MEASURE {
-			measure.physics_seconds += glfw.GetTime() - measure_t0
-			measure.steps += steps
-		}
-
-		overloaded := accumulator >= sim.DT
-		if overloaded {
-			accumulator = math.mod(accumulator, sim.DT)
-			overload_frames += 1
-		} else {
-			overload_frames = 0
-		}
-
-		if overload_frames >= GOVERNOR_FRAMES {
+		current_jd := clock_jd(clock)
+		if clock_settle(&clock) {
 			state.sim_speed = math.max(1, state.sim_speed / 2)
 			state.title_stale = true
-			overload_frames = 0
 		}
 
-		alpha := accumulator / sim.DT
-		dt_signed := state.time_reversed ? -sim.DT : sim.DT
-		render_time := sim_time - (1 - alpha) * dt_signed
-		cx, cy := glfw.GetCursorPos(window)
+		alpha := clock_alpha(clock)
+		render_time := clock_render_time(clock, state.time_reversed)
 
+		cx, cy := glfw.GetCursorPos(window)
 		camera_update(&state, {cx, cy}, &prev_cursor, bodies[:], alpha)
 
 		camera_frame := Camera_Frame {
@@ -284,49 +88,32 @@ main :: proc() {
 		pending_edits_apply(&state, bodies[:], &gravity_tree)
 		pending_click_apply(&state, bodies[:], alpha, camera_frame, window_width, window_height)
 
-
-		when sim.MEASURE {
-			measure_t0 = glfw.GetTime()
-		}
-
-		if state.input.wireframe_mode do gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
-
-		bodies_draw(
+		renderer_draw_scene(
+			&renderer,
+			&state,
 			bodies[:],
-			sphere_mesh,
-			&textures,
-			body_program,
+			trails[:],
 			camera_frame,
-			fb_height,
 			alpha,
 			render_time,
+			&measure,
 		)
-
-		if state.input.wireframe_mode do gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
-
-		when sim.MEASURE {
-			measure.bodies_seconds += glfw.GetTime() - measure_t0
-		}
-
-		if !state.input.hide_trails {
-			when sim.MEASURE {
-				measure_t0 = glfw.GetTime()
-			}
-
-			trails_draw(trails[:], bodies[:], trail_mesh, trail_program, camera_frame, alpha)
-			when sim.MEASURE {
-				measure.trails_seconds += glfw.GetTime() - measure_t0
-			}
-		}
 
 		when sim.MEASURE {
 			sim.measure_frame_report(&measure, trails[:], glfw.GetTime())
 		}
 
 		when sim.BH_DEBUG_DRAW {
-			gravity_tree_cells_draw(&gravity_tree, trail_mesh, trail_program, camera_frame)
+			gravity_tree_cells_draw(
+				&gravity_tree,
+				renderer.trail_mesh,
+				renderer.trail_program,
+				camera_frame,
+			)
 		}
 
+
+		// Title
 		shown_minute := int(math.floor((current_jd + 0.5) * 1440))
 		if shown_minute != last_shown_minute {
 			last_shown_minute = shown_minute
@@ -334,45 +121,32 @@ main :: proc() {
 		}
 
 		if drag, ok := state.input.drag_start.?; ok {
-			cursor_x, cursor_y := glfw.GetCursorPos(window)
-			cursor: Pixel_Pos = {cursor_x, cursor_y}
+			cursor: Pixel_Pos = {cx, cy}
 
 			a, b, preview_ok := drag_preview_pass(
 				&state,
 				cursor,
 				drag,
-				trail_mesh,
-				sphere_mesh,
-				trail_program,
-				body_program,
+				renderer.trail_mesh,
+				renderer.sphere_mesh,
+				renderer.trail_program,
+				renderer.body_program,
 				camera_frame,
 				window_width,
 				window_height,
 				fb_height,
-				textures.fallback,
+				renderer.textures.fallback,
 			)
 
-			if (preview_ok) {
+			if preview_ok {
 				window_title_drag_update(window, &state, a, b)
 			}
 		} else {
 			window_title_update(window, &state, bodies[:], sim.date_from_jd(current_jd))
 		}
 
-		brightness_draw(&target_scene, &target_brightness, &brightness_program, empty_vao)
-		bloom := bloom_blur(
-			&target_brightness,
-			&target_blur,
-			&blur_program,
-			empty_vao,
-			BLOOM_ITERATIONS,
-		)
-
-		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
-		gl.Viewport(0, 0, fb_width, fb_height)
-
-		composite_draw(&target_scene, bloom, &composite_program, empty_vao)
-
+		// post chain
+		renderer_end_frame(&renderer)
 
 		glfw.SwapBuffers(window)
 		glfw.PollEvents()
@@ -381,82 +155,4 @@ main :: proc() {
 
 		free_all(context.temp_allocator)
 	}
-
-	return
-}
-
-state_get :: proc "contextless" (window: glfw.WindowHandle) -> ^State {
-	state := (^State)(glfw.GetWindowUserPointer(window))
-	return state
-}
-
-@(private = "file")
-window_title_drag_update :: proc(
-	window: glfw.WindowHandle,
-	state: ^State,
-	start_world, end_world: World_Pos,
-) {
-	speed := linalg.length(end_world - start_world) / DRAG_TIME
-	mass, _ := mass_radius_get(state.input.spawn_mass_exp)
-
-	title := fmt.ctprintf(
-		"%s - Spawn %e sol (x%.0f Moon) - %.1f km/s",
-		TITLE + " ",
-		mass,
-		math.pow(2, state.input.spawn_mass_exp),
-		speed * sim.KM_PER_VEL_UNIT,
-	)
-	glfw.SetWindowTitle(window, title)
-
-	state.title_stale = true
-}
-
-@(private = "file")
-window_title_update :: proc(
-	window: glfw.WindowHandle,
-	state: ^State,
-	bodies: []sim.Body,
-	date: sim.Date,
-) {
-	title: cstring
-
-	if !state.title_stale do return
-	if state.tracked_body >= 0 {
-		tracked_body_name := bodies[state.tracked_body].name
-		title = fmt.ctprintf(
-			"%s - %s - %f days/sec - %f years/sec - sim_speed %d - %04d-%02d-%02d %02d:%02d",
-			TITLE,
-			tracked_body_name,
-			f64(state.sim_speed * (state.time_reversed ? -1 : 1)) / sim.SECONDS_IN_DAY,
-			f64(state.sim_speed * (state.time_reversed ? -1 : 1)) / sim.SECONDS_IN_YEAR,
-			state.sim_speed * (state.time_reversed ? -1 : 1),
-			date.year,
-			date.month,
-			date.day,
-			date.hours,
-			date.minutes,
-		)
-	} else {
-		title = fmt.ctprintf(
-			"%s - %f days/sec - %f years/sec - sim_speed %d - %04d-%02d-%02d %02d:%02d",
-			TITLE,
-			f64(state.sim_speed * (state.time_reversed ? -1 : 1)) / sim.SECONDS_IN_DAY,
-			f64(state.sim_speed * (state.time_reversed ? -1 : 1)) / sim.SECONDS_IN_YEAR,
-			state.sim_speed * (state.time_reversed ? -1 : 1),
-			date.year,
-			date.month,
-			date.day,
-			date.hours,
-			date.minutes,
-		)
-	}
-
-	glfw.SetWindowTitle(window, title)
-	state.title_stale = false
-}
-
-
-@(private = "file")
-callback_framebuffer_size :: proc "c" (window: glfw.WindowHandle, width, height: i32) {
-	gl.Viewport(0, 0, width, height)
 }
