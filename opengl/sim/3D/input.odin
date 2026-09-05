@@ -23,7 +23,7 @@ Input :: struct {
 	drag_start:     Maybe(Pixel_Pos),
 	spawn_mass_exp: f64,
 	hide_trails:    bool,
-	polygon_mode:   bool,
+	wireframe_mode: bool,
 }
 
 Spawn_Request :: struct {
@@ -143,8 +143,8 @@ callback_key :: proc "c" (window: glfw.WindowHandle, key, scancode, action, mods
 		if key == glfw.KEY_T {
 			state.input.hide_trails = !state.input.hide_trails
 		}
-		if key == glfw.KEY_P {
-			state.input.polygon_mode = !state.input.polygon_mode
+		if key == glfw.KEY_W {
+			state.input.wireframe_mode = !state.input.wireframe_mode
 		}
 	}
 }

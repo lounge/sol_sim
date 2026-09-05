@@ -288,7 +288,7 @@ main :: proc() {
 			measure_t0 = glfw.GetTime()
 		}
 
-		if state.input.polygon_mode do gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
+		if state.input.wireframe_mode do gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
 
 		bodies_draw(
 			bodies[:],
@@ -300,7 +300,7 @@ main :: proc() {
 			render_time,
 		)
 
-		if state.input.polygon_mode do gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
+		if state.input.wireframe_mode do gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
 
 		when sim.MEASURE {
 			measure.bodies_seconds += glfw.GetTime() - measure_t0
