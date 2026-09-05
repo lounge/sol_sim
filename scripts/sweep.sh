@@ -12,7 +12,7 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
 measure_case() { # spawn_count total_steps bh_threshold -> physics ms/step
-	odin build opengl/sim/3D -o:speed -define:MEASURE=true \
+	odin build sim/opengl -o:speed -define:MEASURE=true \
 		-define:MEASURE_SPAWN_COUNT="$1" -define:TOTAL_STEPS="$2" \
 		-define:BH_THRESHOLD="$3" -out:"$tmp/sweep"
 	"$tmp/sweep" | grep '^\[measure\]' | tail -1 | awk '{print $3}'

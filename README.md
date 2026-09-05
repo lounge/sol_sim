@@ -18,14 +18,14 @@ A from-scratch orbital simulation of the solar system. Trying to learn some new 
 ## Run
 
 ```sh
-odin run opengl/sim/3D            # debug build
-odin run opengl/sim/3D -o:speed   # optimized build — needed for high sim speeds
+odin run sim/opengl            # debug build
+odin run sim/opengl -o:speed   # optimized build — needed for high sim speeds
 ```
 
 Launches at the current date and time. Pin any start date with a Julian date define, e.g. the 2026-08-12 solar eclipse:
 
 ```sh
-odin run opengl/sim/3D -o:speed -define:START_JD=2461265.24
+odin run sim/opengl -o:speed -define:START_JD=2461265.24
 ```
 
 ## Seeing the octree
@@ -33,8 +33,8 @@ odin run opengl/sim/3D -o:speed -define:START_JD=2461265.24
 Gravity switches from brute force to a Barnes–Hut octree above `BH_THRESHOLD` bodies (600 by default), so the default system never builds one. Force the tree and draw its cells:
 
 ```sh
-odin run opengl/sim/3D -o:speed -define:BH_DEBUG_DRAW=true -define:BH_THRESHOLD=0
-odin run opengl/sim/3D -o:speed -define:BH_DEBUG_DRAW=true -define:BH_THRESHOLD=0 -define:MEASURE=true   # +300 spawned bodies, a much busier tree
+odin run sim/opengl -o:speed -define:BH_DEBUG_DRAW=true -define:BH_THRESHOLD=0
+odin run sim/opengl -o:speed -define:BH_DEBUG_DRAW=true -define:BH_THRESHOLD=0 -define:MEASURE=true   # +300 spawned bodies, a much busier tree
 ```
 
 Cells are drawn in red as wireframe boxes and rebuilt every physics step; zoom out to see the whole hierarchy, or right-drag to spawn bodies and watch the cells subdivide around them.

@@ -4,7 +4,7 @@
 	"profiles": [
 		{
 			"name": "3d",
-			"checker_path": ["opengl/sim/3D"]
+			"checker_path": ["sim/opengl"]
 		}
 	]
 }

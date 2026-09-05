@@ -20,12 +20,12 @@ main
 window
 triangle
 shaders
-3D
+opengl
 !main/
 !window/
 !triangle/
 !shaders/
-!3D/
+!opengl/
 
 # macOS
 .DS_Store

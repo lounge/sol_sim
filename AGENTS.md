@@ -9,10 +9,10 @@ This is a learning project — the learning is the point, the simulation is the 
 ## Commands
 
 ```sh
-odin run opengl/sim/3D            # build and run (debug)
-odin run opengl/sim/3D -o:speed   # optimized (~9×) — needed for high sim speeds
+odin run sim/opengl            # build and run (debug)
+odin run sim/opengl -o:speed   # optimized (~9×) — needed for high sim speeds
 scripts/check.sh                  # the lint bar: the define/lint matrix (17 cells) + the unit tests — keep it clean
-odin test opengl/sim/core         # the unit tests alone (note: `odin test` does not run vet)
+odin test sim/core         # the unit tests alone (note: `odin test` does not run vet)
 scripts/sweep.sh                  # BH_THRESHOLD crossover sweep (headless MEASURE builds)
 ```
 
@@ -33,7 +33,7 @@ Completing a milestone = check the roadmap box + write the journal entry.
 
 ## Architecture
 
-`sim_core` (`opengl/sim/core/`) is the headless sim: `physics.odin` (integrator, `DT`, `G`, `Vec`), `gravity_tree.odin`, `collision.odin`, `body.odin` (add/remove, `kepler_solve`, perifocal state), `trail.odin`, `system.odin` (`Body_Spec` tree → bodies/trails), `spec_*.odin` (one file per planet with its moons), `measure.odin` (benchmark spawns, determinism dump), `date.odin`, `colors.odin`. The app (`opengl/sim/3D/`, imports it as `sim_core`): `main.odin` (frame loop), `interactions.odin` (pending-request application), `render.odin` (draw procs, `Render_Target`), `shader.odin`, `camera.odin` (orbit camera; `camera_ray`/`ray_plane_hit`), `input.odin`, `state.odin`, `headless.odin` (`TOTAL_STEPS` runner), GLSL in `res/`. Only `vendor:OpenGL` + `vendor:glfw`; OpenGL 3.3 core (macOS caps at 4.1); all uniforms f32. Constants live in the file owning their concept; proc naming is noun-first (`trail_record`) — in a flat package the prefix is the namespace.
+`sim_core` (`sim/core/`) is the headless sim: `physics.odin` (integrator, `DT`, `G`, `Vec`), `gravity_tree.odin`, `collision.odin`, `body.odin` (add/remove, `kepler_solve`, perifocal state), `trail.odin`, `system.odin` (`Body_Spec` tree → bodies/trails), `spec_*.odin` (one file per planet with its moons), `measure.odin` (benchmark spawns, determinism dump), `date.odin`, `colors.odin`. The app (`sim/opengl/`, imports it as `sim_core`): `main.odin` (frame loop), `interactions.odin` (pending-request application), `render.odin` (draw procs, `Render_Target`), `shader.odin`, `camera.odin` (orbit camera; `camera_ray`/`ray_plane_hit`), `input.odin`, `state.odin`, `headless.odin` (`TOTAL_STEPS` runner), GLSL in `res/`. Only `vendor:OpenGL` + `vendor:glfw`; OpenGL 3.3 core (macOS caps at 4.1); all uniforms f32. Constants live in the file owning their concept; proc naming is noun-first (`trail_record`) — in a flat package the prefix is the namespace.
 
 ## Load-bearing rules (rationale lives in JOURNAL.md)
 
