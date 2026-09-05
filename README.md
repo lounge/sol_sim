@@ -2,6 +2,8 @@
 
 A from-scratch orbital simulation of the solar system. Trying to learn some new stuff...
 
+![sol_sim](img/sim_readme.gif)
+
 ## Learning
 
 - **Odin** — lang

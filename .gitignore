@@ -36,3 +36,6 @@ opengl
 # Editors
 .vscode/
 .idea/
+
+# Full-size capture, 115 MB — over the GitHub push limit; the README uses the downscaled copy
+img/sim.gif
