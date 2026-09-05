@@ -55,8 +55,17 @@ Cells are drawn in red as wireframe boxes and rebuilt every physics step; zoom o
 | W | wireframe on / off |
 | Esc | quit |
 
+## Scripts
+
+```sh
+scripts/check.sh    # the lint bar: odin check with -vet -strict-style across every define combination (17 cells), then the unit tests
+scripts/sweep.sh    # BH_THRESHOLD crossover: headless MEASURE builds timing brute force vs. octree per body count, prints ms/step for each
+```
+
+`check.sh` exists because a false `when` branch is parsed but never type-checked, so each define combination is its own compile and must be linted on its own; keep it clean before committing. `sweep.sh` takes a few minutes and is only needed when the gravity or tree code changes; its crossover is what sets the shipped `BH_THRESHOLD`.
+
 ## Documentation
 
 - [ROADMAP.md](ROADMAP.md)
 - [JOURNAL.md](JOURNAL.md)
-- [Texture attribution](opengl/sim/3D/tex/ATTRIBUTION.md) — planet and moon maps are third-party (Solar System Scope CC BY 4.0, NASA, and others with non-commercial terms); sources and licences per file
+- [Texture attribution](sim/opengl/tex/ATTRIBUTION.md) — planet and moon maps are third-party (Solar System Scope CC BY 4.0, NASA, and others with non-commercial terms); sources and licences per file
