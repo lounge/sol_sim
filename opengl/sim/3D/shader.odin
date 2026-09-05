@@ -20,6 +20,7 @@ Body_Program :: struct {
 	receiver_slot:      i32,
 	body_radius:        i32,
 	emissive_intensity: i32,
+	albedo_map:         i32,
 }
 
 Trail_Program :: struct {
@@ -65,6 +66,7 @@ body_program_load :: proc(program: u32) -> Body_Program {
 		receiver_slot      = uniform_lookup(program, "receiver_slot"),
 		body_radius        = uniform_lookup(program, "body_radius"),
 		emissive_intensity = uniform_lookup(program, "emissive_intensity"),
+		albedo_map         = uniform_lookup(program, "albedo_map"),
 	}
 
 	return program

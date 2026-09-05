@@ -203,6 +203,7 @@ sphere_point :: proc(ring, segment, rings, segments: i32) -> (pos: [3]f32, uv: [
 bodies_draw :: proc(
 	bodies: []sim.Body,
 	mesh: Mesh,
+	textures: ^Textures,
 	program: Body_Program,
 	camera_frame: Camera_Frame,
 	height: i32,
@@ -210,6 +211,10 @@ bodies_draw :: proc(
 	render_time: f64,
 ) {
 	gl.UseProgram(program.id)
+
+	shader_set(program.albedo_map, 0)
+
+	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindVertexArray(mesh.vao)
 
 	projection32 := (matrix[4, 4]f32)(camera_frame.proj)
@@ -264,9 +269,14 @@ bodies_draw :: proc(
 		angle := bodies_spin_angle(body.rotation_period, render_time)
 
 		shader_set(program.emissive, i32(emissive))
+
+		tex, textured := texture_lookup(textures, body.name)
+		tint := textured ? sim.Color{1, 1, 1} : body.color
+
 		sphere_draw(
 			body.radius,
-			body.color,
+			tint,
+			tex,
 			mesh,
 			program,
 			center_view,
@@ -299,6 +309,7 @@ drag_preview_pass :: proc(
 	camera_frame: Camera_Frame,
 	window_width, window_height: i32,
 	fb_height: i32,
+	fallback_tex: u32,
 ) -> (
 	pos_a, pos_b: World_Pos,
 	ok: bool,
@@ -315,7 +326,15 @@ drag_preview_pass :: proc(
 		drag_preview_draw(a, b, trail_mesh, trail_program, camera_frame)
 
 		_, radius := mass_radius_get(state.input.spawn_mass_exp)
-		mass_preview_draw(b, radius, sphere_mesh, body_program, camera_frame, fb_height)
+		mass_preview_draw(
+			b,
+			radius,
+			sphere_mesh,
+			body_program,
+			camera_frame,
+			fb_height,
+			fallback_tex,
+		)
 	}
 
 	return a, b, a_ok && b_ok
@@ -565,7 +584,8 @@ gl_check_error :: proc(loc := #caller_location) {
 @(private = "file")
 sphere_draw :: proc(
 	radius: f64,
-	color: sim.Color,
+	tint: sim.Color,
+	tex: u32,
 	mesh: Mesh,
 	program: Body_Program,
 	center_view: [4]f64,
@@ -591,11 +611,14 @@ sphere_draw :: proc(
 	flux_scale := (radius / draw_radius) * (radius / draw_radius)
 	emissive_intensity := 1.0 + (EMISSIVE_INTENSITY - 1.0) * flux_scale
 
-	shader_set(program.color, color.x, color.y, color.z)
+	gl.BindTexture(gl.TEXTURE_2D, tex)
+	shader_set(program.color, tint.x, tint.y, tint.z)
+
 	shader_set(program.mv, &mv32)
 	shader_set(program.body_radius, f32(radius))
 	shader_set(program.receiver_slot, receiver_slots)
 	shader_set(program.emissive_intensity, f32(emissive_intensity))
+
 
 	gl.DrawArrays(mesh.primitive, 0, mesh.vertex_count)
 }
@@ -641,6 +664,7 @@ mass_preview_draw :: proc(
 	program: Body_Program,
 	camera_frame: Camera_Frame,
 	height: i32,
+	fallback_tex: u32,
 ) {
 	gl.UseProgram(program.id)
 	gl.BindVertexArray(mesh.vao)
@@ -656,6 +680,7 @@ mass_preview_draw :: proc(
 	sphere_draw(
 		radius,
 		sim.PALETTE[.Spawn],
+		fallback_tex,
 		mesh,
 		program,
 		center_view,

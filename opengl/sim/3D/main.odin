@@ -167,6 +167,7 @@ main :: proc() {
 
 	sphere_mesh := sphere_mesh_create(16, 32)
 	trail_mesh := trail_mesh_create()
+	textures := texture_create()
 
 	empty_vao: u32
 	gl.GenVertexArrays(1, &empty_vao)
@@ -293,6 +294,7 @@ main :: proc() {
 		bodies_draw(
 			bodies[:],
 			sphere_mesh,
+			&textures,
 			body_program,
 			camera_frame,
 			fb_height,
@@ -347,6 +349,7 @@ main :: proc() {
 				window_width,
 				window_height,
 				fb_height,
+				textures.fallback,
 			)
 
 			if (preview_ok) {

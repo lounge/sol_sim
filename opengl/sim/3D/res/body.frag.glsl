@@ -4,6 +4,7 @@ const float PI = 3.14159265358979323846;
 const float AMBIENT = 0.05;
 const int MAX_OCCLUDERS = 32; // Needs to stay in sync with shader.odin
 
+uniform sampler2D albedo_map;
 uniform vec3 color;
 uniform vec3 sun_pos_view;
 uniform int emissive;
@@ -20,6 +21,7 @@ uniform float emissive_intensity;
 flat in vec3 v_center_view;
 in vec3 v_pos_view;
 in vec3 v_normal_view;
+in vec2 v_uv;
 
 out vec4 FragColor;
 
@@ -42,9 +44,9 @@ float disc_visibility(float a_s, float a_o, float theta) {
 
 void main()
 {
-
     if (emissive == 1) {
-        FragColor = vec4(pow(color, vec3(2.2)) * emissive_intensity, 1.0);
+        vec3 base = pow(color, vec3(2.2)) * texture(albedo_map, v_uv).rgb;
+        FragColor = vec4(base * emissive_intensity, 1.0);
     } else {
         float diffuse = 0.0;
         if (lit == 1) {
@@ -83,7 +85,7 @@ void main()
             diffuse = max(dot(N, L), 0.0) * vis;
         }
 
-        vec3 albedo = pow(color, vec3(2.2));
+        vec3 albedo = pow(color, vec3(2.2)) * texture(albedo_map, v_uv).rgb;
         float lighting = AMBIENT + (1.0 - AMBIENT) * diffuse;
         vec3 shading = albedo * lighting;
         FragColor = vec4(shading, 1.0);
