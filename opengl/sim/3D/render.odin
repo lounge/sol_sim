@@ -121,13 +121,47 @@ sphere_mesh_create :: proc(rings: i32, segments: i32) -> Mesh {
 
 	for ring in 0 ..< rings {
 		for seg in 0 ..< segments {
-			a := sphere_point(ring, seg, rings, segments) // upper-left of the quad
-			b := sphere_point(ring + 1, seg, rings, segments) // lower-left
-			c := sphere_point(ring + 1, seg + 1, rings, segments) // lower-right
-			d := sphere_point(ring, seg + 1, rings, segments) // upper-right
+			a, a_uv := sphere_point(ring, seg, rings, segments) // upper-left of the quad
+			b, b_uv := sphere_point(ring + 1, seg, rings, segments) // lower-left
+			c, c_uv := sphere_point(ring + 1, seg + 1, rings, segments) // lower-right
+			d, d_uv := sphere_point(ring, seg + 1, rings, segments) // upper-right
 
-			append(&vertices, a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z) // counter-clockwise
-			append(&vertices, a.x, a.y, a.z, c.x, c.y, c.z, d.x, d.y, d.z)
+			append(
+				&vertices,
+				a.x,
+				a.y,
+				a.z,
+				a_uv.x,
+				a_uv.y,
+				b.x,
+				b.y,
+				b.z,
+				b_uv.x,
+				b_uv.y,
+				c.x,
+				c.y,
+				c.z,
+				c_uv.x,
+				c_uv.y,
+			) // counter-clockwise
+			append(
+				&vertices,
+				a.x,
+				a.y,
+				a.z,
+				a_uv.x,
+				a_uv.y,
+				c.x,
+				c.y,
+				c.z,
+				c_uv.x,
+				c_uv.y,
+				d.x,
+				d.y,
+				d.z,
+				d_uv.x,
+				d_uv.y,
+			)
 		}
 	}
 
@@ -141,8 +175,11 @@ sphere_mesh_create :: proc(rings: i32, segments: i32) -> Mesh {
 		raw_data(vertices),
 		gl.STATIC_DRAW,
 	)
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, 3 * size_of(f32), 0)
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, 5 * size_of(f32), 0)
+	gl.VertexAttribPointer(1, 2, gl.FLOAT, gl.FALSE, 5 * size_of(f32), 3 * size_of(f32))
+
 	gl.EnableVertexAttribArray(0)
+	gl.EnableVertexAttribArray(1)
 	gl.BindVertexArray(0)
 
 	mesh := Mesh{vao, vbo, rings * segments * 6, gl.TRIANGLES}
@@ -152,10 +189,15 @@ sphere_mesh_create :: proc(rings: i32, segments: i32) -> Mesh {
 }
 
 @(private = "file")
-sphere_point :: proc(ring, segment, rings, segments: i32) -> [3]f32 {
+sphere_point :: proc(ring, segment, rings, segments: i32) -> (pos: [3]f32, uv: [2]f32) {
 	theta := math.PI * f32(ring) / f32(rings)
-	phi := 2 * math.PI * f32(segment) / f32(segments)
-	return {math.sin(theta) * math.cos(phi), math.sin(theta) * math.sin(phi), math.cos(theta)}
+	phi := 2 * math.PI * f32(segment) / f32(segments) - math.PI
+
+	return {
+		math.sin(theta) * math.cos(phi),
+		math.sin(theta) * math.sin(phi),
+		math.cos(theta),
+	}, {f32(segment) / f32(segments), f32(ring) / f32(rings)}
 }
 
 bodies_draw :: proc(
@@ -243,7 +285,7 @@ bodies_spin_angle :: proc(period_days: f64, t: f64) -> f64 {
 
 	period_units := period_days * sim.SECONDS_IN_DAY / sim.T_UNIT_SECONDS
 	turns := t / period_units
-	return (2* math.PI) * (turns - math.floor_f64(turns))
+	return (2 * math.PI) * (turns - math.floor_f64(turns))
 
 }
 
