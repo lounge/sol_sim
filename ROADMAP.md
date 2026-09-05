@@ -38,9 +38,12 @@
 36. [x] tests for the pure leaves (date conversions, kepler_solve round-trip, spec_rel_state)
 37. [x] Make sun bloom
 38. [x] Make bodies spheres.
-39. [ ] Simple textures?
-40. [ ] If sun is delted or another body gets larger mass make the new largest bloom?
-41. [ ] Thread accels_compute across cores, runtime-scaled to the user's machine. Test improvment ganes
-42. [ ] Per-body substepping for fast moons (Phobos-class orbits).
-43. [ ] z-spawning
-44. [ ] Port to Vulkan? :'(
+39. [x] Simple textures?
+40. [ ] If sun is delted or another body gets larger mass make the new largest emit?
+41. [ ] Obliquity: IAU pole (RA/Dec) per spec row, one tilt rotation between view and spin.
+42. [ ] Epoch spin phase: prime meridian at JD_EPOCH, audited by sub-solar longitude against Horizons.
+43. [ ] Earth night map on the dark side.
+44. [ ] Thread accels_compute across cores, runtime-scaled to the user's machine. Test improvment ganes
+45. [ ] Per-body substepping for fast moons (Phobos-class orbits).
+46. [ ] z-spawning
+47. [ ] Port to Vulkan? :'(
